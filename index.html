@@ -442,6 +442,15 @@ input,select,button{font-family:'DM Sans',sans-serif;}
 
   <!-- HOME -->
   <div class="pg on" id="pg-home">
+    <!-- READONLY BANNER -->
+    <div id="roBanner" style="display:none;background:linear-gradient(135deg,#1a3a6c,#002868);border-radius:14px;padding:15px 16px;margin-bottom:10px;align-items:center;gap:12px">
+      <div style="font-size:28px">&#128202;</div>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#fff">Reporting &amp; Monitoring Access</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:2px">You can view all team activity and reports. Break booking is not available for your role.</div>
+      </div>
+    </div>
+
     <div id="abbanner" style="display:none" class="abbanner">
       <div class="abinner">
         <div class="abtag">Break In Progress</div>
@@ -636,20 +645,20 @@ var EMPLOYEES = [
   {pw:'bdr@4533',name:'Badreyah Alruwayeh',role:'ITM Agent',access:'agent'},
   {pw:'mrm@4534',name:'Mariam Almutairi',role:'ITM Agent',access:'agent'},
   {pw:'arj@4535',name:'Abdullah Rajab',role:'ITM Agent',access:'agent'},
-  {pw:'shq@2001',name:'Shouq Alkandari',role:'Team Leader',access:'supervisor'},
-  {pw:'ano@2002',name:'Alanoud Alotaibi',role:'Team Leader',access:'supervisor'},
-  {pw:'mot@2003',name:'Mohammad Alothman',role:'Team Leader',access:'supervisor'},
-  {pw:'ara@4536',name:'Abdulrahman Alahmad',role:'Back Office',access:'agent'},
-  {pw:'nhr@4537',name:'Nourah Alhazzani',role:'Back Office',access:'agent'},
+  {pw:'shq@2001',name:'Shouq Alkandari',role:'Team Leader',access:'readonly'},
+  {pw:'ano@2002',name:'Alanoud Alotaibi',role:'Team Leader',access:'readonly'},
+  {pw:'mot@2003',name:'Mohammad Alothman',role:'Team Leader',access:'readonly'},
+  {pw:'ara@4536',name:'Abdulrahman Alahmad',role:'Back Office',access:'readonly'},
+  {pw:'nhr@4537',name:'Nourah Alhazzani',role:'Back Office',access:'readonly'},
   {pw:'ahm@4538',name:'Ahmed Nidah',role:'Wage Agent',access:'agent'},
   {pw:'bil@4539',name:'Bilal Faisal',role:'Wage Agent',access:'agent'},
   {pw:'fat@4540',name:'Fatemeh Mayahi',role:'Wage Agent',access:'agent'},
   {pw:'nah@4541',name:'Nahla Ibrahem',role:'Wage Agent',access:'agent'},
-  {pw:'ftm@4542',name:'Fatmah Alhamar',role:'Quality Assurance',access:'agent'},
-  {pw:'brb@4543',name:'Badreyah BoRubayea',role:'Quality Assurance',access:'agent'},
-  {pw:'mqr@1001',name:'Mohammad Abdulraheem',role:'QA Supervisor',access:'supervisor'},
-  {pw:'tal@0001',name:'Talal Al Jarki',role:'Head',access:'admin'},
-  {pw:'KIB@admin2026',name:'Admin',role:'System Admin',access:'admin'}
+  {pw:'ftm@4542',name:'Fatmah Alhamar',role:'Quality Assurance',access:'readonly'},
+  {pw:'brb@4543',name:'Badreyah BoRubayea',role:'Quality Assurance',access:'readonly'},
+  {pw:'mqr@1001',name:'Mohammad Abdulraheem',role:'QA Supervisor',access:'readonly'},
+  {pw:'tal@0001',name:'Talal Al Jarki',role:'Head',access:'readonly'},
+  {pw:'KIB@admin2026',name:'Admin',role:'System Admin',access:'readonly'}
 ];
 
 // ════════════════════════════════════════════
@@ -674,7 +683,7 @@ var timerInt=null, clockInt=null, refInt=null, toastTO=null;
 var COLS=['#1a3a6c','#2d5a8e','#14532d','#4a1942','#7c2d12','#1e3a5f','#713f12','#0d5c63'];
 function ac(n){var h=0;for(var i=0;i<n.length;i++)h=(h+n.charCodeAt(i))%COLS.length;return COLS[h];}
 function ini(n){var p=n.trim().split(' ');return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():p[0][0].toUpperCase();}
-function roleCls(access){return{admin:'rb-admin',supervisor:'rb-sup',tl:'rb-tl',agent:'rb-agent'}[access]||'rb-agent';}
+function roleCls(access){return{admin:'rb-admin',supervisor:'rb-sup',tl:'rb-tl',agent:'rb-agent',readonly:'rb-mgr'}[access]||'rb-agent';}
 
 // ════════════════════════════════════════════
 //  TIME HELPERS
@@ -705,6 +714,11 @@ function checkPw(){
   document.getElementById('idname').textContent=emp.name;
   var rc=roleCls(emp.access);
   document.getElementById('idrole').innerHTML='<span class="rbadge '+rc+'">'+emp.role+'</span>';
+  // Readonly users skip shift selection - go straight in
+  if(emp.access==='readonly'){
+    loginUser(emp, null, null, null);
+    return;
+  }
   buildShiftGrid();
   document.getElementById('step1').classList.remove('on');
   document.getElementById('step2').classList.add('on');
@@ -745,22 +759,42 @@ function confirmLogin(){
   var shEndH=shStartH+8;
   var shEndHH=shEndH%24;
   var shEnd=('0'+shEndHH).slice(-2)+':00';
-  var shEndMin=shEndH*60; // raw minutes (may exceed 1440 for overnight)
-  me={name:pendingEmp.name,role:pendingEmp.role,access:pendingEmp.access,shift:selShift,shiftEnd:shEnd,shiftEndMin:shEndMin};
+  var shEndMin=shEndH*60;
+  loginUser(pendingEmp, selShift, shEnd, shEndMin);
+}
+
+function loginUser(emp, shift, shEnd, shEndMin){
+  me={name:emp.name,role:emp.role,access:emp.access,shift:shift,shiftEnd:shEnd,shiftEndMin:shEndMin};
   document.getElementById('sLogin').style.display='none';
   document.getElementById('sApp').style.display='block';
   var av1=document.getElementById('uav');av1.textContent=ini(me.name);
   var av2=document.getElementById('asav');av2.textContent=ini(me.name);av2.style.background=ac(me.name);
   document.getElementById('asname').textContent=me.name;
-  document.getElementById('asinfo').textContent=me.role+' · Shift '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
-  document.getElementById('bcshift').textContent='Shift: '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
-  if(me.access==='admin'||me.access==='supervisor'){
+
+  if(me.access==='readonly'){
+    // Readonly: no shift, monitoring only
+    document.getElementById('asinfo').textContent=me.role+' · Monitor Access';
+    document.getElementById('bcshift').textContent='Reporting & Monitoring';
+    document.getElementById('nav-book').style.display='none';
+    document.getElementById('nav-swap').style.display='none';
     document.getElementById('nav-admin').style.display='flex';
     document.getElementById('supSection').style.display='block';
+    document.getElementById('roBanner').style.display='flex';
+    startClock();renderAll();
+    gp('team');
+    refInt=setInterval(renderAll,8000);
+    showToast('Welcome, '+me.name.split(' ')[0]+'! Monitor access','inf');
+  } else {
+    document.getElementById('asinfo').textContent=me.role+' · Shift '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
+    document.getElementById('bcshift').textContent='Shift: '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
+    if(me.access==='admin'||me.access==='supervisor'){
+      document.getElementById('nav-admin').style.display='flex';
+      document.getElementById('supSection').style.display='block';
+    }
+    startClock();renderAll();checkActiveBreak();
+    refInt=setInterval(renderAll,8000);
+    showToast('Welcome, '+me.name.split(' ')[0]+'!','ok');
   }
-  startClock();renderAll();checkActiveBreak();
-  refInt=setInterval(renderAll,8000);
-  showToast('Welcome, '+me.name.split(' ')[0]+'!','ok');
 }
 
 function doLogout(){
@@ -871,6 +905,7 @@ function pickDur(dur){
 
 function confirmBook(){
   if(!me||!selSlot)return;
+  if(me.access==='readonly'){showToast('Monitoring access only – cannot book breaks','err');return;}
   var d=gd();var daily=d.settings?(d.settings.dailyMin||60):60;var maxCon=d.settings?(d.settings.maxCon||2):2;var maxBreak=d.settings?(d.settings.maxBreak||30):30;
   if(selDur>maxBreak){showToast('Max '+maxBreak+' min per break','err');return;}
   var sched=schedMin(me.name,d);
@@ -904,6 +939,7 @@ function schedNotifs(brk){
 //  ACTIVE BREAK
 // ════════════════════════════════════════════
 function startBreak(brkId){
+  if(me&&me.access==='readonly'){showToast('Monitoring access only','err');return;}
   var d=gd();var tb=tdb(d);var brk=null;
   for(var i=0;i<tb.length;i++){if(tb[i].id===brkId){brk=tb[i];break;}}
   if(!brk)return;
@@ -1029,6 +1065,22 @@ function renderAll(){
 }
 
 function renderBalance(d){
+  if(me&&me.access==='readonly'){
+    // Show team stats instead of personal balance
+    var tb=tdb(d);var daily=d.settings?(d.settings.dailyMin||60):60;
+    var active=tb.filter(function(b){return b.status==='active';}).length;
+    var total=tb.filter(function(b){return b.status!=='cancelled';}).length;
+    var totalMins=tb.reduce(function(s,b){return b.status!=='cancelled'?s+b.duration:s;},0);
+    document.getElementById('bcnum').textContent=active;
+    document.getElementById('bcsub').textContent=total+' breaks scheduled today · '+totalMins+' min total';
+    document.getElementById('bcprog').style.width=Math.min(total/10*100,100)+'%';
+    document.getElementById('bcprog').style.background='linear-gradient(90deg,var(--gold),var(--gold2))';
+    document.getElementById('bcused').textContent=total+' breaks today';
+    document.getElementById('bchip').textContent='Monitor';
+    var bclbl=document.querySelector('.bclbl');if(bclbl)bclbl.textContent='Active Breaks Now';
+    var bcunit=document.querySelector('.bcunit');if(bcunit)bcunit.textContent='on break';
+    return;
+  }
   var daily=d.settings?(d.settings.dailyMin||60):60;
   var sched=schedMin(me.name,d);var used=usedMin(me.name,d);
   var rem=Math.max(daily-sched,0);var pct=Math.min(sched/daily*100,100);
