@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>KIB · Break System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --navy:#002868;--navy2:#001845;--gold:#b8860b;--gold2:#d4a017;
+  --goldbg:#fdf6e3;--goldb:#e8c96a;--bg:#f2f4f8;--white:#fff;
+  --border:#dde3ef;--t1:#0f1c35;--t2:#5a6885;--t3:#9aaabf;
+  --green:#0a7c4a;--gbg:#e6f4ed;--red:#c0392b;--rbg:#fdecea;
+  --amber:#d97706;--abg:#fef3cd;--r:10px;--rl:14px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;font-size:14px;}
+input,select,button{font-family:'DM Sans',sans-serif;}
+
+/* ── LOGIN ─────────────────── */
+#sLogin{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(ellipse at 20% 80%,rgba(0,40,104,.06),transparent 60%),
+             radial-gradient(ellipse at 80% 20%,rgba(184,134,11,.05),transparent 60%),var(--white);
+}
+.lbox{width:100%;max-width:380px;background:var(--white);border:1px solid var(--border);border-radius:18px;box-shadow:0 8px 40px rgba(0,40,104,.12);overflow:hidden;}
+.lhdr{background:var(--navy);padding:28px 22px;text-align:center;position:relative;overflow:hidden;}
+.lhdr::before{content:'';position:absolute;top:-50px;right:-50px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.04);}
+.lhdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold2),var(--goldb),var(--gold2),transparent);}
+.lemb{width:56px;height:56px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:12px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.lkib{font-size:22px;font-weight:800;color:#fff;letter-spacing:4px;}
+.lfull{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.4px;margin-top:2px;}
+
+/* Login Steps */
+.lstep{display:none;padding:22px;}
+.lstep.on{display:block;}
+.lstep h3{font-size:15px;font-weight:700;margin-bottom:3px;}
+.lstep p{font-size:12px;color:var(--t2);margin-bottom:18px;}
+.lbl{display:block;font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;}
+.fld{width:100%;padding:12px 13px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;color:var(--t1);background:var(--bg);outline:none;transition:.2s;-webkit-appearance:none;}
+.fld:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,40,104,.08);}
+.fld option{background:#fff;}
+.fg{margin-bottom:14px;}
+.btn-main{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;transition:.15s;}
+.btn-main:active{opacity:.9;transform:scale(.99);}
+.btn-back{width:100%;padding:10px;background:none;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;margin-top:8px;}
+
+/* Identity Card (step 2) */
+.idcard{background:rgba(0,40,104,.04);border:1px solid rgba(0,40,104,.12);border-radius:var(--r);padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.idav{width:44px;height:44px;border-radius:10px;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;}
+.idname{font-size:15px;font-weight:700;color:var(--t1);}
+.idrole{font-size:11px;margin-top:3px;}
+
+/* Shift time grid */
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;}
+.stile{border:1.5px solid var(--border);border-radius:var(--r);padding:8px 4px;text-align:center;cursor:pointer;background:var(--white);transition:.15s;}
+.stile:active{transform:scale(.97);}
+.stile.sel{border-color:var(--navy);background:rgba(0,40,104,.05);}
+.stile.blocked{background:var(--bg);opacity:.4;cursor:not-allowed;}
+.sttime{font-size:12px;font-weight:700;color:var(--t1);}
+.stend{font-size:10px;color:var(--t2);margin-top:2px;}
+.stile.sel .sttime{color:var(--navy);}
+
+/* ── APP ─────────────────────── */
+#sApp{display:none;min-height:100vh;padding-bottom:66px;}
+
+/* TOPBAR */
+.topbar{background:var(--navy);height:52px;padding:0 13px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,40,104,.2);}
+.tbl{display:flex;align-items:center;gap:9px;}
+.tlogo{width:28px;height:28px;background:rgba(255,255,255,.12);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.ttitle{font-size:13px;font-weight:700;color:#fff;}
+.tsub{font-size:9px;color:rgba(255,255,255,.4);}
+.tbr{display:flex;align-items:center;gap:7px;}
+.clk{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:4px 9px;text-align:center;}
+.clkt{font-size:13px;font-weight:700;color:var(--gold2);font-variant-numeric:tabular-nums;}
+.clkd{font-size:9px;color:rgba(255,255,255,.35);}
+.bellbtn{width:28px;height:28px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;position:relative;}
+.bdot{position:absolute;top:3px;right:3px;width:7px;height:7px;background:#e84040;border-radius:50%;border:1.5px solid var(--navy);display:none;}
+.uav{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--navy);background:var(--gold2);cursor:pointer;}
+
+/* AGENT STRIP */
+.astrip{background:var(--white);border-bottom:1px solid var(--border);padding:9px 13px;display:flex;align-items:center;gap:9px;}
+.asav{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
+.asname{font-size:13px;font-weight:700;}
+.asinfo{font-size:10px;color:var(--t2);margin-top:1px;}
+.asr{margin-left:auto;display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.balchip{background:var(--goldbg);border:1px solid var(--goldb);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--gold);}
+.btnout{border:1px solid var(--border);background:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--t2);cursor:pointer;}
+
+/* NOTIF PANEL */
+.npanel{position:fixed;top:52px;left:0;right:0;z-index:200;background:var(--white);border-bottom:1px solid var(--border);box-shadow:0 8px 24px rgba(0,0,0,.1);transform:translateY(-110%);transition:.3s;max-height:70vh;overflow-y:auto;}
+.npanel.open{transform:translateY(0);}
+.nhdr{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.nhdr span{font-size:14px;font-weight:700;}
+.btnclr{font-size:12px;font-weight:600;color:var(--navy);background:none;border:none;cursor:pointer;}
+.nitem{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:9px;}
+.nitem.unread{background:rgba(0,40,104,.03);}
+.nicon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.nmsg{font-size:12px;line-height:1.5;}
+.ntime{font-size:10px;color:var(--t3);margin-top:2px;}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.06);}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 4px 9px;border:none;background:none;cursor:pointer;position:relative;}
+.nb .ni{font-size:18px;margin-bottom:1px;}
+.nb .nl{font-size:9px;font-weight:600;color:var(--t3);}
+.nb.on .nl{color:var(--navy);font-weight:800;}
+.nb.on::after{content:'';position:absolute;top:0;left:25%;right:25%;height:2px;background:var(--navy);border-radius:0 0 2px 2px;}
+.nbadge{position:absolute;top:5px;right:calc(50% - 12px);background:#e84040;color:#fff;border-radius:10px;padding:1px 5px;font-size:9px;font-weight:800;display:none;}
+
+/* PAGES */
+.pg{display:none;padding:13px;}
+.pg.on{display:block;}
+.sh{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin:16px 0 9px;display:flex;align-items:center;gap:6px;}
+.sh::before{content:'';width:3px;height:10px;background:var(--navy);border-radius:2px;flex-shrink:0;}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:10px;overflow:hidden;}
+.ch{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ctitle{font-size:13px;font-weight:700;}
+.cb{padding:13px;}
+
+/* BALANCE CARD */
+.balcard{background:var(--navy);border-radius:var(--rl);padding:17px;margin-bottom:10px;position:relative;overflow:hidden;}
+.balcard::before{content:'';position:absolute;top:-35px;right:-35px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04);}
+.bctop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.bclbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;}
+.bcshift{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;color:rgba(255,255,255,.65);}
+.bcrow{display:flex;align-items:flex-end;gap:10px;margin-bottom:8px;}
+.bcnum{font-size:42px;font-weight:800;color:#fff;line-height:1;font-variant-numeric:tabular-nums;}
+.bcunit{font-size:12px;color:rgba(255,255,255,.45);padding-bottom:6px;}
+.bcsub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:11px;}
+.bcpwrap{background:rgba(255,255,255,.12);border-radius:3px;height:4px;overflow:hidden;}
+.bcprog{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .4s;}
+.bcprow{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.35);margin-top:4px;}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+.pdot{width:5px;height:5px;border-radius:50%;}
+.p-green{background:var(--gbg);color:var(--green);}
+.p-green .pdot{background:var(--green);animation:pp 2s infinite;}
+.p-amber{background:var(--abg);color:var(--amber);}
+.p-amber .pdot{background:var(--amber);animation:pp 1.5s infinite;}
+.p-navy{background:rgba(0,40,104,.08);color:var(--navy);}
+.p-red{background:var(--rbg);color:var(--red);}
+.p-gold{background:var(--goldbg);color:var(--gold);}
+@keyframes pp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* ACTIVE BREAK BANNER */
+.abbanner{background:var(--navy);border-radius:var(--rl);padding:15px;margin-bottom:10px;position:relative;overflow:hidden;}
+.abbanner::before{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04);}
+.abinner{position:relative;z-index:1;}
+.abtag{font-size:10px;font-weight:600;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+.abrow{display:flex;align-items:center;justify-content:space-between;}
+.abtype{font-size:13px;font-weight:700;color:#fff;}
+.abtimer{font-size:34px;font-weight:800;color:var(--gold2);letter-spacing:3px;font-variant-numeric:tabular-nums;}
+.absub{font-size:10px;color:rgba(255,255,255,.35);margin-top:1px;text-align:right;}
+.abpwrap{background:rgba(255,255,255,.12);border-radius:3px;height:4px;margin-top:12px;}
+.abprog{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .5s;}
+.btnend{margin-top:11px;width:100%;padding:11px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);border-radius:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;}
+
+/* AGENT ROWS */
+.agrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.agrow:last-child{border-bottom:none;}
+.agav{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;}
+.agn{font-size:13px;font-weight:600;}
+.ags{font-size:11px;color:var(--t2);margin-top:1px;}
+
+/* SLOT GRID */
+.bkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
+.bslot{border:1.5px solid var(--border);border-radius:var(--r);padding:9px 5px;text-align:center;cursor:pointer;background:var(--white);transition:.15s;}
+.bslot:active{transform:scale(.97);}
+.bslot.sel{border-color:var(--navy);background:rgba(0,40,104,.05);}
+.bslot.full{background:var(--rbg);border-color:rgba(192,57,43,.2);cursor:not-allowed;}
+.bslot.partial{background:var(--abg);border-color:rgba(217,119,6,.2);}
+.bslot.mine{background:rgba(0,40,104,.05);border-color:var(--navy);cursor:not-allowed;}
+.bslot.blocked{background:var(--bg);opacity:.4;cursor:not-allowed;}
+.bst{font-size:12px;font-weight:700;color:var(--t1);}
+.bsw{font-size:10px;color:var(--t2);margin-top:2px;line-height:1.3;}
+.bslot.sel .bst{color:var(--navy);}
+.bslot.full .bst{color:var(--red);}
+.bslot.mine .bst{color:var(--navy);}
+
+/* DURATION BUTTONS */
+.durrow{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.durbtn{padding:7px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:700;color:var(--t2);cursor:pointer;}
+.durbtn.sel{background:var(--navy);border-color:var(--navy);color:#fff;}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
+.btn:active{transform:scale(.98);}
+.btn-navy{background:var(--navy);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-red{background:var(--rbg);color:var(--red);border:1px solid rgba(192,57,43,.2)!important;}
+.btn-outline{background:none;border:1.5px solid var(--border);color:var(--t2);}
+.bsm{padding:6px 12px;font-size:12px;width:auto;border-radius:7px;border:1px solid var(--border)!important;}
+
+/* TIMELINE */
+.tline{padding-left:17px;position:relative;margin-bottom:10px;}
+.tline::before{content:'';position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:var(--border);}
+.tlitem{position:relative;margin-bottom:10px;}
+.tlitem:last-child{margin-bottom:0;}
+.tldot{position:absolute;left:-17px;top:10px;width:10px;height:10px;border-radius:50%;background:var(--t3);border:2px solid var(--white);}
+.tldot.active{background:var(--navy);}
+.tldot.done{background:var(--green);}
+.tlcard{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;}
+.tltime{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.tltitle{font-size:13px;font-weight:700;}
+.tlact{display:flex;align-items:center;justify-content:space-between;margin-top:7px;}
+
+/* SWAP CARDS */
+.swcard{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px 13px;margin-bottom:9px;}
+.swfrom{font-size:11px;color:var(--t2);margin-bottom:4px;}
+.swtitle{font-size:13px;font-weight:700;margin-bottom:3px;}
+.swmeta{font-size:12px;color:var(--t2);margin-bottom:10px;}
+.swbtns{display:flex;gap:7px;}
+
+/* HISTORY */
+.histrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.histrow:last-child{border-bottom:none;}
+.hicon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.hinfo{flex:1;min-width:0;}
+.htitle{font-size:13px;font-weight:700;}
+.hmeta{font-size:11px;color:var(--t2);margin-top:1px;}
+.hr{text-align:right;flex-shrink:0;}
+.hdur{font-size:14px;font-weight:800;color:var(--navy);}
+
+/* MODAL */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:400;display:flex;align-items:flex-end;}
+.msheet{background:var(--white);width:100%;border-radius:18px 18px 0 0;padding:20px 15px 28px;max-height:80vh;overflow-y:auto;}
+.msheet h3{font-size:15px;font-weight:800;margin-bottom:3px;}
+.msheet p{font-size:12px;color:var(--t2);margin-bottom:14px;}
+.aplist{max-height:240px;overflow-y:auto;margin-bottom:12px;}
+.apitem{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:6px;cursor:pointer;background:var(--white);}
+.apitem.sel{border-color:var(--navy);background:rgba(0,40,104,.04);}
+.apav{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;}
+.apname{font-size:13px;font-weight:600;}
+
+/* SETTINGS */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.srow:last-child{border-bottom:none;}
+.srl{font-size:13px;font-weight:600;}
+.srs{font-size:11px;color:var(--t2);margin-top:1px;}
+.si{width:68px;padding:8px 9px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;font-weight:700;color:var(--navy);text-align:center;background:var(--bg);outline:none;}
+.si:focus{border-color:var(--navy);}
+.adrow{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);}
+.adrow:last-child{border-bottom:none;}
+
+/* INFO BOX */
+.infobox{background:rgba(0,40,104,.05);border-radius:var(--r);padding:8px 11px;margin-bottom:11px;font-size:12px;color:var(--navy);font-weight:600;}
+
+/* ROLE BADGE */
+.rbadge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+.rb-agent{background:var(--gbg);color:var(--green);}
+.rb-tl{background:rgba(0,40,104,.08);color:var(--navy);}
+.rb-sup{background:var(--abg);color:var(--amber);}
+.rb-mgr{background:var(--rbg);color:var(--red);}
+.rb-admin{background:var(--navy);color:#fff;}
+
+/* TEAM DASHBOARD */
+.team-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:12px;}
+.tscard{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:14px;text-align:center;position:relative;overflow:hidden;}
+.tscard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.tscard.c-navy::after{background:var(--navy);}
+.tscard.c-green::after{background:var(--green);}
+.tscard.c-amber::after{background:var(--amber);}
+.tscard.c-red::after{background:var(--red);}
+.tsnum{font-size:32px;font-weight:800;line-height:1;margin-bottom:4px;}
+.tslbl{font-size:11px;color:var(--t2);font-weight:500;}
+.tscard.c-navy .tsnum{color:var(--navy);}
+.tscard.c-green .tsnum{color:var(--green);}
+.tscard.c-amber .tsnum{color:var(--amber);}
+.tscard.c-red .tsnum{color:var(--red);}
+
+.con-meter{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;}
+.con-dots{display:flex;gap:6px;}
+.cdot{width:22px;height:22px;border-radius:50%;background:var(--border);transition:.3s;}
+.cdot.on{background:var(--amber);box-shadow:0 0 0 3px rgba(217,119,6,.2);animation:cdp 1.5s infinite;}
+@keyframes cdp{0%,100%{box-shadow:0 0 0 3px rgba(217,119,6,.2)}50%{box-shadow:0 0 0 6px rgba(217,119,6,.08)}}
+.cdot.max{background:var(--red);box-shadow:0 0 0 3px rgba(192,57,43,.2);}
+.con-info{flex:1;}
+.con-title{font-size:13px;font-weight:700;color:var(--t1);}
+.con-sub{font-size:11px;color:var(--t2);margin-top:2px;}
+
+.team-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.team-row:last-child{border-bottom:none;}
+.trav{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;position:relative;}
+.trav .av-badge{position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;border:1.5px solid var(--white);}
+.trav .av-badge.on{background:var(--amber);}
+.trav .av-badge.free{background:var(--green);}
+.tr-name{font-size:13px;font-weight:600;color:var(--t1);}
+.tr-role{font-size:10px;color:var(--t2);margin-top:1px;}
+.tr-right{margin-left:auto;text-align:right;flex-shrink:0;}
+.tr-breaks{font-size:11px;color:var(--t3);}
+.tr-bal{font-size:12px;font-weight:700;margin-top:2px;}
+
+.dept-sep{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:2px;display:flex;align-items:center;gap:7px;}
+.dept-sep::before{content:'';width:3px;height:10px;background:var(--border);border-radius:2px;}
+
+.break-prog{background:var(--border);border-radius:2px;height:3px;width:60px;overflow:hidden;margin-top:4px;margin-left:auto;}
+.break-prog-fill{height:100%;border-radius:2px;}
+
+/* EMPTY */
+.empty{text-align:center;padding:28px 16px;}
+.ei{font-size:30px;opacity:.3;margin-bottom:8px;}
+.ep{font-size:12px;color:var(--t3);}
+
+/* TOAST */
+.toast{position:fixed;top:61px;left:13px;right:13px;background:var(--white);border:1px solid var(--border);border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 30px rgba(0,0,0,.12);z-index:500;font-size:13px;font-weight:600;transform:translateY(-90px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{border-left:3px solid var(--green);}
+.toast.err{border-left:3px solid var(--red);}
+.toast.inf{border-left:3px solid var(--navy);}
+
+/* ERROR MSG */
+.errmsg{background:var(--rbg);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);font-weight:600;margin-bottom:12px;display:none;}
+.errmsg.on{display:block;}
+
+@media(min-width:480px){.bkgrid{grid-template-columns:repeat(4,1fr);}.sgrid{grid-template-columns:repeat(4,1fr);}}
+
+/* ── TEAM DASHBOARD ──────────────── */
+.stat4{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;}
+.stcard{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:14px 13px;display:flex;align-items:center;gap:11px;position:relative;overflow:hidden;}
+.stcard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+.stcard.c-navy::after{background:var(--navy);}
+.stcard.c-green::after{background:var(--green);}
+.stcard.c-amber::after{background:var(--amber);}
+.stcard.c-red::after{background:var(--red);}
+.stico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.stval{font-size:26px;font-weight:800;line-height:1;margin-bottom:2px;}
+.stlbl{font-size:10px;color:var(--t2);font-weight:500;}
+
+.concbar{border-radius:var(--rl);padding:13px 15px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);}
+.concbar.ok{background:var(--gbg);border-color:rgba(10,124,74,.15);}
+.concbar.warn{background:var(--abg);border-color:rgba(217,119,6,.2);}
+.concbar.full{background:var(--rbg);border-color:rgba(192,57,43,.2);}
+.cblbl{font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
+.cbnum{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;}
+.cbright{font-size:26px;}
+
+.team-section{margin-bottom:14px;}
+.tsec-hdr{background:var(--navy);border-radius:var(--r) var(--r) 0 0;padding:9px 13px;display:flex;align-items:center;justify-content:space-between;}
+.tsec-title{font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;}
+.tsec-count{font-size:11px;font-weight:700;color:rgba(255,255,255,.55);}
+.tsec-body{background:var(--white);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);}
+
+.tm-row{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--border);}
+.tm-row:last-child{border-bottom:none;}
+.tm-av{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;position:relative;}
+.tm-onbrk::after{content:'';position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;background:var(--amber);border-radius:50%;border:2px solid var(--white);}
+.tm-done::after{content:'';position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;background:var(--green);border-radius:50%;border:2px solid var(--white);}
+.tm-name{font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tm-sub{font-size:10px;color:var(--t2);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.tm-right{margin-left:auto;flex-shrink:0;text-align:right;}
+.tm-mins{font-size:13px;font-weight:800;color:var(--navy);}
+.tm-used{font-size:10px;color:var(--t3);margin-top:1px;}
+.miniprog{height:3px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden;width:60px;}
+.miniprog-fill{height:100%;border-radius:2px;background:var(--navy);transition:width .3s;}
+
+.brkbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:800;white-space:nowrap;}
+.bb-onbrk{background:var(--abg);color:var(--amber);}
+.bb-avail{background:var(--gbg);color:var(--green);}
+.bb-done{background:rgba(0,40,104,.07);color:var(--navy);}
+
+.timer-live{font-size:11px;font-weight:800;color:var(--amber);font-variant-numeric:tabular-nums;}
+
+.filter-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:10px;}
+.filter-tabs::-webkit-scrollbar{height:0;}
+.ftab{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:11px;font-weight:700;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.ftab.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+</style>
+</head>
+<body>
+
+<!-- ████ LOGIN ████ -->
+<div id="sLogin">
+<div class="lbox">
+  <div class="lhdr">
+    <div class="lemb">&#127978;</div>
+    <div class="lkib">KIB</div>
+    <div class="lfull">Kuwait International Bank &mdash; Break System</div>
+  </div>
+
+  <!-- Step 1: Password -->
+  <div class="lstep on" id="step1">
+    <h3>Welcome Back</h3>
+    <p>Enter your password to sign in</p>
+    <div class="errmsg" id="pwerr">Incorrect password. Please try again.</div>
+    <div class="fg">
+      <label class="lbl">Password</label>
+      <input type="password" class="fld" id="pwInput" placeholder="Your password" onkeypress="if(event.key==='Enter')checkPw()">
+    </div>
+    <button class="btn-main" onclick="checkPw()">Continue &rarr;</button>
+  </div>
+
+  <!-- Step 2: Confirm identity + select shift -->
+  <div class="lstep" id="step2">
+    <h3>Confirm &amp; Select Shift</h3>
+    <p>Verify your identity and choose your shift start time</p>
+    <div class="idcard" id="idcard">
+      <div class="idav" id="idav">MN</div>
+      <div>
+        <div class="idname" id="idname">Name</div>
+        <div class="idrole" id="idrole"></div>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="lbl">Shift Start Time &mdash; 8 hr shift (7 AM &ndash; 8 PM)</label>
+      <div class="sgrid" id="shiftGrid"></div>
+    </div>
+    <div class="errmsg" id="shifterr">Please select your shift start time.</div>
+    <button class="btn-main" onclick="confirmLogin()">Start My Shift &rarr;</button>
+    <button class="btn-back" onclick="backStep()">&#8592; Back</button>
+  </div>
+</div>
+</div>
+
+<!-- ████ APP ████ -->
+<div id="sApp">
+  <div class="topbar">
+    <div class="tbl">
+      <div class="tlogo">&#127978;</div>
+      <div><div class="ttitle">KIB Break System</div><div class="tsub">Contact Center</div></div>
+    </div>
+    <div class="tbr">
+      <div class="clk"><div class="clkt" id="clt">--:--</div><div class="clkd" id="cld"></div></div>
+      <div class="bellbtn" onclick="toggleN()">&#128276;<div class="bdot" id="ndot"></div></div>
+      <div class="uav" id="uav">M</div>
+    </div>
+  </div>
+
+  <div class="npanel" id="npanel">
+    <div class="nhdr"><span>&#128276; Notifications</span><button class="btnclr" onclick="clearN()">Mark all read</button></div>
+    <div id="nlist"><div class="empty"><div class="ep">No notifications</div></div></div>
+  </div>
+
+  <div class="astrip">
+    <div class="asav" id="asav">M</div>
+    <div><div class="asname" id="asname">&#8212;</div><div class="asinfo" id="asinfo">&#8212;</div></div>
+    <div class="asr"><div class="balchip" id="bchip">60 min</div><button class="btnout" onclick="doLogout()">Sign Out</button></div>
+  </div>
+
+  <!-- HOME -->
+  <div class="pg on" id="pg-home">
+    <div id="abbanner" style="display:none" class="abbanner">
+      <div class="abinner">
+        <div class="abtag">Break In Progress</div>
+        <div class="abrow"><div><div class="abtype" id="abtype">&#8212;</div></div><div><div class="abtimer" id="abtimer">00:00</div><div class="absub">elapsed</div></div></div>
+        <div class="abpwrap"><div class="abprog" id="abprog" style="width:0%"></div></div>
+      </div>
+      <button class="btnend" onclick="endBreak()">&#10003; &nbsp;End Break</button>
+    </div>
+
+    <div class="balcard">
+      <div class="bctop"><div class="bclbl">Break Balance</div><div class="bcshift" id="bcshift">Shift: --:-- to --:--</div></div>
+      <div class="bcrow"><div class="bcnum" id="bcnum">60</div><div class="bcunit">min remaining</div></div>
+      <div class="bcsub" id="bcsub">0 of 60 minutes scheduled</div>
+      <div class="bcpwrap"><div class="bcprog" id="bcprog" style="width:0%"></div></div>
+      <div class="bcprow"><span id="bcused">0 min used</span><span>60 min total</span></div>
+    </div>
+
+    <div class="sh">Now on Break</div>
+    <div class="card"><div class="cb" style="padding:2px 13px" id="nowPanel"><div class="empty" style="padding:16px"><div class="ep">No one on break &#10003;</div></div></div></div>
+
+    <div class="sh">My Schedule Today</div>
+    <div id="schedPanel"><div class="empty"><div class="ei">&#128197;</div><div class="ep">No breaks scheduled. Go to <strong>Book</strong>.</div></div></div>
+  </div>
+
+  <!-- BOOK -->
+  <div class="pg" id="pg-book">
+    <div class="sh">Book a Break</div>
+    <div class="card">
+      <div class="ch"><div class="ctitle">&#8987; Select Time Slot</div></div>
+      <div class="cb">
+        <div style="font-size:11px;color:var(--t2);margin-bottom:10px;line-height:1.6">
+          <span style="color:var(--green)">&#9632;</span> Available &nbsp;
+          <span style="color:var(--amber)">&#9632;</span> 1 booked &nbsp;
+          <span style="color:var(--red)">&#9632;</span> Full &nbsp;
+          <span style="color:var(--t3)">&#9632;</span> Blocked (first/last 15 min of shift)
+        </div>
+        <div class="bkgrid" id="bkgrid">Loading...</div>
+        <div class="infobox" id="slotinfo" style="display:none"></div>
+      </div>
+    </div>
+    <div class="card" id="durcard" style="display:none">
+      <div class="ch"><div class="ctitle">&#9203; Duration</div></div>
+      <div class="cb">
+        <div class="durrow" id="durrow"></div>
+        <div style="font-size:11px;color:var(--t2)">Max 30 min per break &nbsp;|&nbsp; Balance: <strong id="durbal">60 min</strong></div>
+      </div>
+    </div>
+    <div id="bookbtnwrap" style="display:none">
+      <button class="btn btn-navy" onclick="confirmBook()">&#128197; &nbsp;Confirm Booking</button>
+    </div>
+  </div>
+
+  <!-- SWAP -->
+  <div class="pg" id="pg-swap">
+    <div class="sh">Incoming Swap Requests</div>
+    <div id="inswap"><div class="empty"><div class="ei">&#128260;</div><div class="ep">No pending requests</div></div></div>
+    <div class="sh">My Breaks (Request Swap)</div>
+    <div id="myswap"><div class="empty"><div class="ei">&#9749;</div><div class="ep">No scheduled breaks</div></div></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="pg" id="pg-hist">
+    <div class="sh">My Breaks Today</div>
+    <div class="card"><div class="cb" style="padding:2px 13px" id="histpanel"><div class="empty" style="padding:16px"><div class="ep">No breaks today</div></div></div></div>
+    <div id="supSection" style="display:none">
+      <div class="sh">All Agents Today</div>
+      <div class="card"><div class="cb" style="padding:2px 13px" id="allpanel"></div></div>
+    </div>
+  </div>
+
+  <!-- TEAM DASHBOARD -->
+  <div class="pg" id="pg-team">
+    <div class="sh">Live Overview</div>
+    <div class="stat4" id="tmStats"></div>
+    <div class="concbar ok" id="concBar">
+      <div><div class="cblbl">On Break Right Now</div><div class="cbnum" id="concNum" style="color:var(--green)">0 / 2</div></div>
+      <div class="cbright" id="concIcon">&#x1F7E2;</div>
+    </div>
+    <div class="filter-tabs" id="teamFilter">
+      <button class="ftab on" onclick="setTF(this,'')">All</button>
+      <button class="ftab" onclick="setTF(this,'on-break')">&#128308; On Break</button>
+      <button class="ftab" onclick="setTF(this,'available')">&#128994; Available</button>
+      <button class="ftab" onclick="setTF(this,'Inbound Agent')">Inbound</button>
+      <button class="ftab" onclick="setTF(this,'Outbound Agent')">Outbound</button>
+      <button class="ftab" onclick="setTF(this,'ITM Agent')">ITM</button>
+      <button class="ftab" onclick="setTF(this,'Team Leader')">TL</button>
+      <button class="ftab" onclick="setTF(this,'Assist Team Leader')">ATL</button>
+      <button class="ftab" onclick="setTF(this,'Back Office')">Back Office</button>
+      <button class="ftab" onclick="setTF(this,'Wage Agent')">Wage</button>
+      <button class="ftab" onclick="setTF(this,'Quality Assurance')">QA</button>
+    </div>
+    <div id="teamList"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="pg" id="pg-admin">
+    <div class="sh">Settings</div>
+    <div class="card">
+      <div class="cb" style="padding:2px 13px">
+        <div class="srow"><div><div class="srl">Daily Break Allowance</div><div class="srs">Minutes per agent per shift</div></div><input type="number" class="si" id="smax" value="60" min="15" max="120"></div>
+        <div class="srow"><div><div class="srl">Max Concurrent</div><div class="srs">Agents on break at same time</div></div><input type="number" class="si" id="scon" value="2" min="1" max="10"></div>
+        <div class="srow"><div><div class="srl">Max Single Break (min)</div><div class="srs">Maximum per booking</div></div><input type="number" class="si" id="smaxb" value="30" min="5" max="90"></div>
+      </div>
+      <div class="cb" style="padding:11px 13px;border-top:1px solid var(--border)"><button class="btn btn-navy" onclick="saveSett()">&#128190; &nbsp;Save Settings</button></div>
+    </div>
+    <div class="sh">Live Overview</div>
+    <div class="card"><div class="cb" style="padding:2px 13px" id="adminOverview"></div></div>
+    <div class="sh">Data</div>
+    <div class="card"><div class="cb" style="display:flex;flex-direction:column;gap:9px">
+      <button class="btn btn-red" onclick="clearDay()">&#128465; Clear Today</button>
+      <button class="btn btn-red" onclick="clearAll()" style="opacity:.7">&#9888; Clear All Data</button>
+    </div></div>
+  </div>
+
+  <!-- TEAM PAGE -->
+  <div class="pg" id="pg-team">
+    <div class="sh">Live Team Status</div>
+    <div class="con-meter">
+      <div style="flex:1">
+        <div class="con-title" id="conTitle">0 of 2 on break</div>
+        <div class="con-sub" id="conSub">All agents available</div>
+        <div class="con-dots" id="conDots" style="margin-top:8px"></div>
+      </div>
+      <div style="font-size:38px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1;" id="conBigNum">0</div>
+    </div>
+    <div class="team-summary">
+      <div class="tscard c-navy"><div class="tsnum" id="ts-total">0</div><div class="tslbl">Total Agents</div></div>
+      <div class="tscard c-amber"><div class="tsnum" id="ts-onbrk">0</div><div class="tslbl">On Break Now</div></div>
+      <div class="tscard c-green"><div class="tsnum" id="ts-breaks">0</div><div class="tslbl">Breaks Today</div></div>
+      <div class="tscard c-red"><div class="tsnum" id="ts-mins">0</div><div class="tslbl">Min Used Today</div></div>
+    </div>
+    <div class="sh">On Break Right Now</div>
+    <div class="card"><div class="cb" style="padding:2px 13px" id="tNowBreak">
+      <div class="empty" style="padding:14px"><div class="ep">&#10003; No one on break</div></div>
+    </div></div>
+    <div class="sh">Full Team Overview</div>
+    <div class="card"><div class="cb" style="padding:4px 13px" id="tAllAgents">Loading...</div></div>
+  </div>
+
+  <div class="bnav">
+    <button class="nb on" id="nav-home" onclick="gp('home')"><span class="ni">&#127968;</span><span class="nl">Home</span></button>
+    <button class="nb" id="nav-book" onclick="gp('book')"><span class="ni">&#128197;</span><span class="nl">Book</span></button>
+    <button class="nb" id="nav-team" onclick="gp('team')"><span class="ni">&#128101;</span><span class="nl">Team</span></button>
+    <button class="nb" id="nav-swap" onclick="gp('swap')"><span class="ni">&#128260;</span><span class="nl">Swap</span><span class="nbadge" id="swbadge"></span></button>
+    <button class="nb" id="nav-hist" onclick="gp('hist')"><span class="ni">&#128203;</span><span class="nl">History</span></button>
+    <button class="nb" id="nav-admin" onclick="gp('admin')" style="display:none"><span class="ni">&#9881;</span><span class="nl">Admin</span></button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  EMPLOYEE DATABASE WITH PASSWORDS
+// ════════════════════════════════════════════
+var EMPLOYEES = [
+  {pw:'fou@4501',name:'Fouzeyah Erzouqi',role:'Inbound Agent',access:'agent'},
+  {pw:'sar@4502',name:'Sarah Alqattan',role:'Inbound Agent',access:'agent'},
+  {pw:'dan@4503',name:'Danah Alenezi',role:'Inbound Agent',access:'agent'},
+  {pw:'yas@4504',name:'Yasmine Maraafi',role:'Inbound Agent',access:'agent'},
+  {pw:'ezz@4505',name:'Ezz Alsalem',role:'Inbound Agent',access:'agent'},
+  {pw:'abk@4506',name:'Abdullah Bakhsh',role:'Inbound Agent',access:'agent'},
+  {pw:'abz@4507',name:'Abdulaziz Bozobar',role:'Inbound Agent',access:'agent'},
+  {pw:'abr@4508',name:'Abdulrahman Abdullah',role:'Inbound Agent',access:'agent'},
+  {pw:'awm@4509',name:'Abdullah W Mohammad',role:'Inbound Agent',access:'agent'},
+  {pw:'ash@4510',name:'Abdollah Shaverdi',role:'Inbound Agent',access:'agent'},
+  {pw:'azu@4511',name:'Abdulaziz Alzuabi',role:'Inbound Agent',access:'agent'},
+  {pw:'alf@4512',name:'Abdulrahman Alfassam',role:'Inbound Agent',access:'agent'},
+  {pw:'als@4513',name:'Abdulwahab Alsaber',role:'Inbound Agent',access:'agent'},
+  {pw:'slj@4514',name:'Saleh Aljabri',role:'Inbound Agent',access:'agent'},
+  {pw:'alw@4515',name:'Ali Alwayel',role:'Inbound Agent',access:'agent'},
+  {pw:'anq@4516',name:'Ahmad Alnajdi',role:'Inbound Agent',access:'agent'},
+  {pw:'sha@4517',name:'Ali ShahAli',role:'Inbound Agent',access:'agent'},
+  {pw:'aye@4518',name:'Ayedh Alotaibi',role:'Inbound Agent',access:'agent'},
+  {pw:'fah@4519',name:'Fahad Alabdullah',role:'Inbound Agent',access:'agent'},
+  {pw:'hsa@4520',name:'Hasan Ali',role:'Inbound Agent',access:'agent'},
+  {pw:'hkh@4521',name:'Hussain Alkhabbaz',role:'Inbound Agent',access:'agent'},
+  {pw:'msh@4522',name:'Mohammad Alshakhs',role:'Inbound Agent',access:'agent'},
+  {pw:'omr@4523',name:'Omar Almutairi',role:'Inbound Agent',access:'agent'},
+  {pw:'osa@4524',name:'Omar Alsaeed',role:'Inbound Agent',access:'agent'},
+  {pw:'omm@4525',name:'Omar Mohammad',role:'Inbound Agent',access:'agent'},
+  {pw:'sah@4526',name:'Saad Alharbi',role:'Inbound Agent',access:'agent'},
+  {pw:'slk@4527',name:'Sulaiman Alkhalaf',role:'Inbound Agent',access:'agent'},
+  {pw:'asr@4528',name:'Asrar Alattar',role:'Outbound Agent',access:'agent'},
+  {pw:'lat@4529',name:'Latefah Alhouti',role:'Outbound Agent',access:'agent'},
+  {pw:'nas@3001',name:'Naser Bandar',role:'Assist Team Leader',access:'supervisor'},
+  {pw:'haj@3002',name:'Hasan Alajmi',role:'Assist Team Leader',access:'supervisor'},
+  {pw:'ath@3003',name:'Athoub Alnoufal',role:'Assist Team Leader',access:'supervisor'},
+  {pw:'ane@4530',name:'Ahmad Alenezi',role:'ITM Agent',access:'agent'},
+  {pw:'sbq@4531',name:'Salman Albaqshi',role:'ITM Agent',access:'agent'},
+  {pw:'dhr@4532',name:'Dhari Alshammari',role:'ITM Agent',access:'agent'},
+  {pw:'bdr@4533',name:'Badreyah Alruwayeh',role:'ITM Agent',access:'agent'},
+  {pw:'mrm@4534',name:'Mariam Almutairi',role:'ITM Agent',access:'agent'},
+  {pw:'arj@4535',name:'Abdullah Rajab',role:'ITM Agent',access:'agent'},
+  {pw:'shq@2001',name:'Shouq Alkandari',role:'Team Leader',access:'supervisor'},
+  {pw:'ano@2002',name:'Alanoud Alotaibi',role:'Team Leader',access:'supervisor'},
+  {pw:'mot@2003',name:'Mohammad Alothman',role:'Team Leader',access:'supervisor'},
+  {pw:'ara@4536',name:'Abdulrahman Alahmad',role:'Back Office',access:'agent'},
+  {pw:'nhr@4537',name:'Nourah Alhazzani',role:'Back Office',access:'agent'},
+  {pw:'ahm@4538',name:'Ahmed Nidah',role:'Wage Agent',access:'agent'},
+  {pw:'bil@4539',name:'Bilal Faisal',role:'Wage Agent',access:'agent'},
+  {pw:'fat@4540',name:'Fatemeh Mayahi',role:'Wage Agent',access:'agent'},
+  {pw:'nah@4541',name:'Nahla Ibrahem',role:'Wage Agent',access:'agent'},
+  {pw:'ftm@4542',name:'Fatmah Alhamar',role:'Quality Assurance',access:'agent'},
+  {pw:'brb@4543',name:'Badreyah BoRubayea',role:'Quality Assurance',access:'agent'},
+  {pw:'mqr@1001',name:'Mohammad Abdulraheem',role:'QA Supervisor',access:'supervisor'},
+  {pw:'tal@0001',name:'Talal Al Jarki',role:'Head',access:'admin'},
+  {pw:'KIB@admin2026',name:'Admin',role:'System Admin',access:'admin'}
+];
+
+// ════════════════════════════════════════════
+//  STORAGE
+// ════════════════════════════════════════════
+var SK = 'kibv7';
+function today(){return new Date().toISOString().split('T')[0];}
+function gd(){try{var r=localStorage.getItem(SK);return r?JSON.parse(r):defData();}catch(e){return defData();}}
+function defData(){return{breaks:{},swaps:[],notifs:{},settings:{dailyMin:60,maxCon:2,maxBreak:30}};}
+function sv(d){d.ts=Date.now();localStorage.setItem(SK,JSON.stringify(d));}
+function tdb(d){var t=today();if(!d.breaks[t])d.breaks[t]=[];return d.breaks[t];}
+
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+var me=null, pendingEmp=null, selShift=null, selSlot=null, selDur=15, teamFilterVal='';
+var timerInt=null, clockInt=null, refInt=null, toastTO=null;
+
+// ════════════════════════════════════════════
+//  COLORS / AVATAR
+// ════════════════════════════════════════════
+var COLS=['#1a3a6c','#2d5a8e','#14532d','#4a1942','#7c2d12','#1e3a5f','#713f12','#0d5c63'];
+function ac(n){var h=0;for(var i=0;i<n.length;i++)h=(h+n.charCodeAt(i))%COLS.length;return COLS[h];}
+function ini(n){var p=n.trim().split(' ');return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():p[0][0].toUpperCase();}
+function roleCls(access){return{admin:'rb-admin',supervisor:'rb-sup',tl:'rb-tl',agent:'rb-agent'}[access]||'rb-agent';}
+
+// ════════════════════════════════════════════
+//  TIME HELPERS
+// ════════════════════════════════════════════
+function toMin(hhmm){var p=hhmm.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
+function fromMin(m){return('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);}
+function fmt12(hhmm){var p=hhmm.split(':');var h=parseInt(p[0]);var hh=h%12||12;var ap=h<12?'AM':'PM';return hh+':'+p[1]+' '+ap;}
+function nowHHMM(){var n=new Date();return('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2);}
+
+// ════════════════════════════════════════════
+//  LOGIN FLOW
+// ════════════════════════════════════════════
+function checkPw(){
+  var pw=document.getElementById('pwInput').value.trim();
+  var emp=null;
+  for(var i=0;i<EMPLOYEES.length;i++){if(EMPLOYEES[i].pw===pw){emp=EMPLOYEES[i];break;}}
+  if(!emp){
+    document.getElementById('pwerr').classList.add('on');
+    document.getElementById('pwInput').style.borderColor='var(--red)';
+    return;
+  }
+  document.getElementById('pwerr').classList.remove('on');
+  document.getElementById('pwInput').style.borderColor='';
+  pendingEmp=emp;
+  // Show identity card
+  var av=document.getElementById('idav');
+  av.textContent=ini(emp.name);av.style.background=ac(emp.name);
+  document.getElementById('idname').textContent=emp.name;
+  var rc=roleCls(emp.access);
+  document.getElementById('idrole').innerHTML='<span class="rbadge '+rc+'">'+emp.role+'</span>';
+  buildShiftGrid();
+  document.getElementById('step1').classList.remove('on');
+  document.getElementById('step2').classList.add('on');
+}
+
+function backStep(){
+  document.getElementById('step2').classList.remove('on');
+  document.getElementById('step1').classList.add('on');
+  document.getElementById('pwInput').value='';
+  selShift=null;pendingEmp=null;
+}
+
+function buildShiftGrid(){
+  var el=document.getElementById('shiftGrid');
+  var html='';
+  // 7AM to 8PM start times (every hour), 8-hour shifts
+  for(var h=7;h<=20;h++){
+    var val=('0'+h).slice(-2)+':00';
+    var endH=h+8;
+    var endHH=endH%24;
+    var endVal=('0'+endHH).slice(-2)+':00';
+    var endLabel=endH>=24?fmt12(endVal)+' +1':'';
+    var isSel=selShift&&selShift===val;
+    html+='<div class="stile'+(isSel?' sel':'')+'" onclick="pickShift(\''+val+'\')"><div class="sttime">'+fmt12(val)+'</div><div class="stend">until '+fmt12(endVal)+(endH>=24?' <span style=\"font-size:9px;color:var(--amber)\">+1</span>':'')+'</div></div>';
+  }
+  el.innerHTML=html;
+}
+
+function pickShift(val){
+  selShift=val;
+  document.querySelectorAll('.stile').forEach(function(t){t.classList.toggle('sel',t.querySelector('.sttime').textContent===fmt12(val));});
+}
+
+function confirmLogin(){
+  document.getElementById('shifterr').classList.remove('on');
+  if(!selShift){document.getElementById('shifterr').classList.add('on');return;}
+  var shStartH=parseInt(selShift.split(':')[0]);
+  var shEndH=shStartH+8;
+  var shEndHH=shEndH%24;
+  var shEnd=('0'+shEndHH).slice(-2)+':00';
+  var shEndMin=shEndH*60; // raw minutes (may exceed 1440 for overnight)
+  me={name:pendingEmp.name,role:pendingEmp.role,access:pendingEmp.access,shift:selShift,shiftEnd:shEnd,shiftEndMin:shEndMin};
+  document.getElementById('sLogin').style.display='none';
+  document.getElementById('sApp').style.display='block';
+  var av1=document.getElementById('uav');av1.textContent=ini(me.name);
+  var av2=document.getElementById('asav');av2.textContent=ini(me.name);av2.style.background=ac(me.name);
+  document.getElementById('asname').textContent=me.name;
+  document.getElementById('asinfo').textContent=me.role+' · Shift '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
+  document.getElementById('bcshift').textContent='Shift: '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
+  if(me.access==='admin'||me.access==='supervisor'){
+    document.getElementById('nav-admin').style.display='flex';
+    document.getElementById('supSection').style.display='block';
+  }
+  startClock();renderAll();checkActiveBreak();
+  refInt=setInterval(renderAll,8000);
+  showToast('Welcome, '+me.name.split(' ')[0]+'!','ok');
+}
+
+function doLogout(){
+  me=null;selShift=null;selSlot=null;selDur=15;pendingEmp=null;
+  clearInterval(clockInt);clearInterval(refInt);clearInterval(timerInt);
+  document.getElementById('abbanner').style.display='none';
+  document.getElementById('sApp').style.display='none';
+  document.getElementById('sLogin').style.display='flex';
+  document.getElementById('step2').classList.remove('on');
+  document.getElementById('step1').classList.add('on');
+  document.getElementById('pwInput').value='';
+}
+
+window.addEventListener('storage',function(e){if(e.key===SK)renderAll();});
+
+// ════════════════════════════════════════════
+//  CLOCK
+// ════════════════════════════════════════════
+function startClock(){
+  function tick(){
+    var n=new Date();
+    document.getElementById('clt').textContent=n.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',hour12:true});
+    document.getElementById('cld').textContent=n.toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'});
+  }
+  tick();clockInt=setInterval(tick,1000);
+}
+
+// ════════════════════════════════════════════
+//  BREAK BALANCE HELPERS
+// ════════════════════════════════════════════
+function schedMin(name,d){
+  var s=0;var tb=tdb(d);
+  for(var i=0;i<tb.length;i++){if(tb[i].agent===name&&tb[i].status!=='cancelled')s+=tb[i].duration;}
+  return s;
+}
+function usedMin(name,d){
+  var s=0;var tb=tdb(d);
+  for(var i=0;i<tb.length;i++){if(tb[i].agent===name&&(tb[i].status==='active'||tb[i].status==='completed'))s+=(tb[i].actualDuration||tb[i].duration);}
+  return s;
+}
+function concurrentAt(sMin,dur,d,excId){
+  var cnt=0;var tb=tdb(d);
+  for(var i=0;i<tb.length;i++){
+    var b=tb[i];if(b.status==='cancelled')continue;if(excId&&b.id===excId)continue;
+    var bS=toMin(b.breakStart),bE=bS+b.duration,sE=sMin+dur;
+    if(bS<sE&&bE>sMin)cnt++;
+  }
+  return cnt;
+}
+
+// ════════════════════════════════════════════
+//  SLOT GRID FOR BOOKING
+// ════════════════════════════════════════════
+function buildSlotGrid(){
+  if(!me)return;
+  var d=gd();var tb=tdb(d);
+  var startM=toMin(me.shift),endM=me.shiftEndMin||toMin(me.shiftEnd);
+  var maxCon=d.settings?(d.settings.maxCon||2):2;
+  var nowM=toMin(nowHHMM());
+  // For overnight shifts, adjust nowM so past-check works correctly
+  var adjNowM=(startM>nowM&&startM>720)?nowM+1440:nowM;
+  var el=document.getElementById('bkgrid');
+  var html='';
+  for(var m=startM;m<endM;m+=30){
+    var valid=(m>=startM+15)&&(m+15<=endM-15);
+    var atSlot=[];var myHere=null;
+    for(var j=0;j<tb.length;j++){
+      var b=tb[j];if(b.status==='cancelled')continue;
+      var bS=toMin(b.breakStart),bE=bS+b.duration;
+      if(bS<=m&&bE>m){atSlot.push(b);if(b.agent===me.name)myHere=b;}
+    }
+    var isPast=m<adjNowM-30;
+    var isFull=atSlot.length>=maxCon;
+    var isSel=selSlot&&selSlot.min===m;
+    var cls='bslot',who='',dis=false;
+    if(myHere){cls+=' mine';who='Yours';dis=true;}
+    else if(!valid||isPast){cls+=' blocked';who=!valid?'Blocked':'Past';dis=true;}
+    else if(isFull){cls+=' full';who=atSlot.map(function(x){return x.agent.split(' ')[0];}).join(', ');dis=true;}
+    else if(atSlot.length>0){cls+=' partial';who=atSlot.map(function(x){return x.agent.split(' ')[0];}).join(', ');}
+    else{who='Free';}
+    if(isSel&&!dis)cls+=' sel';
+    var hhmm=fromMin(m);
+    html+='<div class="'+cls+'" onclick="'+(dis?'':'pickSlot('+m+',\''+hhmm+'\')')+'"><div class="bst">'+fmt12(hhmm)+'</div><div class="bsw">'+who+'</div></div>';
+  }
+  el.innerHTML=html||'<div style="font-size:12px;color:var(--t3);padding:10px;text-align:center">No slots available</div>';
+}
+
+function pickSlot(min,hhmm){
+  selSlot={min:min,hhmm:hhmm};buildSlotGrid();
+  var d=gd();var daily=d.settings?(d.settings.dailyMin||60):60;var maxBreak=d.settings?(d.settings.maxBreak||30):30;
+  var sched=schedMin(me.name,d);var rem=Math.max(daily-sched,0);var maxDur=Math.min(maxBreak,rem);
+  if(maxDur<1){showToast('No break balance remaining','err');return;}
+  var dr=document.getElementById('durrow');var opts=[5,10,15,20,25,30];var html='';
+  for(var i=0;i<opts.length;i++){if(opts[i]<=maxDur)html+='<button class="durbtn'+(selDur===opts[i]?' sel':'')+'" onclick="pickDur('+opts[i]+')">'+opts[i]+' min</button>';}
+  dr.innerHTML=html;if(selDur>maxDur)selDur=Math.min(15,maxDur);
+  document.getElementById('durbal').textContent=rem+' min';
+  document.getElementById('durcard').style.display='block';
+  var si=document.getElementById('slotinfo');si.style.display='block';
+  si.textContent='Selected: '+fmt12(hhmm)+' · '+selDur+' min';
+  document.getElementById('bookbtnwrap').style.display='block';
+}
+
+function pickDur(dur){
+  selDur=dur;
+  document.querySelectorAll('.durbtn').forEach(function(b){b.classList.toggle('sel',parseInt(b.textContent)===dur);});
+  if(selSlot)document.getElementById('slotinfo').textContent='Selected: '+fmt12(selSlot.hhmm)+' · '+selDur+' min';
+}
+
+function confirmBook(){
+  if(!me||!selSlot)return;
+  var d=gd();var daily=d.settings?(d.settings.dailyMin||60):60;var maxCon=d.settings?(d.settings.maxCon||2):2;var maxBreak=d.settings?(d.settings.maxBreak||30):30;
+  if(selDur>maxBreak){showToast('Max '+maxBreak+' min per break','err');return;}
+  var sched=schedMin(me.name,d);
+  if(sched+selDur>daily){showToast('Not enough balance','err');return;}
+  var conc=concurrentAt(selSlot.min,selDur,d,null);
+  if(conc>=maxCon){showToast('Slot full – max '+maxCon+' at same time','err');return;}
+  var tb=tdb(d);
+  for(var i=0;i<tb.length;i++){
+    var b=tb[i];if(b.agent!==me.name||b.status==='cancelled')continue;
+    var bS=toMin(b.breakStart),bE=bS+b.duration,sE=selSlot.min+selDur;
+    if(bS<sE&&bE>selSlot.min){showToast('You have a break overlapping this time','err');return;}
+  }
+  var brk={id:Date.now().toString(),agent:me.name,shift:me.shift,breakStart:selSlot.hhmm,duration:selDur,status:'scheduled',startedAt:null,endedAt:null,actualDuration:null,date:today()};
+  tb.push(brk);sv(d);
+  showToast('Break booked: '+fmt12(brk.breakStart)+' · '+selDur+' min','ok');
+  selSlot=null;selDur=15;
+  document.getElementById('durcard').style.display='none';
+  document.getElementById('bookbtnwrap').style.display='none';
+  document.getElementById('slotinfo').style.display='none';
+  schedNotifs(brk);renderAll();buildSlotGrid();
+}
+
+function schedNotifs(brk){
+  var sM=toMin(brk.breakStart),nM=toMin(nowHHMM());
+  var ms1=(sM-nM)*60000,ms2=(sM+brk.duration-nM)*60000;
+  if(ms1>0&&ms1<12*3600000)setTimeout(function(){pushNotif(brk.agent,'Your break has started ('+fmt12(brk.breakStart)+' · '+brk.duration+' min)','start');if(me&&brk.agent===me.name)showToast('Break started!','ok');},ms1);
+  if(ms2>0&&ms2<12*3600000)setTimeout(function(){pushNotif(brk.agent,'Break ended – please return to desk','end');if(me&&brk.agent===me.name)showToast('Break time over – back to desk!','inf');},ms2);
+}
+
+// ════════════════════════════════════════════
+//  ACTIVE BREAK
+// ════════════════════════════════════════════
+function startBreak(brkId){
+  var d=gd();var tb=tdb(d);var brk=null;
+  for(var i=0;i<tb.length;i++){if(tb[i].id===brkId){brk=tb[i];break;}}
+  if(!brk)return;
+  for(var i=0;i<tb.length;i++){if(tb[i].agent===me.name&&tb[i].status==='active'){showToast('Already on break','err');return;}}
+  brk.status='active';brk.startedAt=new Date().toISOString();sv(d);
+  showToast('Break started! '+brk.duration+' min','ok');
+  pushNotif(me.name,'Break started at '+fmt12(brk.breakStart)+' ('+brk.duration+' min)','start');
+  renderAll();activateBanner(brk);
+}
+
+function endBreak(){
+  var d=gd();var tb=tdb(d);var brk=null;
+  for(var i=0;i<tb.length;i++){if(tb[i].agent===me.name&&tb[i].status==='active'){brk=tb[i];break;}}
+  if(!brk)return;
+  brk.status='completed';brk.endedAt=new Date().toISOString();brk.actualDuration=Math.round((new Date(brk.endedAt)-new Date(brk.startedAt))/60000);
+  sv(d);clearInterval(timerInt);document.getElementById('abbanner').style.display='none';
+  showToast('Break ended – '+brk.actualDuration+' min actual','inf');
+  pushNotif(me.name,'Break ended. Duration: '+brk.actualDuration+' min.','end');
+  renderAll();
+}
+
+function checkActiveBreak(){
+  if(!me)return;var d=gd();var tb=tdb(d);
+  for(var i=0;i<tb.length;i++){if(tb[i].agent===me.name&&tb[i].status==='active'){activateBanner(tb[i]);return;}}
+}
+
+function activateBanner(brk){
+  document.getElementById('abbanner').style.display='block';
+  document.getElementById('abtype').textContent=fmt12(brk.breakStart)+' · '+brk.duration+' min';
+  clearInterval(timerInt);
+  timerInt=setInterval(function(){
+    if(!brk.startedAt)return;
+    var el=Math.floor((Date.now()-new Date(brk.startedAt))/1000);
+    var em=Math.floor(el/60),es=el%60;
+    document.getElementById('abtimer').textContent=('0'+em).slice(-2)+':'+('0'+es).slice(-2);
+    var pct=Math.min(el/(brk.duration*60)*100,100);
+    var pr=document.getElementById('abprog');pr.style.width=pct+'%';
+    pr.style.background=pct>90?'linear-gradient(90deg,var(--amber),var(--red))':'linear-gradient(90deg,var(--gold),var(--gold2))';
+    if(el>brk.duration*60&&el%60===0)showToast('Break time exceeded!','err');
+  },1000);
+}
+
+function cancelBreak(brkId){
+  if(!confirm('Cancel this break?'))return;
+  var d=gd();var tb=tdb(d);
+  for(var i=0;i<tb.length;i++){if(tb[i].id===brkId){tb[i].status='cancelled';break;}}
+  sv(d);renderAll();showToast('Break cancelled','inf');
+}
+
+// ════════════════════════════════════════════
+//  SWAP
+// ════════════════════════════════════════════
+function openSwapRequest(breakId){
+  var d=gd();var tb=tdb(d);var brk=null;
+  for(var i=0;i<tb.length;i++){if(tb[i].id===breakId){brk=tb[i];break;}}
+  if(!brk)return;
+  var others=EMPLOYEES.filter(function(e){return e.name!==me.name;});
+  var html='<div class="msheet"><h3>Request Swap</h3><p>Swap your '+brk.duration+'-min break at '+fmt12(brk.breakStart)+'</p><div class="aplist">';
+  for(var i=0;i<others.length;i++){var a=others[i];html+='<div class="apitem" onclick="sendSwap(\''+breakId+'\',\''+a.name.replace(/'/g,"\\'")+'\')" ><div class="apav" style="background:'+ac(a.name)+'">'+ini(a.name)+'</div><div><div class="apname">'+a.name+'</div><div style="font-size:10px;color:var(--t2)">'+a.role+'</div></div></div>';}
+  html+='</div><button class="btn btn-outline" onclick="this.closest(\'.moverlay\').remove()" style="margin-top:4px">Cancel</button></div>';
+  var ov=document.createElement('div');ov.className='moverlay';ov.innerHTML=html;
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+  document.body.appendChild(ov);
+}
+
+function sendSwap(breakId,toAgent){
+  var d=gd();if(!d.swaps)d.swaps=[];
+  d.swaps.push({id:Date.now().toString(),from:me.name,to:toAgent,fromBreakId:breakId,date:today(),status:'pending',at:new Date().toISOString()});
+  sv(d);document.querySelector('.moverlay')&&document.querySelector('.moverlay').remove();
+  showToast('Request sent to '+toAgent.split(' ')[0],'ok');
+  pushNotif(toAgent,me.name+' wants to swap a break with you – check Swap tab','swap');renderAll();
+}
+
+function respondSwap(swapId,resp){
+  var d=gd();var sw=null;
+  for(var i=0;i<d.swaps.length;i++){if(d.swaps[i].id===swapId){sw=d.swaps[i];break;}}
+  if(!sw)return;sw.status=resp;
+  if(resp==='accepted'){
+    var tb=tdb(d);var fromBrk=null;
+    for(var i=0;i<tb.length;i++){if(tb[i].id===sw.fromBreakId){fromBrk=tb[i];break;}}
+    var myBrk=null;
+    for(var i=0;i<tb.length;i++){if(tb[i].agent===me.name&&tb[i].status==='scheduled'){myBrk=tb[i];break;}}
+    if(fromBrk&&myBrk){var tmp=myBrk.breakStart;myBrk.breakStart=fromBrk.breakStart;fromBrk.breakStart=tmp;var tmpd=myBrk.duration;myBrk.duration=fromBrk.duration;fromBrk.duration=tmpd;}
+    pushNotif(sw.from,me.name+' accepted your swap!','swap_ok');showToast('Swap accepted','ok');
+  }else{pushNotif(sw.from,me.name+' declined your swap request','swap_no');showToast('Swap declined','inf');}
+  sv(d);renderAll();
+}
+
+// ════════════════════════════════════════════
+//  NOTIFICATIONS
+// ════════════════════════════════════════════
+function pushNotif(agent,msg,type){
+  var d=gd();if(!d.notifs)d.notifs={};if(!d.notifs[agent])d.notifs[agent]=[];
+  d.notifs[agent].unshift({id:Date.now().toString(),msg:msg,type:type,time:new Date().toISOString(),read:false});
+  if(d.notifs[agent].length>30)d.notifs[agent]=d.notifs[agent].slice(0,30);
+  sv(d);if(me&&agent===me.name)document.getElementById('ndot').style.display='block';
+}
+function toggleN(){var p=document.getElementById('npanel');var o=p.classList.toggle('open');if(o){markRead();renderNotifs();}}
+function markRead(){if(!me)return;var d=gd();if(d.notifs&&d.notifs[me.name])d.notifs[me.name].forEach(function(n){n.read=true;});sv(d);document.getElementById('ndot').style.display='none';}
+function clearN(){if(!me)return;var d=gd();if(d.notifs)d.notifs[me.name]=[];sv(d);renderNotifs();}
+function renderNotifs(){
+  if(!me)return;var d=gd();var list=(d.notifs&&d.notifs[me.name])?d.notifs[me.name]:[];
+  var unread=list.filter(function(n){return!n.read;}).length;
+  document.getElementById('ndot').style.display=unread>0?'block':'none';
+  var el=document.getElementById('nlist');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="ep">No notifications</div></div>';return;}
+  var icons={start:'&#9749;',end:'&#10003;',swap:'&#128260;',swap_ok:'&#10003;',swap_no:'&#10007;'};
+  var bgs={start:'rgba(0,40,104,.06)',end:'var(--gbg)',swap:'var(--abg)',swap_ok:'var(--gbg)',swap_no:'var(--rbg)'};
+  var html='';
+  for(var i=0;i<list.length;i++){
+    var n=list[i];var t=new Date(n.time).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',hour12:true});
+    html+='<div class="nitem'+(n.read?'':' unread')+'"><div class="nicon" style="background:'+(bgs[n.type]||'var(--bg)')+'">'+( icons[n.type]||'&#128228;')+'</div><div><div class="nmsg">'+n.msg+'</div><div class="ntime">'+t+'</div></div></div>';
+  }
+  el.innerHTML=html;
+}
+
+// ════════════════════════════════════════════
+//  RENDER ALL
+// ════════════════════════════════════════════
+function renderAll(){
+  if(!me)return;var d=gd();
+  renderBalance(d);renderNow(d);renderSched(d);renderSwapPage(d);renderHistory(d);renderAdmin(d);renderTeam(d);renderNotifs();
+}
+
+function renderBalance(d){
+  var daily=d.settings?(d.settings.dailyMin||60):60;
+  var sched=schedMin(me.name,d);var used=usedMin(me.name,d);
+  var rem=Math.max(daily-sched,0);var pct=Math.min(sched/daily*100,100);
+  document.getElementById('bcnum').textContent=rem;
+  document.getElementById('bcsub').textContent=used+' min used · '+(sched-used)+' min upcoming';
+  document.getElementById('bcprog').style.width=pct+'%';
+  document.getElementById('bcprog').style.background=pct>90?'linear-gradient(90deg,var(--amber),var(--red))':'linear-gradient(90deg,var(--gold),var(--gold2))';
+  document.getElementById('bcused').textContent=sched+' min scheduled';
+  document.getElementById('bchip').textContent=rem+' min left';
+}
+
+function renderNow(d){
+  var el=document.getElementById('nowPanel');var nowM=toMin(nowHHMM());var tb=tdb(d);var list=[];
+  for(var i=0;i<tb.length;i++){var b=tb[i];if(b.status==='cancelled')continue;var bS=toMin(b.breakStart);if(bS<=nowM&&bS+b.duration>nowM)list.push(b);}
+  if(!list.length){el.innerHTML='<div class="empty" style="padding:14px"><div class="ep">No one on break &#10003;</div></div>';return;}
+  var html='';
+  for(var i=0;i<list.length;i++){var b=list[i];html+='<div class="agrow"><div class="agav" style="background:'+ac(b.agent)+'">'+ini(b.agent)+'</div><div><div class="agn">'+b.agent+'</div><div class="ags">'+fmt12(b.breakStart)+' · '+b.duration+' min</div></div><div style="margin-left:auto"><span class="pill p-amber"><span class="pdot"></span>On Break</span></div></div>';}
+  el.innerHTML=html;
+}
+
+function renderSched(d){
+  var tb=tdb(d);var myb=[];
+  for(var i=0;i<tb.length;i++){if(tb[i].agent===me.name&&tb[i].status!=='cancelled')myb.push(tb[i]);}
+  myb.sort(function(a,b){return toMin(a.breakStart)-toMin(b.breakStart);});
+  var el=document.getElementById('schedPanel');var nowM=toMin(nowHHMM());
+  if(!myb.length){el.innerHTML='<div class="empty"><div class="ei">&#128197;</div><div class="ep">No breaks scheduled. Go to <strong>Book</strong>.</div></div>';return;}
+  var html='<div class="tline">';
+  for(var i=0;i<myb.length;i++){
+    var b=myb[i];var bM=toMin(b.breakStart);var isDone=b.status==='completed';var isAct=b.status==='active';
+    var dc=isDone?'done':isAct?'active':'';var actual=b.actualDuration?' · Actual: '+b.actualDuration+' min':'';
+    var canStart=b.status==='scheduled'&&Math.abs(bM-nowM)<=15;
+    var pill=isDone?'<span class="pill p-green">&#10003; Done</span>':isAct?'<span class="pill p-navy">&#8987; In Progress</span>':'<span class="pill p-gold">&#128197; Scheduled</span>';
+    html+='<div class="tlitem"><div class="tldot '+dc+'"></div><div class="tlcard"><div class="tltime">'+fmt12(b.breakStart)+'</div><div class="tltitle">'+b.duration+' min break'+actual+'</div><div class="tlact">'+pill;
+    if(canStart&&!isDone&&!isAct)html+='<button class="btn btn-navy bsm" onclick="startBreak(\''+b.id+'\')">Start Now</button>';
+    if(!isDone&&!isAct)html+='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px" onclick="cancelBreak(\''+b.id+'\')">Cancel</button>';
+    html+='</div></div></div>';
+  }
+  html+='</div>';el.innerHTML=html;
+}
+
+function renderSwapPage(d){
+  var td=today();var swaps=d.swaps||[];var inc=swaps.filter(function(s){return s.to===me.name&&s.status==='pending'&&s.date===td;});
+  var inEl=document.getElementById('inswap');
+  if(!inc.length){inEl.innerHTML='<div class="empty"><div class="ei">&#128260;</div><div class="ep">No pending requests</div></div>';}
+  else{
+    var html='';var tb=tdb(d);
+    for(var i=0;i<inc.length;i++){var s=inc[i];var fb=null;for(var j=0;j<tb.length;j++){if(tb[j].id===s.fromBreakId){fb=tb[j];break;}}
+      html+='<div class="swcard"><div class="swfrom">From: <strong>'+s.from+'</strong></div><div class="swtitle">Swap Request</div><div class="swmeta">'+(fb?fmt12(fb.breakStart)+' · '+fb.duration+' min':'—')+'</div><div class="swbtns"><button class="btn btn-green bsm" onclick="respondSwap(\''+s.id+'\',\'accepted\')">&#10003; Accept</button><button class="btn btn-red bsm" onclick="respondSwap(\''+s.id+'\',\'rejected\')">&#10007; Decline</button></div></div>';
+    }
+    inEl.innerHTML=html;
+  }
+  var badge=document.getElementById('swbadge');badge.textContent=inc.length;badge.style.display=inc.length>0?'block':'none';
+  var myb=[];var tb2=tdb(d);for(var i=0;i<tb2.length;i++){if(tb2[i].agent===me.name&&tb2[i].status==='scheduled')myb.push(tb2[i]);}
+  var myEl=document.getElementById('myswap');
+  if(!myb.length){myEl.innerHTML='<div class="empty"><div class="ei">&#9749;</div><div class="ep">No scheduled breaks to swap</div></div>';return;}
+  var html2='';
+  for(var i=0;i<myb.length;i++){var b=myb[i];var pend=swaps.filter(function(s){return s.fromBreakId===b.id&&s.status==='pending';}).length>0;
+    html2+='<div class="card" style="margin-bottom:9px"><div class="ch"><div class="ctitle">&#9749; '+fmt12(b.breakStart)+' · '+b.duration+' min</div>'+(pend?'<span class="pill p-amber">Pending</span>':'')+'</div><div class="cb">'+(pend?'<p style="font-size:12px;color:var(--t2)">Request sent...</p>':'<button class="btn btn-outline" onclick="openSwapRequest(\''+b.id+'\')" style="font-size:13px;padding:11px">&#128260; Request Swap</button>')+'</div></div>';
+  }
+  myEl.innerHTML=html2;
+}
+
+function renderHistory(d){
+  var myb=[];var tb=tdb(d);
+  for(var i=0;i<tb.length;i++){if(tb[i].agent===me.name)myb.push(tb[i]);}
+  myb.sort(function(a,b){return toMin(b.breakStart)-toMin(a.breakStart);});
+  var el=document.getElementById('histpanel');
+  if(!myb.length){el.innerHTML='<div class="empty" style="padding:14px"><div class="ep">No breaks today</div></div>';return;}
+  var sbg={completed:'var(--gbg)',active:'rgba(0,40,104,.06)',scheduled:'var(--goldbg)',cancelled:'var(--rbg)'};
+  var sic={completed:'&#10003;',active:'&#8987;',scheduled:'&#128197;',cancelled:'&#10007;'};
+  var spl={completed:'p-green',active:'p-navy',scheduled:'p-gold',cancelled:'p-red'};
+  var html='';
+  for(var i=0;i<myb.length;i++){var b=myb[i];var dur=b.actualDuration||b.duration;
+    html+='<div class="histrow"><div class="hicon" style="background:'+(sbg[b.status]||'var(--bg)')+'">'+sic[b.status]+'</div><div class="hinfo"><div class="htitle">'+fmt12(b.breakStart)+'</div><div class="hmeta">'+b.duration+' min'+(b.actualDuration?' · Actual: '+b.actualDuration+' min':'')+'</div></div><div class="hr"><div class="hdur">'+dur+'m</div><span class="pill '+(spl[b.status]||'p-gold')+'" style="font-size:10px;margin-top:4px;display:inline-flex">'+b.status+'</span></div></div>';
+  }
+  el.innerHTML=html;
+  if(me.access!=='agent'){
+    var all=tdb(d).filter(function(b){return b.status!=='cancelled';}).sort(function(a,b){return toMin(b.breakStart)-toMin(a.breakStart);});
+    var aEl=document.getElementById('allpanel');
+    if(!all.length){aEl.innerHTML='<div class="empty" style="padding:14px"><div class="ep">No breaks today</div></div>';return;}
+    var html2='';
+    for(var i=0;i<all.length;i++){var b=all[i];
+      html2+='<div class="histrow"><div class="hicon" style="background:'+(sbg[b.status]||'var(--bg)')+'">'+sic[b.status]+'</div><div class="hinfo"><div class="htitle">'+b.agent+'</div><div class="hmeta">'+fmt12(b.breakStart)+' · '+b.duration+' min</div></div><div class="hr"><div class="hdur" style="font-size:12px">'+(b.actualDuration||b.duration)+'m</div><span class="pill '+(spl[b.status]||'p-gold')+'" style="font-size:10px;margin-top:4px;display:inline-flex">'+b.status+'</span></div></div>';
+    }
+    aEl.innerHTML=html2;
+  }
+}
+
+function renderAdmin(d){
+  if(me&&me.access==='agent')return;
+  var el=document.getElementById('adminOverview');if(!el)return;
+  document.getElementById('smax').value=d.settings?(d.settings.dailyMin||60):60;
+  document.getElementById('scon').value=d.settings?(d.settings.maxCon||2):2;
+  document.getElementById('smaxb').value=d.settings?(d.settings.maxBreak||30):30;
+  var tb=tdb(d);var daily=d.settings?(d.settings.dailyMin||60):60;
+  var allNames=EMPLOYEES.map(function(e){return e.name;});
+  var html='';
+  for(var i=0;i<allNames.length;i++){
+    var a=allNames[i];var breaks=tb.filter(function(b){return b.agent===a&&b.status!=='cancelled';});
+    if(!breaks.length)continue;
+    var mins=breaks.reduce(function(s,b){return s+(b.actualDuration||b.duration);},0);
+    html+='<div class="adrow"><div class="agav" style="background:'+ac(a)+';width:28px;height:28px;border-radius:7px;font-size:10px;font-weight:800">'+ini(a)+'</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+a+'</div><div style="font-size:11px;color:var(--t2)">'+breaks.length+' break'+( breaks.length!==1?'s':'')+' · '+mins+'/'+daily+' min</div></div></div>';
+  }
+  el.innerHTML=html||'<div class="empty" style="padding:14px"><div class="ep">No break activity today</div></div>';
+}
+
+function saveSett(){
+  var d=gd();d.settings={dailyMin:parseInt(document.getElementById('smax').value)||60,maxCon:parseInt(document.getElementById('scon').value)||2,maxBreak:parseInt(document.getElementById('smaxb').value)||30};
+  sv(d);renderAll();showToast('Settings saved','ok');
+}
+function clearDay(){if(!confirm("Clear today?"))return;var d=gd();d.breaks[today()]=[];sv(d);renderAll();showToast('Cleared','inf');}
+function clearAll(){if(!confirm('Clear ALL?'))return;localStorage.removeItem(SK);renderAll();showToast('Done','inf');}
+
+// ════════════════════════════════════════════
+//  TEAM DASHBOARD
+// ════════════════════════════════════════════
+var DEPT_ORDER = [
+  {label:'Inbound Agents', roles:['Inbound Agent']},
+  {label:'Outbound Agents', roles:['Outbound Agent']},
+  {label:'ITM Agents', roles:['ITM Agent']},
+  {label:'Assist Team Leaders', roles:['Assist Team Leader']},
+  {label:'Team Leaders', roles:['Team Leader']},
+  {label:'Back Office', roles:['Back Office']},
+  {label:'Wage Agents', roles:['Wage Agent']},
+  {label:'Quality Assurance', roles:['Quality Assurance','QA Supervisor']},
+  {label:'Management', roles:['Head','System Admin']}
+];
+
+function renderTeam(d){
+  if(!me) return;
+  var tb = tdb(d);
+  var nowM = toMin(nowHHMM());
+  var daily = d.settings ? (d.settings.dailyMin||60) : 60;
+  var maxCon = d.settings ? (d.settings.maxCon||2) : 2;
+
+  // Who is on break right now (slot overlaps current time)
+  var onBreakNow = tb.filter(function(b){
+    if(b.status==='cancelled') return false;
+    var bS=toMin(b.breakStart); return bS<=nowM && bS+b.duration>nowM;
+  });
+  var onBreakNames = onBreakNow.map(function(b){return b.agent;});
+
+  // Concurrent meter
+  var cnt = onBreakNow.length;
+  var bigEl = document.getElementById('conBigNum');
+  var titleEl = document.getElementById('conTitle');
+  var subEl = document.getElementById('conSub');
+  var dotsEl = document.getElementById('conDots');
+  if(bigEl) bigEl.textContent = cnt;
+  if(titleEl) titleEl.textContent = cnt + ' of ' + maxCon + ' on break now';
+  if(subEl) subEl.textContent = cnt===0 ? 'All agents available' : cnt>=maxCon ? 'Maximum reached – no more breaks allowed' : 'Still room for '+(maxCon-cnt)+' more break'+(maxCon-cnt>1?'s':'');
+  if(dotsEl){
+    var dhtml='';
+    for(var d2=0;d2<maxCon;d2++) dhtml+='<div class="cdot'+(d2<cnt?(cnt>=maxCon?' max':' on'):'')+'"></div>';
+    dotsEl.innerHTML=dhtml;
+  }
+  // Update con-meter border color
+  var meter = document.querySelector('.con-meter');
+  if(meter){
+    if(cnt>=maxCon){meter.style.borderColor='rgba(192,57,43,.3)';meter.style.background='var(--rbg)';}
+    else if(cnt>0){meter.style.borderColor='rgba(217,119,6,.3)';meter.style.background='var(--abg)';}
+    else{meter.style.borderColor='var(--border)';meter.style.background='var(--white)';}
+  }
+  if(bigEl) bigEl.style.color = cnt>=maxCon ? 'var(--red)' : cnt>0 ? 'var(--amber)' : 'var(--green)';
+
+  // Summary tiles
+  var totalAgents = EMPLOYEES.length;
+  var totalBreaks = tb.filter(function(b){return b.status!=='cancelled';}).length;
+  var totalMins = tb.filter(function(b){return b.status!=='cancelled';}).reduce(function(s,b){return s+(b.actualDuration||b.duration);},0);
+  var el1=document.getElementById('ts-total'); if(el1)el1.textContent=totalAgents;
+  var el2=document.getElementById('ts-onbrk'); if(el2)el2.textContent=cnt;
+  var el3=document.getElementById('ts-breaks'); if(el3)el3.textContent=totalBreaks;
+  var el4=document.getElementById('ts-mins'); if(el4)el4.textContent=totalMins;
+
+  // On break now section
+  var nbEl = document.getElementById('tNowBreak');
+  if(nbEl){
+    if(!onBreakNow.length){
+      nbEl.innerHTML='<div class="empty" style="padding:14px"><div class="ep">&#10003; No one on break right now</div></div>';
+    } else {
+      var nbHtml='';
+      for(var i=0;i<onBreakNow.length;i++){
+        var b=onBreakNow[i];
+        var elapsed=Math.floor((nowM-toMin(b.breakStart)));
+        var remaining=b.duration-elapsed;
+        var rem=remaining>0?remaining+' min left':'Overdue';
+        var remCol=remaining<=5?'var(--red)':remaining<=10?'var(--amber)':'var(--green)';
+        nbHtml+='<div class="team-row">';
+        nbHtml+='<div class="trav" style="background:'+ac(b.agent)+'">'+ini(b.agent)+'<div class="av-badge on"></div></div>';
+        nbHtml+='<div><div class="tr-name">'+b.agent+'</div>';
+        nbHtml+='<div class="tr-role">Started '+fmt12(b.breakStart)+' · '+b.duration+' min break</div></div>';
+        nbHtml+='<div class="tr-right"><div style="font-size:12px;font-weight:700;color:'+remCol+'">'+rem+'</div>';
+        var pct2=Math.min(elapsed/b.duration*100,100);
+        nbHtml+='<div class="break-prog"><div class="break-prog-fill" style="width:'+pct2+'%;background:'+(pct2>90?'var(--red)':'var(--amber)')+'"></div></div>';
+        nbHtml+='</div></div>';
+      }
+      nbEl.innerHTML=nbHtml;
+    }
+  }
+
+  // Full team list by department
+  var allEl = document.getElementById('tAllAgents');
+  if(!allEl) return;
+  var html='';
+
+  for(var di=0;di<DEPT_ORDER.length;di++){
+    var dept=DEPT_ORDER[di];
+    var deptEmps=EMPLOYEES.filter(function(e){return dept.roles.indexOf(e.role)>=0;});
+    if(!deptEmps.length) continue;
+    html+='<div class="dept-sep">'+dept.label+' <span style="color:var(--navy);margin-left:auto;font-size:11px;font-weight:800">'+deptEmps.length+'</span></div>';
+    for(var ei=0;ei<deptEmps.length;ei++){
+      var emp=deptEmps[ei];
+      var empBreaks=tb.filter(function(b){return b.agent===emp.name&&b.status!=='cancelled';});
+      var empUsed=empBreaks.filter(function(b){return b.status==='completed';}).reduce(function(s,b){return s+(b.actualDuration||b.duration);},0);
+      var empSched=empBreaks.reduce(function(s,b){return s+b.duration;},0);
+      var isOnBreak=onBreakNames.indexOf(emp.name)>=0;
+      var isMe=emp.name===me.name;
+      var pct3=Math.min(empSched/daily*100,100);
+      var balColor=empSched>=daily?'var(--red)':empSched>daily*0.7?'var(--amber)':'var(--green)';
+      html+='<div class="team-row">';
+      html+='<div class="trav" style="background:'+ac(emp.name)+'">'+ini(emp.name)+'<div class="av-badge '+(isOnBreak?'on':'free')+'"></div></div>';
+      html+='<div><div class="tr-name">'+emp.name+(isMe?' <span style="font-size:10px;background:var(--goldbg);color:var(--gold);border-radius:4px;padding:1px 5px;font-weight:700">Me</span>':'')+'</div>';
+      html+='<div class="tr-role">'+emp.role+'</div></div>';
+      html+='<div class="tr-right">';
+      if(isOnBreak){
+        var activeBrk=onBreakNow.find?onBreakNow.find(function(b){return b.agent===emp.name;}):null;
+        if(!activeBrk){for(var x=0;x<onBreakNow.length;x++){if(onBreakNow[x].agent===emp.name){activeBrk=onBreakNow[x];break;}}}
+        html+='<span class="pill p-amber" style="font-size:10px"><span class="pdot"></span>On Break</span>';
+      } else {
+        html+='<span class="pill p-green" style="font-size:10px"><span class="pdot"></span>Available</span>';
+      }
+      html+='<div class="tr-breaks">'+empBreaks.length+' break'+(empBreaks.length!==1?'s':'')+' · <span style="color:'+balColor+';font-weight:700">'+empSched+'/'+daily+'m</span></div>';
+      html+='<div class="break-prog"><div class="break-prog-fill" style="width:'+pct3+'%;background:'+balColor+'"></div></div>';
+      html+='</div></div>';
+    }
+  }
+  allEl.innerHTML=html||'<div class="empty" style="padding:14px"><div class="ep">No data</div></div>';
+}
+
+// ════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════
+function gp(p){
+  document.querySelectorAll('.pg').forEach(function(x){x.classList.remove('on');});
+  document.querySelectorAll('.nb').forEach(function(x){x.classList.remove('on');});
+  document.getElementById('pg-'+p).classList.add('on');
+  document.getElementById('nav-'+p).classList.add('on');
+  if(p==='book')buildSlotGrid();
+  document.getElementById('npanel').classList.remove('open');
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════
+function showToast(msg,type){
+  var el=document.getElementById('toast');
+  var ic={ok:'✅',err:'❌',inf:'ℹ️'};
+  el.innerHTML=(ic[type]||'')+' '+msg;el.className='toast show '+(type||'');
+  clearTimeout(toastTO);toastTO=setTimeout(function(){el.classList.remove('show');},3500);
+}
+
+document.addEventListener('click',function(e){
+  var p=document.getElementById('npanel');var bell=document.querySelector('.bellbtn');
+  if(p&&p.classList.contains('open')&&!p.contains(e.target)&&bell&&!bell.contains(e.target))p.classList.remove('open');
+});
+</script>
+</body>
+</html>
