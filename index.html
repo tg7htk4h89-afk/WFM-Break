@@ -521,29 +521,6 @@ input,select,button{font-family:'DM Sans',sans-serif;}
     </div>
   </div>
 
-  <!-- TEAM DASHBOARD -->
-  <div class="pg" id="pg-team">
-    <div class="sh">Live Overview</div>
-    <div class="stat4" id="tmStats"></div>
-    <div class="concbar ok" id="concBar">
-      <div><div class="cblbl">On Break Right Now</div><div class="cbnum" id="concNum" style="color:var(--green)">0 / 2</div></div>
-      <div class="cbright" id="concIcon">&#x1F7E2;</div>
-    </div>
-    <div class="filter-tabs" id="teamFilter">
-      <button class="ftab on" onclick="setTF(this,'')">All</button>
-      <button class="ftab" onclick="setTF(this,'on-break')">&#128308; On Break</button>
-      <button class="ftab" onclick="setTF(this,'available')">&#128994; Available</button>
-      <button class="ftab" onclick="setTF(this,'Inbound Agent')">Inbound</button>
-      <button class="ftab" onclick="setTF(this,'Outbound Agent')">Outbound</button>
-      <button class="ftab" onclick="setTF(this,'ITM Agent')">ITM</button>
-      <button class="ftab" onclick="setTF(this,'Team Leader')">TL</button>
-      <button class="ftab" onclick="setTF(this,'Assist Team Leader')">ATL</button>
-      <button class="ftab" onclick="setTF(this,'Back Office')">Back Office</button>
-      <button class="ftab" onclick="setTF(this,'Wage Agent')">Wage</button>
-      <button class="ftab" onclick="setTF(this,'Quality Assurance')">QA</button>
-    </div>
-    <div id="teamList"></div>
-  </div>
 
   <!-- ADMIN -->
   <div class="pg" id="pg-admin">
@@ -603,28 +580,42 @@ input,select,button{font-family:'DM Sans',sans-serif;}
 
   <!-- TEAM PAGE -->
   <div class="pg" id="pg-team">
-    <div class="sh">Live Team Status</div>
-    <div class="con-meter">
+    <!-- Concurrent bar -->
+    <div class="con-meter" id="conMeter" style="margin-top:4px">
       <div style="flex:1">
-        <div class="con-title" id="conTitle">0 of 2 on break</div>
+        <div class="con-title" id="conTitle">0 of 2 on break now</div>
         <div class="con-sub" id="conSub">All agents available</div>
         <div class="con-dots" id="conDots" style="margin-top:8px"></div>
       </div>
-      <div style="font-size:38px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1;" id="conBigNum">0</div>
+      <div style="font-size:42px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1;color:var(--green)" id="conBigNum">0</div>
     </div>
+    <!-- Summary tiles -->
     <div class="team-summary">
       <div class="tscard c-navy"><div class="tsnum" id="ts-total">0</div><div class="tslbl">Total Agents</div></div>
       <div class="tscard c-amber"><div class="tsnum" id="ts-onbrk">0</div><div class="tslbl">On Break Now</div></div>
       <div class="tscard c-green"><div class="tsnum" id="ts-breaks">0</div><div class="tslbl">Breaks Today</div></div>
       <div class="tscard c-red"><div class="tsnum" id="ts-mins">0</div><div class="tslbl">Min Used Today</div></div>
     </div>
-    <div class="sh">On Break Right Now</div>
-    <div class="card"><div class="cb" style="padding:2px 13px" id="tNowBreak">
-      <div class="empty" style="padding:14px"><div class="ep">&#10003; No one on break</div></div>
+    <!-- Filter tabs -->
+    <div style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch;">
+      <button class="ftab on" onclick="setTF(this,'')">All</button>
+      <button class="ftab" onclick="setTF(this,'on-break')">&#128308; On Break</button>
+      <button class="ftab" onclick="setTF(this,'available')">&#128994; Free</button>
+      <button class="ftab" onclick="setTF(this,'Inbound Agent')">Inbound</button>
+      <button class="ftab" onclick="setTF(this,'Outbound Agent')">Outbound</button>
+      <button class="ftab" onclick="setTF(this,'ITM Agent')">ITM</button>
+      <button class="ftab" onclick="setTF(this,'Team Leader')">TL</button>
+      <button class="ftab" onclick="setTF(this,'Assist Team Leader')">ATL</button>
+      <button class="ftab" onclick="setTF(this,'Back Office')">Back Office</button>
+      <button class="ftab" onclick="setTF(this,'Wage Agent')">Wage</button>
+      <button class="ftab" onclick="setTF(this,'Quality Assurance')">QA</button>
+    </div>
+    <!-- Agent list -->
+    <div class="card"><div class="cb" style="padding:4px 13px" id="tAllAgents">
+      <div class="empty" style="padding:20px"><div class="ei">&#128101;</div><div class="ep">Loading team...</div></div>
     </div></div>
-    <div class="sh">Full Team Overview</div>
-    <div class="card"><div class="cb" style="padding:4px 13px" id="tAllAgents">Loading...</div></div>
   </div>
+
 
   <div class="bnav">
     <button class="nb on" id="nav-home" onclick="gp('home')"><span class="ni">&#127968;</span><span class="nl">Home</span></button>
@@ -809,29 +800,45 @@ function loginUser(emp, shift, shEnd, shEndMin){
   var av2=document.getElementById('asav');av2.textContent=ini(me.name);av2.style.background=ac(me.name);
   document.getElementById('asname').textContent=me.name;
 
+  // ── Auto-inject demo data for demo accounts ──────────
+  var isDemo=(emp.pw==='demo@1234'||emp.pw==='demo@mgr');
+  if(isDemo) injectDemoData();
+
   if(me.access==='readonly'){
-    // Readonly: no shift, monitoring only
-    document.getElementById('asinfo').textContent=me.role+' · Monitor Access';
-    document.getElementById('bcshift').textContent='Reporting & Monitoring';
+    document.getElementById('asinfo').textContent=me.role+' · '+(isDemo?'Demo Mode':'Monitor Access');
+    document.getElementById('bcshift').textContent=isDemo?'Demo – Reporting View':'Reporting & Monitoring';
     document.getElementById('nav-book').style.display='none';
     document.getElementById('nav-swap').style.display='none';
     document.getElementById('nav-admin').style.display='flex';
     document.getElementById('supSection').style.display='block';
     document.getElementById('roBanner').style.display='flex';
+    if(isDemo) document.getElementById('roBanner').querySelector('div div:last-child').textContent='Demo mode – viewing a simulated work day. All data is sample only.';
     startClock();renderAll();
     gp('team');
     refInt=setInterval(renderAll,8000);
-    showToast('Welcome, '+me.name.split(' ')[0]+'! Monitor access','inf');
+    showToast(isDemo?'📊 Demo Manager View loaded':'Welcome, '+me.name.split(' ')[0]+'! Monitor access','inf');
   } else {
-    document.getElementById('asinfo').textContent=me.role+' · Shift '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
+    document.getElementById('asinfo').textContent=me.role+' · Shift '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd)+(isDemo?' · Demo':'');
     document.getElementById('bcshift').textContent='Shift: '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
     if(me.access==='admin'||me.access==='supervisor'){
       document.getElementById('nav-admin').style.display='flex';
       document.getElementById('supSection').style.display='block';
     }
-    startClock();renderAll();checkActiveBreak();
+    startClock();renderAll();
+    if(isDemo){
+      // show demo banner on home
+      var demoBar=document.createElement('div');
+      demoBar.id='demoBannerAgent';
+      demoBar.style.cssText='background:linear-gradient(135deg,#14532d,#166534);border-radius:12px;padding:12px 14px;margin:0 0 2px 0;display:flex;align-items:center;gap:10px;';
+      demoBar.innerHTML='<span style="font-size:22px">🎭</span><div><div style="font-size:13px;font-weight:700;color:#fff">Demo Agent Mode</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:1px">Your team breaks are pre-loaded. Book your own break just like normal.</div></div>';
+      var homeEl=document.getElementById('pg-home');
+      homeEl.insertBefore(demoBar,homeEl.firstChild);
+      checkActiveBreak();
+    } else {
+      checkActiveBreak();
+    }
     refInt=setInterval(renderAll,8000);
-    showToast('Welcome, '+me.name.split(' ')[0]+'!','ok');
+    showToast(isDemo?'🎭 Demo Agent View loaded':'Welcome, '+me.name.split(' ')[0]+'!','ok');
   }
 }
 
@@ -1238,45 +1245,169 @@ function clearAll(){if(!confirm('Clear ALL data? This cannot be undone.'))return
 // ════════════════════════════════════════════
 //  DEMO DATA
 // ════════════════════════════════════════════
-function loadDemoData(){
-  if(!confirm('Load demo data? This will add sample breaks for today.'))return;
-  var d=gd();var t=today();if(!d.breaks[t])d.breaks[t]=[];var tb=d.breaks[t];
-  var now=new Date();var h=now.getHours();var nowM=h*60+now.getMinutes();
-  // Helper: make a break entry
-  function mkbrk(agent,startH,startMin,dur,status,minsAgo){
-    var sm=startH*60+startMin;
+function injectDemoData(){
+  // Silent – called automatically on demo login
+  var d=gd();
+  var t=today();
+  d.breaks[t]=[];
+  var tb=d.breaks[t];
+
+  // ─── time anchor: now in minutes since midnight ───────────
+  var now=new Date();
+  var nowM=now.getHours()*60+now.getMinutes();
+  var daily=d.settings?(d.settings.dailyMin||60):60;
+
+  // ─── builder ──────────────────────────────────────────────
+  // minsBeforeNow: how many minutes ago this break ENDED (for completed)
+  //                how many minutes ago this break STARTED (for active)
+  //                0 for scheduled (future)
+  function brk(agent,shift,startMins,dur,status,minsBeforeNow){
+    var uid=String(Date.now()+Math.floor(Math.random()*99999));
+    var bH=Math.floor(startMins/60);
+    var bM=startMins%60;
     var startedAt=null,endedAt=null,actualDur=null;
-    if(status==='completed'){startedAt=new Date(Date.now()-(minsAgo+dur)*60000).toISOString();endedAt=new Date(Date.now()-minsAgo*60000).toISOString();actualDur=dur+Math.floor(Math.random()*4)-1;}
-    if(status==='active'){startedAt=new Date(Date.now()-minsAgo*60000).toISOString();}
-    return{id:(Date.now()+Math.random()).toString().replace('.',''),agent:agent,shift:'08:00',breakStart:('0'+startH).slice(-2)+':'+('0'+startMin).slice(-2),duration:dur,status:status,startedAt:startedAt,endedAt:endedAt,actualDuration:actualDur,date:t};
+    if(status==='completed'){
+      // ended minsBeforeNow ago, started dur+minsBeforeNow ago
+      endedAt=new Date(Date.now()-minsBeforeNow*60000).toISOString();
+      startedAt=new Date(Date.now()-(minsBeforeNow+dur)*60000).toISOString();
+      // Realistic actual: some 1-3 min over, some exact, rarely short
+      var drift=[0,0,1,1,2,2,3,-1][Math.floor(Math.random()*8)];
+      actualDur=Math.max(dur,dur+drift);
+    }
+    if(status==='active'){
+      startedAt=new Date(Date.now()-minsBeforeNow*60000).toISOString();
+    }
+    return{
+      id:uid,agent:agent,shift:shift,
+      breakStart:('0'+bH).slice(-2)+':'+('0'+bM).slice(-2),
+      duration:dur,status:status,
+      startedAt:startedAt,endedAt:endedAt,actualDuration:actualDur,date:t
+    };
   }
-  var demos=[
-    mkbrk('Demo User',9,0,15,'completed',90),
-    mkbrk('Demo User',11,30,20,'scheduled',0),
-    mkbrk('Fouzeyah Erzouqi',9,30,15,'completed',75),
-    mkbrk('Sarah Alqattan',10,0,20,'completed',50),
-    mkbrk('Danah Alenezi',10,30,15,'completed',35),
-    mkbrk('Yasmine Maraafi',11,0,30,'completed',20),
-    mkbrk('Ezz Alsalem',11,30,15,'active',8),
-    mkbrk('Abdullah Bakhsh',12,0,20,'scheduled',0),
-    mkbrk('Abdulaziz Bozobar',12,30,15,'scheduled',0),
-    mkbrk('Abdulrahman Abdullah',13,0,25,'scheduled',0),
-    mkbrk('Ali Alwayel',9,0,20,'completed',110),
-    mkbrk('Omar Alsaeed',10,0,15,'completed',65),
-    mkbrk('Saad Alharbi',11,0,20,'completed',40),
-    mkbrk('Asrar Alattar',11,30,15,'active',5),
-    mkbrk('Latefah Alhouti',13,30,20,'scheduled',0),
-    mkbrk('Ahmad Alenezi',9,30,20,'completed',80),
-    mkbrk('Mariam Almutairi',10,30,15,'completed',45),
+
+  // ─── scenario: currently ~11:30 AM feel ──────────────────
+  // Anchor everything to "now" so the demo always looks current
+  // Use offsets in minutes relative to nowM
+
+  var n=nowM; // current minute of day
+
+  // ── Group A: Early shift 08:00 – fully done with 2 breaks (balance used) ──
+  // These agents took their full 60 min. Nothing left.
+  var eA=[
+    'Fouzeyah Erzouqi','Sarah Alqattan','Danah Alenezi',
+    'Ezz Alsalem','Abdullah Bakhsh','Abdulaziz Bozobar',
+    'Ahmad Alenezi','Salman Albaqshi','Ahmed Nidah','Bilal Faisal'
   ];
-  // Avoid duplicates
-  for(var i=0;i<demos.length;i++){
-    var dup=false;
-    for(var j=0;j<tb.length;j++){if(tb[j].agent===demos[i].agent&&tb[j].breakStart===demos[i].breakStart){dup=true;break;}}
-    if(!dup)tb.push(demos[i]);
-  }
+  var offA=[[n-230,20,n-170],[n-140,15,n-60],[n-105,25,n-20]]; // 3 break patterns
+  var pats=[
+    [[n-230,20],[n-105,25]], // 45 min used
+    [[n-210,30],[n-90,30]],  // 60 min used (full)
+    [[n-180,20],[n-70,20],[n-20,20]], // 60 min used (3 breaks)
+    [[n-200,15],[n-120,15],[n-50,30]] // 60 min used
+  ];
+  eA.forEach(function(name,i){
+    var pat=pats[i%pats.length];
+    pat.forEach(function(p){
+      if(p[0]>480&&p[0]<n-p[1]){ // valid: after 8am, already ended
+        tb.push(brk(name,'08:00',p[0],p[1],'completed',n-p[0]-p[1]));
+      }
+    });
+  });
+
+  // ── Group B: Mid shift 09:00 – took 1 break, 1 more scheduled ──
+  var eB=[
+    'Abdulrahman Abdullah','Abdullah W Mohammad','Abdollah Shaverdi',
+    'Abdulaziz Alzuabi','Abdulrahman Alfassam','Abdulwahab Alsaber',
+    'Asrar Alattar','Latefah Alhouti','Fatemeh Mayahi','Mariam Almutairi'
+  ];
+  var patsB=[
+    [n-160,20],[n-140,15],[n-130,20],[n-120,15],[n-110,20],
+    [n-150,25],[n-135,20],[n-125,15],[n-115,25],[n-105,20]
+  ];
+  eB.forEach(function(name,i){
+    var startM=patsB[i][0], dur=patsB[i][1];
+    if(startM>540&&startM<n-dur){
+      tb.push(brk(name,'09:00',startM,dur,'completed',n-startM-dur));
+    }
+    // Schedule 2nd break ~90 min from now
+    var sched2=n+85+i*8;
+    if(sched2<1020) tb.push(brk(name,'09:00',sched2,15,'scheduled',0));
+  });
+
+  // ── Group C: Late starters 10:00 – took 1 break, 1 scheduled ──
+  var eC=[
+    'Saleh Aljabri','Ali Alwayel','Ahmad Alnajdi','Ali ShahAli',
+    'Ayedh Alotaibi','Dhari Alshammari','Badreyah Alruwayeh',
+    'Nahla Ibrahem','Fatmah Alhamar','Badreyah BoRubayea'
+  ];
+  eC.forEach(function(name,i){
+    var startM=n-90+i*3;
+    if(startM>600&&startM<n-20){
+      tb.push(brk(name,'10:00',startM,20,'completed',n-startM-20));
+    }
+    var sched=n+75+i*10;
+    if(sched<1080) tb.push(brk(name,'10:00',sched,20,'scheduled',0));
+  });
+
+  // ── Group D: No breaks yet – scheduled only ──
+  var eD=[
+    'Fahad Alabdullah','Hasan Ali','Hussain Alkhabbaz','Mohammad Alshakhs',
+    'Sulaiman Alkhalaf','Abdullah Rajab','Abdulrahman Alahmad','Nourah Alhazzani'
+  ];
+  eD.forEach(function(name,i){
+    var sched=n+30+i*15;
+    if(sched<1200) tb.push(brk(name,'09:00',sched,15,'scheduled',0));
+    var sched2=sched+90;
+    if(sched2<1200) tb.push(brk(name,'09:00',sched2,15,'scheduled',0));
+  });
+
+  // ── ACTIVE RIGHT NOW: exactly 2 agents on break ──
+  var activeAgents=['Omar Almutairi','Omar Alsaeed'];
+  var activeStart1=n-9, activeStart2=n-4;
+  if(activeStart1>480) tb.push(brk('Omar Almutairi','08:00',activeStart1,15,'active',9));
+  if(activeStart2>480) tb.push(brk('Omar Alsaeed',  '09:00',activeStart2,20,'active',4));
+
+  // ── Upcoming soon (next 30 min) ──
+  tb.push(brk('Omar Mohammad',    '08:00',n+18,15,'scheduled',0));
+  tb.push(brk('Saad Alharbi',     '09:00',n+22,20,'scheduled',0));
+  tb.push(brk('Naser Bandar',     '08:00',n+28,15,'scheduled',0));
+
+  // ── Assist TLs: 1 done, 1 upcoming ──
+  tb.push(brk('Naser Bandar',     '08:00',n-155,15,'completed',n-(n-155)-15));
+  tb.push(brk('Hasan Alajmi',     '08:00',n-120,20,'completed',n-(n-120)-20));
+  tb.push(brk('Hasan Alajmi',     '08:00',n+60,20,'scheduled',0));
+  tb.push(brk('Athoub Alnoufal',  '09:00',n-90, 15,'completed',n-(n-90)-15));
+  tb.push(brk('Athoub Alnoufal',  '09:00',n+80, 15,'scheduled',0));
+
+  // Demo User has no pre-filled breaks – they book like a real agent
+
+  // clean up any entries with invalid times
+  d.breaks[t]=tb.filter(function(b){
+    var p=b.breakStart.split(':');
+    var sm=parseInt(p[0])*60+parseInt(p[1]);
+    return sm>=420&&sm<=1200;
+  });
+
+  // count unique agents
+  var agents=[...new Set(d.breaks[t].map(function(b){return b.agent;}))];
+  var compl=d.breaks[t].filter(function(b){return b.status==='completed';}).length;
+  var act=d.breaks[t].filter(function(b){return b.status==='active';}).length;
+  var sched=d.breaks[t].filter(function(b){return b.status==='scheduled';}).length;
+
   sv(d);renderAll();
-  showToast('Demo data loaded! '+(demos.length)+' breaks added','ok');
+  showToast(
+    'Demo loaded: '+d.breaks[t].length+' breaks | '+
+    compl+' done · '+act+' active · '+sched+' upcoming',
+    'ok'
+  );
+
+}
+
+function loadDemoData(){
+  if(!confirm('Load realistic demo data for today?\nThis replaces any existing data.'))return;
+  injectDemoData();
+  renderAll();
+  showToast('Demo data loaded!','ok');
 }
 
 // ════════════════════════════════════════════
@@ -1313,8 +1444,7 @@ function downloadCSV(scope){
     }
   }
   if(rows.length<=1){showToast('No data to export','err');return;}
-  var csv=rows.map(function(r){return r.join(',');}).join('
-');
+  var csv=rows.map(function(r){return r.join(',');}).join('\n');
   var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');a.href=url;
@@ -1328,16 +1458,24 @@ function downloadCSV(scope){
 //  TEAM DASHBOARD
 // ════════════════════════════════════════════
 var DEPT_ORDER = [
-  {label:'Inbound Agents', roles:['Inbound Agent']},
-  {label:'Outbound Agents', roles:['Outbound Agent']},
-  {label:'ITM Agents', roles:['ITM Agent']},
+  {label:'Inbound Agents',      roles:['Inbound Agent']},
+  {label:'Outbound Agents',     roles:['Outbound Agent']},
+  {label:'ITM Agents',          roles:['ITM Agent']},
   {label:'Assist Team Leaders', roles:['Assist Team Leader']},
-  {label:'Team Leaders', roles:['Team Leader']},
-  {label:'Back Office', roles:['Back Office']},
-  {label:'Wage Agents', roles:['Wage Agent']},
-  {label:'Quality Assurance', roles:['Quality Assurance','QA Supervisor']},
-  {label:'Management', roles:['Head','System Admin']}
+  {label:'Team Leaders',        roles:['Team Leader']},
+  {label:'Back Office',         roles:['Back Office']},
+  {label:'Wage Agents',         roles:['Wage Agent']},
+  {label:'Quality Assurance',   roles:['Quality Assurance','QA Supervisor']},
+  {label:'Management',          roles:['Head','System Admin']}
 ];
+var teamFilter = '';
+
+function setTF(btn, val){
+  teamFilter = val;
+  document.querySelectorAll('.ftab').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  var d = gd(); renderTeam(d);
+}
 
 function renderTeam(d){
   if(!me) return;
@@ -1346,108 +1484,142 @@ function renderTeam(d){
   var daily = d.settings ? (d.settings.dailyMin||60) : 60;
   var maxCon = d.settings ? (d.settings.maxCon||2) : 2;
 
-  // Who is on break right now (slot overlaps current time)
-  var onBreakNow = tb.filter(function(b){
-    if(b.status==='cancelled') return false;
-    var bS=toMin(b.breakStart); return bS<=nowM && bS+b.duration>nowM;
-  });
-  var onBreakNames = onBreakNow.map(function(b){return b.agent;});
-
-  // Concurrent meter
-  var cnt = onBreakNow.length;
-  var bigEl = document.getElementById('conBigNum');
-  var titleEl = document.getElementById('conTitle');
-  var subEl = document.getElementById('conSub');
-  var dotsEl = document.getElementById('conDots');
-  if(bigEl) bigEl.textContent = cnt;
-  if(titleEl) titleEl.textContent = cnt + ' of ' + maxCon + ' on break now';
-  if(subEl) subEl.textContent = cnt===0 ? 'All agents available' : cnt>=maxCon ? 'Maximum reached – no more breaks allowed' : 'Still room for '+(maxCon-cnt)+' more break'+(maxCon-cnt>1?'s':'');
-  if(dotsEl){
-    var dhtml='';
-    for(var d2=0;d2<maxCon;d2++) dhtml+='<div class="cdot'+(d2<cnt?(cnt>=maxCon?' max':' on'):'')+'"></div>';
-    dotsEl.innerHTML=dhtml;
+  // Who is on break right now
+  var onBreakNow = [];
+  for(var i=0;i<tb.length;i++){
+    var b=tb[i];
+    if(b.status==='cancelled') continue;
+    var bS=toMin(b.breakStart);
+    if(bS<=nowM && bS+b.duration>nowM) onBreakNow.push(b);
   }
-  // Update con-meter border color
-  var meter = document.querySelector('.con-meter');
+  var onBreakNames = {};
+  for(var i=0;i<onBreakNow.length;i++) onBreakNames[onBreakNow[i].agent]=onBreakNow[i];
+
+  var cnt = onBreakNow.length;
+
+  // ── Concurrent meter ──
+  var bigEl=document.getElementById('conBigNum');
+  var titleEl=document.getElementById('conTitle');
+  var subEl=document.getElementById('conSub');
+  var dotsEl=document.getElementById('conDots');
+  var meter=document.getElementById('conMeter');
+  if(bigEl) bigEl.textContent=cnt;
+  if(bigEl) bigEl.style.color = cnt>=maxCon?'var(--red)':cnt>0?'var(--amber)':'var(--green)';
+  if(titleEl) titleEl.textContent=cnt+' of '+maxCon+' on break now';
+  if(subEl) subEl.textContent = cnt===0?'All agents at their desks':cnt>=maxCon?'Maximum reached – no more breaks allowed':'Room for '+(maxCon-cnt)+' more break'+(maxCon-cnt>1?'s':'');
+  if(dotsEl){
+    var dh='';
+    for(var i=0;i<maxCon;i++) dh+='<div class="cdot'+(i<cnt?(cnt>=maxCon?' max':' on'):'')+'"></div>';
+    dotsEl.innerHTML=dh;
+  }
   if(meter){
     if(cnt>=maxCon){meter.style.borderColor='rgba(192,57,43,.3)';meter.style.background='var(--rbg)';}
     else if(cnt>0){meter.style.borderColor='rgba(217,119,6,.3)';meter.style.background='var(--abg)';}
     else{meter.style.borderColor='var(--border)';meter.style.background='var(--white)';}
   }
-  if(bigEl) bigEl.style.color = cnt>=maxCon ? 'var(--red)' : cnt>0 ? 'var(--amber)' : 'var(--green)';
 
-  // Summary tiles
-  var totalAgents = EMPLOYEES.length;
-  var totalBreaks = tb.filter(function(b){return b.status!=='cancelled';}).length;
-  var totalMins = tb.filter(function(b){return b.status!=='cancelled';}).reduce(function(s,b){return s+(b.actualDuration||b.duration);},0);
-  var el1=document.getElementById('ts-total'); if(el1)el1.textContent=totalAgents;
-  var el2=document.getElementById('ts-onbrk'); if(el2)el2.textContent=cnt;
-  var el3=document.getElementById('ts-breaks'); if(el3)el3.textContent=totalBreaks;
-  var el4=document.getElementById('ts-mins'); if(el4)el4.textContent=totalMins;
-
-  // On break now section
-  var nbEl = document.getElementById('tNowBreak');
-  if(nbEl){
-    if(!onBreakNow.length){
-      nbEl.innerHTML='<div class="empty" style="padding:14px"><div class="ep">&#10003; No one on break right now</div></div>';
-    } else {
-      var nbHtml='';
-      for(var i=0;i<onBreakNow.length;i++){
-        var b=onBreakNow[i];
-        var elapsed=Math.floor((nowM-toMin(b.breakStart)));
-        var remaining=b.duration-elapsed;
-        var rem=remaining>0?remaining+' min left':'Overdue';
-        var remCol=remaining<=5?'var(--red)':remaining<=10?'var(--amber)':'var(--green)';
-        nbHtml+='<div class="team-row">';
-        nbHtml+='<div class="trav" style="background:'+ac(b.agent)+'">'+ini(b.agent)+'<div class="av-badge on"></div></div>';
-        nbHtml+='<div><div class="tr-name">'+b.agent+'</div>';
-        nbHtml+='<div class="tr-role">Started '+fmt12(b.breakStart)+' · '+b.duration+' min break</div></div>';
-        nbHtml+='<div class="tr-right"><div style="font-size:12px;font-weight:700;color:'+remCol+'">'+rem+'</div>';
-        var pct2=Math.min(elapsed/b.duration*100,100);
-        nbHtml+='<div class="break-prog"><div class="break-prog-fill" style="width:'+pct2+'%;background:'+(pct2>90?'var(--red)':'var(--amber)')+'"></div></div>';
-        nbHtml+='</div></div>';
-      }
-      nbEl.innerHTML=nbHtml;
+  // ── Summary tiles ──
+  var totalBreaks=0, totalMins=0;
+  for(var i=0;i<tb.length;i++){
+    if(tb[i].status!=='cancelled'){
+      totalBreaks++;
+      totalMins+=(tb[i].actualDuration||tb[i].duration);
     }
   }
+  var e1=document.getElementById('ts-total'); if(e1) e1.textContent=EMPLOYEES.length;
+  var e2=document.getElementById('ts-onbrk'); if(e2) e2.textContent=cnt;
+  var e3=document.getElementById('ts-breaks'); if(e3) e3.textContent=totalBreaks;
+  var e4=document.getElementById('ts-mins'); if(e4) e4.textContent=totalMins;
 
-  // Full team list by department
-  var allEl = document.getElementById('tAllAgents');
+  // ── Agent list ──
+  var allEl=document.getElementById('tAllAgents');
   if(!allEl) return;
   var html='';
+  var shownCount=0;
 
   for(var di=0;di<DEPT_ORDER.length;di++){
     var dept=DEPT_ORDER[di];
-    var deptEmps=EMPLOYEES.filter(function(e){return dept.roles.indexOf(e.role)>=0;});
+    var deptEmps=[];
+    for(var ei=0;ei<EMPLOYEES.length;ei++){
+      var emp=EMPLOYEES[ei];
+      if(dept.roles.indexOf(emp.role)<0) continue;
+      var isOnBreak=!!onBreakNames[emp.name];
+      // Apply filter
+      if(teamFilter==='on-break' && !isOnBreak) continue;
+      if(teamFilter==='available' && isOnBreak) continue;
+      if(teamFilter!=='' && teamFilter!=='on-break' && teamFilter!=='available'){
+        if(emp.role!==teamFilter) continue;
+      }
+      deptEmps.push(emp);
+    }
     if(!deptEmps.length) continue;
-    html+='<div class="dept-sep">'+dept.label+' <span style="color:var(--navy);margin-left:auto;font-size:11px;font-weight:800">'+deptEmps.length+'</span></div>';
+
+    // Dept header
+    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);padding:10px 0 5px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">';
+    html+='<span style="display:flex;align-items:center;gap:6px"><span style="width:3px;height:10px;background:var(--border);border-radius:2px;display:inline-block"></span>'+dept.label+'</span>';
+    html+='<span style="color:var(--navy);font-weight:800">'+deptEmps.length+'</span></div>';
+
     for(var ei=0;ei<deptEmps.length;ei++){
       var emp=deptEmps[ei];
-      var empBreaks=tb.filter(function(b){return b.agent===emp.name&&b.status!=='cancelled';});
-      var empUsed=empBreaks.filter(function(b){return b.status==='completed';}).reduce(function(s,b){return s+(b.actualDuration||b.duration);},0);
-      var empSched=empBreaks.reduce(function(s,b){return s+b.duration;},0);
-      var isOnBreak=onBreakNames.indexOf(emp.name)>=0;
-      var isMe=emp.name===me.name;
-      var pct3=Math.min(empSched/daily*100,100);
-      var balColor=empSched>=daily?'var(--red)':empSched>daily*0.7?'var(--amber)':'var(--green)';
-      html+='<div class="team-row">';
-      html+='<div class="trav" style="background:'+ac(emp.name)+'">'+ini(emp.name)+'<div class="av-badge '+(isOnBreak?'on':'free')+'"></div></div>';
-      html+='<div><div class="tr-name">'+emp.name+(isMe?' <span style="font-size:10px;background:var(--goldbg);color:var(--gold);border-radius:4px;padding:1px 5px;font-weight:700">Me</span>':'')+'</div>';
-      html+='<div class="tr-role">'+emp.role+'</div></div>';
-      html+='<div class="tr-right">';
-      if(isOnBreak){
-        var activeBrk=onBreakNow.find?onBreakNow.find(function(b){return b.agent===emp.name;}):null;
-        if(!activeBrk){for(var x=0;x<onBreakNow.length;x++){if(onBreakNow[x].agent===emp.name){activeBrk=onBreakNow[x];break;}}}
-        html+='<span class="pill p-amber" style="font-size:10px"><span class="pdot"></span>On Break</span>';
-      } else {
-        html+='<span class="pill p-green" style="font-size:10px"><span class="pdot"></span>Available</span>';
+      var isOnBreak=!!onBreakNames[emp.name];
+      var isMe=me&&emp.name===me.name;
+      var empBreaks=[];
+      for(var bi=0;bi<tb.length;bi++){
+        if(tb[bi].agent===emp.name && tb[bi].status!=='cancelled') empBreaks.push(tb[bi]);
       }
-      html+='<div class="tr-breaks">'+empBreaks.length+' break'+(empBreaks.length!==1?'s':'')+' · <span style="color:'+balColor+';font-weight:700">'+empSched+'/'+daily+'m</span></div>';
-      html+='<div class="break-prog"><div class="break-prog-fill" style="width:'+pct3+'%;background:'+balColor+'"></div></div>';
-      html+='</div></div>';
+      var empSched=0;
+      for(var bi=0;bi<empBreaks.length;bi++) empSched+=empBreaks[bi].duration;
+      var empUsed=0;
+      for(var bi=0;bi<empBreaks.length;bi++){
+        if(empBreaks[bi].status==='completed') empUsed+=(empBreaks[bi].actualDuration||empBreaks[bi].duration);
+      }
+      var balLeft=Math.max(daily-empSched,0);
+      var pct=Math.min(empSched/daily*100,100);
+      var balCol=empSched>=daily?'var(--red)':empSched>daily*0.7?'var(--amber)':'var(--green)';
+
+      // Active break info
+      var activeBrk=onBreakNames[emp.name];
+      var elapsedStr='';
+      if(activeBrk&&activeBrk.startedAt){
+        var el2=Math.floor((Date.now()-new Date(activeBrk.startedAt))/60000);
+        var rem2=activeBrk.duration-el2;
+        elapsedStr=rem2>0?(rem2+' min left'):'Overdue';
+      }
+
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">';
+      // Avatar with status dot
+      html+='<div style="position:relative;flex-shrink:0">';
+      html+='<div style="width:36px;height:36px;border-radius:9px;background:'+ac(emp.name)+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff">'+ini(emp.name)+'</div>';
+      html+='<div style="position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;border:2px solid var(--white);background:'+(isOnBreak?'var(--amber)':'var(--green)')+'"></div>';
+      html+='</div>';
+      // Info
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px">'+emp.name+(isMe?'<span style="font-size:9px;background:var(--goldbg);color:var(--gold);border-radius:4px;padding:1px 5px;font-weight:700">Me</span>':'')+'</div>';
+      html+='<div style="font-size:10px;color:var(--t2);margin-top:1px">'+emp.role;
+      if(isOnBreak && elapsedStr) html+=' · <span style="color:'+(elapsedStr==='Overdue'?'var(--red)':'var(--amber)')+';font-weight:700">'+elapsedStr+'</span>';
+      html+='</div>';
+      // Progress bar
+      html+='<div style="margin-top:5px;background:var(--border);border-radius:2px;height:3px;width:80px">';
+      html+='<div style="height:100%;border-radius:2px;width:'+pct+'%;background:'+balCol+';transition:width .3s"></div></div>';
+      html+='</div>';
+      // Right: status + balance
+      html+='<div style="text-align:right;flex-shrink:0">';
+      if(isOnBreak){
+        html+='<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;background:var(--abg);color:var(--amber)"><span style="width:5px;height:5px;border-radius:50%;background:var(--amber);animation:pp 1.5s infinite"></span>On Break</span>';
+      } else {
+        html+='<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;background:var(--gbg);color:var(--green)"><span style="width:5px;height:5px;border-radius:50%;background:var(--green)"></span>Available</span>';
+      }
+      html+='<div style="font-size:11px;color:var(--t3);margin-top:3px">'+empBreaks.length+' break'+(empBreaks.length!==1?'s':'')+' · <span style="color:'+balCol+';font-weight:700">'+balLeft+'m left</span></div>';
+      html+='</div>';
+      html+='</div>';
+      shownCount++;
     }
   }
-  allEl.innerHTML=html||'<div class="empty" style="padding:14px"><div class="ep">No data</div></div>';
+
+  if(!shownCount){
+    html='<div class="empty" style="padding:20px"><div class="ei">&#128101;</div><div class="ep">'+(teamFilter?'No agents match this filter':'No agent data. Load demo first.')+'</div></div>';
+  }
+  allEl.innerHTML=html;
 }
 
 // ════════════════════════════════════════════
