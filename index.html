@@ -558,6 +558,42 @@ input,select,button{font-family:'DM Sans',sans-serif;}
     </div>
     <div class="sh">Live Overview</div>
     <div class="card"><div class="cb" style="padding:2px 13px" id="adminOverview"></div></div>
+    <div class="sh">&#128196; Reports</div>
+    <div class="card"><div class="cb" style="display:flex;flex-direction:column;gap:9px">
+      <button class="btn btn-navy" onclick="downloadCSV('today')">&#11123; Download Today's Report (CSV)</button>
+      <button class="btn btn-outline" onclick="downloadCSV('all')" style="font-size:13px;padding:12px">&#11123; Download All Data (CSV)</button>
+    </div></div>
+
+    <div class="sh">&#128161; Data Storage Info</div>
+    <div class="card"><div class="cb" style="padding:2px 13px">
+      <div class="srow">
+        <div><div class="srl">Storage Type</div><div class="srs">Browser local storage (this device only)</div></div>
+        <span style="font-size:18px">&#128187;</span>
+      </div>
+      <div class="srow">
+        <div><div class="srl">Data Scope</div><div class="srs">Shared between all users on same browser</div></div>
+        <span style="font-size:18px">&#128257;</span>
+      </div>
+      <div class="srow">
+        <div><div class="srl">When is data logged?</div><div class="srs">Instantly on every action (book, start, end break)</div></div>
+        <span style="font-size:18px">&#9889;</span>
+      </div>
+      <div class="srow">
+        <div><div class="srl">Auto-refresh</div><div class="srs">Every 8 seconds across all open tabs</div></div>
+        <span style="font-size:18px">&#128260;</span>
+      </div>
+      <div class="srow" style="border:none">
+        <div><div class="srl">Last saved</div><div class="srs" id="lastSaved">—</div></div>
+        <span style="font-size:18px">&#128336;</span>
+      </div>
+    </div></div>
+
+    <div class="sh">&#127381; Demo Data</div>
+    <div class="card"><div class="cb" style="display:flex;flex-direction:column;gap:9px">
+      <div style="font-size:12px;color:var(--t2);margin-bottom:4px">Load sample breaks to test the system. Login with <strong>demo@1234</strong> (agent) or <strong>demo@mgr</strong> (manager view).</div>
+      <button class="btn btn-green" onclick="loadDemoData()">&#127381; Load Demo Data</button>
+    </div></div>
+
     <div class="sh">Data</div>
     <div class="card"><div class="cb" style="display:flex;flex-direction:column;gap:9px">
       <button class="btn btn-red" onclick="clearDay()">&#128465; Clear Today</button>
@@ -658,7 +694,9 @@ var EMPLOYEES = [
   {pw:'brb@4543',name:'Badreyah BoRubayea',role:'Quality Assurance',access:'readonly'},
   {pw:'mqr@1001',name:'Mohammad Abdulraheem',role:'QA Supervisor',access:'readonly'},
   {pw:'tal@0001',name:'Talal Al Jarki',role:'Head',access:'readonly'},
-  {pw:'KIB@admin2026',name:'Admin',role:'System Admin',access:'readonly'}
+  {pw:'KIB@admin2026',name:'Admin',role:'System Admin',access:'readonly'},
+  {pw:'demo@1234',name:'Demo User',role:'Inbound Agent',access:'agent'},
+  {pw:'demo@mgr',name:'Demo Manager',role:'Team Leader',access:'readonly'}
 ];
 
 // ════════════════════════════════════════════
@@ -1185,6 +1223,9 @@ function renderAdmin(d){
     html+='<div class="adrow"><div class="agav" style="background:'+ac(a)+';width:28px;height:28px;border-radius:7px;font-size:10px;font-weight:800">'+ini(a)+'</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+a+'</div><div style="font-size:11px;color:var(--t2)">'+breaks.length+' break'+( breaks.length!==1?'s':'')+' · '+mins+'/'+daily+' min</div></div></div>';
   }
   el.innerHTML=html||'<div class="empty" style="padding:14px"><div class="ep">No break activity today</div></div>';
+  // Update last saved
+  var ls=document.getElementById('lastSaved');
+  if(ls&&d.ts){ls.textContent=new Date(d.ts).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 }
 
 function saveSett(){
@@ -1192,7 +1233,96 @@ function saveSett(){
   sv(d);renderAll();showToast('Settings saved','ok');
 }
 function clearDay(){if(!confirm("Clear today?"))return;var d=gd();d.breaks[today()]=[];sv(d);renderAll();showToast('Cleared','inf');}
-function clearAll(){if(!confirm('Clear ALL?'))return;localStorage.removeItem(SK);renderAll();showToast('Done','inf');}
+function clearAll(){if(!confirm('Clear ALL data? This cannot be undone.'))return;localStorage.removeItem(SK);renderAll();showToast('All data cleared','inf');}
+
+// ════════════════════════════════════════════
+//  DEMO DATA
+// ════════════════════════════════════════════
+function loadDemoData(){
+  if(!confirm('Load demo data? This will add sample breaks for today.'))return;
+  var d=gd();var t=today();if(!d.breaks[t])d.breaks[t]=[];var tb=d.breaks[t];
+  var now=new Date();var h=now.getHours();var nowM=h*60+now.getMinutes();
+  // Helper: make a break entry
+  function mkbrk(agent,startH,startMin,dur,status,minsAgo){
+    var sm=startH*60+startMin;
+    var startedAt=null,endedAt=null,actualDur=null;
+    if(status==='completed'){startedAt=new Date(Date.now()-(minsAgo+dur)*60000).toISOString();endedAt=new Date(Date.now()-minsAgo*60000).toISOString();actualDur=dur+Math.floor(Math.random()*4)-1;}
+    if(status==='active'){startedAt=new Date(Date.now()-minsAgo*60000).toISOString();}
+    return{id:(Date.now()+Math.random()).toString().replace('.',''),agent:agent,shift:'08:00',breakStart:('0'+startH).slice(-2)+':'+('0'+startMin).slice(-2),duration:dur,status:status,startedAt:startedAt,endedAt:endedAt,actualDuration:actualDur,date:t};
+  }
+  var demos=[
+    mkbrk('Demo User',9,0,15,'completed',90),
+    mkbrk('Demo User',11,30,20,'scheduled',0),
+    mkbrk('Fouzeyah Erzouqi',9,30,15,'completed',75),
+    mkbrk('Sarah Alqattan',10,0,20,'completed',50),
+    mkbrk('Danah Alenezi',10,30,15,'completed',35),
+    mkbrk('Yasmine Maraafi',11,0,30,'completed',20),
+    mkbrk('Ezz Alsalem',11,30,15,'active',8),
+    mkbrk('Abdullah Bakhsh',12,0,20,'scheduled',0),
+    mkbrk('Abdulaziz Bozobar',12,30,15,'scheduled',0),
+    mkbrk('Abdulrahman Abdullah',13,0,25,'scheduled',0),
+    mkbrk('Ali Alwayel',9,0,20,'completed',110),
+    mkbrk('Omar Alsaeed',10,0,15,'completed',65),
+    mkbrk('Saad Alharbi',11,0,20,'completed',40),
+    mkbrk('Asrar Alattar',11,30,15,'active',5),
+    mkbrk('Latefah Alhouti',13,30,20,'scheduled',0),
+    mkbrk('Ahmad Alenezi',9,30,20,'completed',80),
+    mkbrk('Mariam Almutairi',10,30,15,'completed',45),
+  ];
+  // Avoid duplicates
+  for(var i=0;i<demos.length;i++){
+    var dup=false;
+    for(var j=0;j<tb.length;j++){if(tb[j].agent===demos[i].agent&&tb[j].breakStart===demos[i].breakStart){dup=true;break;}}
+    if(!dup)tb.push(demos[i]);
+  }
+  sv(d);renderAll();
+  showToast('Demo data loaded! '+(demos.length)+' breaks added','ok');
+}
+
+// ════════════════════════════════════════════
+//  CSV EXPORT
+// ════════════════════════════════════════════
+function downloadCSV(scope){
+  var d=gd();var rows=[];var t=today();
+  rows.push(['Date','Agent','Role','Shift Start','Break Start','Duration (min)','Status','Actual Duration (min)','Started At','Ended At','Logged At']);
+  var dates=scope==='today'?[t]:Object.keys(d.breaks).sort();
+  for(var di=0;di<dates.length;di++){
+    var dt=dates[di];var tb=d.breaks[dt]||[];
+    for(var i=0;i<tb.length;i++){
+      var b=tb[i];
+      // Find role
+      var empRole='';
+      for(var ei=0;ei<EMPLOYEES.length;ei++){if(EMPLOYEES[ei].name===b.agent){empRole=EMPLOYEES[ei].role;break;}}
+      var startedFmt=b.startedAt?new Date(b.startedAt).toLocaleString('en-GB'):'';
+      var endedFmt=b.endedAt?new Date(b.endedAt).toLocaleString('en-GB'):'';
+      // Logged at = break creation id (timestamp)
+      var loggedAt=b.id?new Date(parseInt(b.id.split('.')[0])).toLocaleString('en-GB'):'';
+      rows.push([
+        dt,
+        '"'+b.agent+'"',
+        '"'+empRole+'"',
+        b.shift||'',
+        b.breakStart,
+        b.duration,
+        b.status,
+        b.actualDuration||'',
+        '"'+startedFmt+'"',
+        '"'+endedFmt+'"',
+        '"'+loggedAt+'"'
+      ]);
+    }
+  }
+  if(rows.length<=1){showToast('No data to export','err');return;}
+  var csv=rows.map(function(r){return r.join(',');}).join('
+');
+  var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  a.download='KIB_Break_Report_'+(scope==='today'?t:'All')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Report downloaded ✓','ok');
+}
 
 // ════════════════════════════════════════════
 //  TEAM DASHBOARD
