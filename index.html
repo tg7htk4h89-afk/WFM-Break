@@ -58,7 +58,7 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
 .stile.sel .sttime{color:var(--navy);}
 
 /* APP */
-#sApp{display:none;min-height:100vh;padding-bottom:66px;}
+#sApp{display:none;min-height:100vh;padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));}
 #sApp.on{display:block;}
 .topbar{background:linear-gradient(90deg,var(--navy2),var(--navy));height:52px;padding:0 13px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 14px rgba(13,92,166,.25);}
 .tbl{display:flex;align-items:center;gap:9px;}
@@ -85,9 +85,9 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
 .btnout{border:1px solid var(--border);background:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--t2);cursor:pointer;}
 
 /* BOTTOM NAV */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.06);}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 4px 9px;border:none;background:none;cursor:pointer;position:relative;}
-.nb .ni{font-size:18px;margin-bottom:1px;}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:9999;box-shadow:0 -2px 8px rgba(0,0,0,.06);padding-bottom:env(safe-area-inset-bottom,0px);}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 10px;border:none;background:none;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:56px;}
+.nb .ni{font-size:20px;margin-bottom:2px;line-height:1;}
 .nb .nl{font-size:9px;font-weight:600;color:var(--t3);}
 .nb.on .nl{color:var(--navy);font-weight:800;}
 .nb.on::after{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:var(--navy);border-radius:0 0 2px 2px;}
@@ -480,12 +480,12 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
   </div>
 
   <div class="bnav">
-    <button class="nb on" id="nav-home" onclick="gp('home')"><span class="ni">🏠</span><span class="nl">Home</span></button>
-    <button class="nb" id="nav-book" onclick="gp('book')"><span class="ni">📅</span><span class="nl">Book</span></button>
-    <button class="nb" id="nav-team" onclick="gp('team')"><span class="ni">👥</span><span class="nl">Team</span></button>
-    <button class="nb" id="nav-swap" onclick="gp('swap')"><span class="ni">🔄</span><span class="nl">Swap</span><span class="nbadge" id="swbadge"></span></button>
-    <button class="nb" id="nav-hist" onclick="gp('hist')"><span class="ni">📋</span><span class="nl">History</span></button>
-    <button class="nb" id="nav-admin" onclick="gp('admin')" style="display:none"><span class="ni">⚙️</span><span class="nl">Admin</span></button>
+    <button class="nb on" id="nav-home" ontouchstart="gp('home')" onclick="gp('home')"><span class="ni">🏠</span><span class="nl">Home</span></button>
+    <button class="nb" id="nav-book" ontouchstart="gp('book')" onclick="gp('book')"><span class="ni">📅</span><span class="nl">Book</span></button>
+    <button class="nb" id="nav-team" ontouchstart="gp('team')" onclick="gp('team')"><span class="ni">👥</span><span class="nl">Team</span></button>
+    <button class="nb" id="nav-swap" ontouchstart="gp('swap')" onclick="gp('swap')"><span class="ni">🔄</span><span class="nl">Swap</span><span class="nbadge" id="swbadge"></span></button>
+    <button class="nb" id="nav-hist" ontouchstart="gp('hist')" onclick="gp('hist')"><span class="ni">📋</span><span class="nl">History</span></button>
+    <button class="nb" id="nav-admin" ontouchstart="gp('admin')" onclick="gp('admin')" style="display:none"><span class="ni">⚙️</span><span class="nl">Admin</span></button>
   </div>
 </div>
 
@@ -597,8 +597,72 @@ function sv(d){d.ts=Date.now();localStorage.setItem(SK,JSON.stringify(d));apiPus
 function schedMins(name,d){var s=0;tdb(d).forEach(function(b){if(b.agent===name&&b.status==='done')s+=b.duration;});return s;}
 function myBreak(d){var f=null;tdb(d).forEach(function(b){if(!f&&b.agent===me.name&&(b.status==='booked'||b.status==='active'))f=b;});return f;}
 
-function apiPush(d){try{fetch(API,{method:'POST',body:JSON.stringify({action:'saveAll',data:d}),headers:{'Content-Type':'text/plain'}}).then(function(r){return r.json();}).then(function(){setSy(true);}).catch(function(){setSy(false);});}catch(e){setSy(false);}}
-function apiPull(){try{fetch(API+'?action=getAll').then(function(r){return r.json();}).then(function(remote){if(!remote||!remote.ts)return;if(remote.ts>(gd().ts||0)){localStorage.setItem(SK,JSON.stringify(remote));renderAll();}setSy(true);}).catch(function(){setSy(false);});}catch(e){setSy(false);}}
+function apiPush(d){
+  try{
+    fetch(API,{method:'POST',body:JSON.stringify({action:'saveAll',data:d}),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      setSy(true);
+      // If server has newer conflicting data, merge it in
+      if(res&&res.conflict&&res.serverData){
+        mergeData(res.serverData);
+      }
+    }).catch(function(){setSy(false);});
+  }catch(e){setSy(false);}
+}
+function apiPull(){
+  try{
+    fetch(API+'?action=getAll&_='+Date.now()) // cache-bust
+    .then(function(r){return r.json();})
+    .then(function(remote){
+      if(!remote||typeof remote!=='object')return;
+      setSy(true);
+      if(remote.ts&&remote.ts>0){
+        mergeData(remote);
+      }
+    }).catch(function(){setSy(false);});
+  }catch(e){setSy(false);}
+}
+// Merge remote data with local — keeps newest breaks by id, merges logins
+function mergeData(remote){
+  var local=gd();
+  // If remote is strictly newer, just use it
+  if(remote.ts>(local.ts||0)){
+    localStorage.setItem(SK,JSON.stringify(remote));
+    renderAll();
+    return;
+  }
+  // If local is newer but remote has breaks we don't have, merge them in
+  var changed=false;
+  var rDates=Object.keys(remote.breaks||{});
+  rDates.forEach(function(date){
+    if(!local.breaks[date])local.breaks[date]=[];
+    var remoteBreaks=remote.breaks[date]||[];
+    remoteBreaks.forEach(function(rb){
+      var exists=local.breaks[date].find(function(lb){return lb.id===rb.id;});
+      if(!exists){local.breaks[date].push(rb);changed=true;}
+      else if(rb.bookedAt&&rb.bookedAt>(exists.bookedAt||0)){
+        // Remote version of this break is newer — update it
+        var idx=local.breaks[date].indexOf(exists);
+        local.breaks[date][idx]=rb;changed=true;
+      }
+    });
+  });
+  // Merge logins
+  var rLoginDates=Object.keys(remote.logins||{});
+  rLoginDates.forEach(function(date){
+    if(!local.logins[date])local.logins[date]={};
+    var rLogins=remote.logins[date]||{};
+    Object.keys(rLogins).forEach(function(agent){
+      if(!local.logins[date][agent]){local.logins[date][agent]=rLogins[agent];changed=true;}
+    });
+  });
+  if(changed){
+    local.ts=Math.max(local.ts||0,remote.ts||0);
+    localStorage.setItem(SK,JSON.stringify(local));
+    renderAll();
+  }
+}
 function setSy(ok){var d=document.getElementById('syncdot');if(d)d.className='syncdot'+(ok?' ok':' err');}
 function saveLoginAPI(emp,shift){try{fetch(API,{method:'POST',body:JSON.stringify({action:'saveLogin',agent:emp.name,shift:shift.label,date:today()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});}catch(e){}}
 function forceSync(){apiPush(gd());showToast('Syncing...','inf');}
@@ -637,9 +701,50 @@ function confirmShift(){
 function backToLogin(){document.getElementById('step2').className='lstep';document.getElementById('step1').className='lstep on';document.getElementById('pwInput').value='';}
 function finishLogin(emp,shift){
   me=JSON.parse(JSON.stringify(emp));me.shift=shift.start;me.shiftEnd=shift.end;me.shiftLabel=shift.label;
-  me.shiftEndMin=shift.endMinRaw; // raw minutes, may exceed 1440 for overnight
-  var d=gd();if(!d.logins[today()])d.logins[today()]={};
-  d.logins[today()][me.name]={time:nowHH(),shift:shift.label};sv(d);saveLoginAPI(me,shift);startApp();
+  me.shiftEndMin=shift.endMinRaw;
+  // Always pull server data first before pushing — prevents overwriting other agents' breaks
+  function doStart(){
+    var d=gd();
+    if(!d.logins[today()])d.logins[today()]={};
+    d.logins[today()][me.name]={time:nowHH(),shift:shift.label};
+    d.ts=Date.now();
+    localStorage.setItem(SK,JSON.stringify(d));
+    apiPush(d);
+    saveLoginAPI(me,shift);
+    startApp();
+  }
+  var settled=false;
+  var timer=setTimeout(function(){if(!settled){settled=true;doStart();}},4000);
+  try{
+    fetch(API+'?action=getAll&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(remote){
+      if(settled)return; settled=true; clearTimeout(timer);
+      if(remote&&remote.breaks){
+        var local=gd();
+        // Merge remote breaks into local (don't overwrite)
+        Object.keys(remote.breaks||{}).forEach(function(date){
+          if(!local.breaks[date])local.breaks[date]=[];
+          (remote.breaks[date]||[]).forEach(function(rb){
+            if(!local.breaks[date].find(function(lb){return lb.id===rb.id;}))
+              local.breaks[date].push(rb);
+          });
+        });
+        // Merge remote logins
+        Object.keys(remote.logins||{}).forEach(function(date){
+          if(!local.logins[date])local.logins[date]={};
+          Object.keys(remote.logins[date]||{}).forEach(function(ag){
+            if(!local.logins[date][ag])local.logins[date][ag]=remote.logins[date][ag];
+          });
+        });
+        // Use remote settings if available
+        if(remote.settings)local.settings=Object.assign({},remote.settings,local.settings||{});
+        localStorage.setItem(SK,JSON.stringify(local));
+      }
+      doStart();
+    })
+    .catch(function(){if(!settled){settled=true;clearTimeout(timer);doStart();}});
+  }catch(e){if(!settled){settled=true;clearTimeout(timer);doStart();}}
 }
 function doSignOut(){
   me=null;selSlot=null;selDur=15;tmFilter='';
@@ -654,7 +759,7 @@ function startApp(){
   document.getElementById('sApp').className='on';
   if(me.access==='admin'||me.access==='readonly')document.getElementById('nav-admin').style.display='';
   renderStrip();renderAll();gp('home');
-  clkInt=setInterval(renderClock,1000);syncInt=setInterval(function(){apiPull();renderAll();},10000);tmrInt=setInterval(tickTimer,1000);
+  clkInt=setInterval(renderClock,1000);syncInt=setInterval(function(){apiPull();renderAll();},5000);tmrInt=setInterval(tickTimer,1000);
   apiPull();renderClock();
 }
 function renderClock(){
@@ -682,7 +787,10 @@ function tickTimer(){
   }
 }
 
+var _gpLast='',_gpT=0;
 function gp(p){
+  var now=Date.now();if(p===_gpLast&&now-_gpT<400)return; // debounce double fire
+  _gpLast=p;_gpT=now;
   document.getElementById('npanel').classList.remove('open');
   document.querySelectorAll('.pg').forEach(function(x){x.classList.remove('on');});
   document.querySelectorAll('.nb').forEach(function(x){x.classList.remove('on');});
@@ -725,8 +833,16 @@ function renderHome(){
   document.getElementById('bcsub').textContent=used+' of '+daily+' minutes scheduled';
   var pct=Math.min(used/daily*100,100);document.getElementById('bcprog').style.width=pct+'%';
   document.getElementById('bcused').textContent=used+' min used';document.getElementById('bctotal').textContent=daily+' min total';
+  // Show ALL active/booked breaks right now — from ANY department/device
   var nm=toMin(nowHH());
-  var onNow=tdb(d).filter(function(b){if(b.status!=='active'&&b.status!=='booked')return false;var bs=toMin(b.breakStart);return bs<=nm&&bs+b.duration>nm;});
+  var sm2=toMin(me.shift);
+  var adjNm2=(sm2>=720&&nm<sm2&&nm<480)?nm+1440:nm;
+  var onNow=tdb(d).filter(function(b){
+    if(b.status!=='active'&&b.status!=='booked')return false;
+    var bs=toMin(b.breakStart);
+    var bsAdj=(bs<480&&sm2>=720)?bs+1440:bs;
+    return bsAdj<=adjNm2&&bsAdj+b.duration>adjNm2;
+  });
   var nowEl=document.getElementById('nowPanel');
   if(!onNow.length){nowEl.innerHTML='<div class="empty" style="padding:16px"><div class="ep">No one on break ✓</div></div>';}
   else{
@@ -1080,6 +1196,9 @@ function showToast(msg,type){var el=document.getElementById('toast');var ic={ok:
 
 document.getElementById('pwInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
 document.addEventListener('click',function(e){var p=document.getElementById('npanel');var bell=document.querySelector('.bellbtn');if(p&&p.classList.contains('open')&&!p.contains(e.target)&&bell&&!bell.contains(e.target))p.classList.remove('open');});
+// Sync immediately when user comes back to the app (tab focus, screen wake)
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&me){apiPull();setTimeout(renderAll,600);}});
+window.addEventListener('focus',function(){if(me){apiPull();setTimeout(renderAll,600);}});
 </script>
 </body>
 </html>
