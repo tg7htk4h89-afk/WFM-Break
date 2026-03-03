@@ -585,8 +585,9 @@ input,select,button{font-family:'DM Sans',sans-serif;}
 
     <div class="sh">Data</div>
     <div class="card"><div class="cb" style="display:flex;flex-direction:column;gap:9px">
-      <button class="btn btn-red" onclick="clearDay()">&#128465; Clear Today</button>
-      <button class="btn btn-red" onclick="clearAll()" style="opacity:.7">&#9888; Clear All Data</button>
+      <button class="btn btn-red" onclick="clearDay()"><button class="btn btn-red" onclick="clearDay()">&#128465; Clear Today</button>#128465; Clear Today</button>
+      <button class="btn btn-red" onclick="clearAll()" style="opacity:.7"><button class="btn btn-red" onclick="clearAll()" style="opacity:.7">&#9888; Clear All Data</button>#9888; Clear All Data</button>
+      <button class="btn" style="background:#1a3a6c;color:#fff;border:none" onclick="forceResync()"><button class="btn btn-red" onclick="clearAll()" style="opacity:.7">&#9888; Clear All Data</button>#9654; Force Re-Sync to Sheets</button>
     </div></div>
   </div>
 
@@ -730,7 +731,7 @@ function _apiPushAll(d){
   breaks.forEach(function(brk){
     if(brk._synced)return;
     var payload=JSON.parse(JSON.stringify(brk));delete payload._synced;
-    fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+    fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'saveBreak',break:payload})
     }).then(function(r){return r.json();}).then(function(res){
       if(res&&res.success){brk._synced=true;localStorage.setItem(SK,JSON.stringify(d));}
@@ -739,7 +740,7 @@ function _apiPushAll(d){
   });
   // Push settings
   if(d.settings){
-    fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+    fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'saveSettings',settings:d.settings})
     }).catch(function(){});
   }
@@ -1360,8 +1361,9 @@ function saveSett(){
   var d=gd();d.settings={dailyMin:parseInt(document.getElementById('smax').value)||60,maxCon:parseInt(document.getElementById('scon').value)||2,maxBreak:parseInt(document.getElementById('smaxb').value)||30};
   sv(d);renderAll();showToast('Settings saved','ok');
 }
-function clearDay(){if(!confirm("Clear today?"))return;var d=gd();d.breaks[today()]=[];sv(d);fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"clearDay",date:today()})}).catch(function(){});renderAll();showToast("Cleared","inf");}
-function clearAll(){if(!confirm("Clear ALL data? This cannot be undone."))return;localStorage.removeItem(SK);fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"clearAll"})}).catch(function(){});renderAll();showToast("All data cleared","inf");}
+function clearDay(){if(!confirm("Clear today?"))return;var d=gd();d.breaks[today()]=[];sv(d);fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"clearDay",date:today()})}).catch(function(){});renderAll();showToast("Cleared","inf");}
+function clearAll(){if(!confirm("Clear ALL data? This cannot be undone."))return;localStorage.removeItem(SK);fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"clearAll"})}).catch(function(){});renderAll();showToast("All data cleared","inf");}
+function forceResync(){var d=gd();var t=today();var breaks=(d.breaks&&d.breaks[t])||[];breaks.forEach(function(b){delete b._synced;});localStorage.setItem(SK,JSON.stringify(d));_apiPushAll(d);showToast("Re-syncing all breaks to Sheets...","inf");setTimeout(function(){showToast("Sync complete! Check Google Sheet.","suc");},3000);}
 
 // ════════════════════════════════════════════
 //  DEMO DATA
