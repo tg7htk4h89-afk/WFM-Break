@@ -477,7 +477,7 @@ input,select,button{font-family:'DM Sans',sans-serif;}
       <div class="bcrow"><div class="bcnum" id="bcnum">60</div><div class="bcunit">min remaining</div></div>
       <div class="bcsub" id="bcsub">0 of 60 minutes scheduled</div>
       <div class="bcpwrap"><div class="bcprog" id="bcprog" style="width:0%"></div></div>
-      <div class="bcprow"><span id="bcused">0 min used</span><span>60 min total</span></div>
+      <div class="bcprow"><span id="bcused">0 min used</span><span>45 min total</span></div>
     </div>
 
     <div class="sh">Now on Break</div>
@@ -507,7 +507,7 @@ input,select,button{font-family:'DM Sans',sans-serif;}
       <div class="ch"><div class="ctitle">&#9203; Duration</div></div>
       <div class="cb">
         <div class="durrow" id="durrow"></div>
-        <div style="font-size:11px;color:var(--t2)">Max 30 min per break &nbsp;|&nbsp; Balance: <strong id="durbal">60 min</strong></div>
+        <div style="font-size:11px;color:var(--t2)">Max 30 min per break &nbsp;|&nbsp; Balance: <strong id="durbal">45 min</strong></div>
       </div>
     </div>
     <div id="bookbtnwrap" style="display:none">
@@ -707,13 +707,13 @@ var EMPLOYEES = [
 //  STORAGE  –  localStorage cache + Google Sheets API sync
 // ════════════════════════════════════════════
 var SK = 'kibv7';
-var API_URL = 'https://script.google.com/macros/s/AKfycbyh7qyNe6s1KFNtPlI_iT2MtOEgJf5IjyZ_i74OU12U0IqExZscrJER60DKgKmiMjbjKg/exec';
+var API_URL = 'https://script.google.com/macros/s/AKfycbyj6VEz3AdsrMLL3rB5DibHfVcPUkuMgWZBnk3Sb2exhfG9sgHn2nhDaadRDu1C5vlQSQ/exec';
 var _apiOk = null;   // null=unknown, true=online, false=offline
 var syncInt = null;
 
 function today(){return new Date().toISOString().split('T')[0];}
 function gd(){try{var r=localStorage.getItem(SK);return r?JSON.parse(r):defData();}catch(e){return defData();}}
-function defData(){return{breaks:{},swaps:[],notifs:{},settings:{dailyMin:60,maxCon:2,maxBreak:30},logins:{}};}
+function defData(){return{breaks:{},swaps:[],notifs:{},settings:{dailyMin:45,maxCon:2,maxBreak:30},logins:{}};}
 function tdb(d){var t=today();if(!d.breaks[t])d.breaks[t]=[];return d.breaks[t];}
 
 // Save locally AND push to Sheets in background
@@ -776,7 +776,12 @@ function apiPull(){
       d.breaks[t]=local;
       localStorage.setItem(SK,JSON.stringify(d));
       _setSync(true);
-      if(me)renderAll();
+      if(me){
+        renderAll();
+        // Also refresh slot grid if user is on booking page
+        var activePg=document.querySelector('.page.on');
+        if(activePg&&activePg.id==='pg-book') buildSlotGrid();
+      }
     })
     .catch(function(){_setSync(false);});
   // Pull settings too
@@ -785,6 +790,21 @@ function apiPull(){
     .then(function(res){
       if(!res||!res.success||!res.settings)return;
       var d=gd();d.settings=res.settings;
+      localStorage.setItem(SK,JSON.stringify(d));
+    }).catch(function(){});
+  // Pull logins so team page stays accurate across devices
+  fetch(API_URL+'?action=getLogins&date='+t)
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res||!res.success||!res.logins)return;
+      var d=gd();
+      if(!d.logins)d.logins={};
+      if(!d.logins[t])d.logins[t]={};
+      // Merge: remote logins win (add any we don't have locally)
+      var remoteLogins=res.logins;
+      for(var name in remoteLogins){
+        if(!d.logins[t][name]) d.logins[t][name]=remoteLogins[name];
+      }
       localStorage.setItem(SK,JSON.stringify(d));
     }).catch(function(){});
 }
@@ -909,7 +929,7 @@ function confirmLogin(){
 
 function loginUser(emp, shift, shEnd, shEndMin){
   me={name:emp.name,role:emp.role,access:emp.access,shift:shift,shiftEnd:shEnd,shiftEndMin:shEndMin};
-  // Track this login for team page
+  // Track this login for team page (local + push to Sheets)
   if(emp.access!=='readonly'){
     try{
       var d2=gd(); var t2=today();
@@ -917,6 +937,10 @@ function loginUser(emp, shift, shEnd, shEndMin){
       if(!d2.logins[t2]) d2.logins[t2]={};
       d2.logins[t2][emp.name]={time:Date.now(), shift:shift};
       localStorage.setItem(SK, JSON.stringify(d2));
+      // Push login to Google Sheets so other devices see it
+      fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify({action:'saveLogin',agent:emp.name,shift:shift,date:t2})
+      }).catch(function(){});
     }catch(e){}
   }
   document.getElementById('sLogin').style.display='none';
@@ -1072,7 +1096,7 @@ function buildSlotGrid(){
 
 function pickSlot(min,hhmm){
   selSlot={min:min,hhmm:hhmm};buildSlotGrid();
-  var d=gd();var daily=d.settings?(d.settings.dailyMin||60):60;var maxBreak=d.settings?(d.settings.maxBreak||30):30;
+  var d=gd();var daily=d.settings?(d.settings.dailyMin||45):45;var maxBreak=d.settings?(d.settings.maxBreak||30):30;
   var sched=schedMin(me.name,d);var rem=Math.max(daily-sched,0);var maxDur=Math.min(maxBreak,rem);
   if(maxDur<1){showToast('No break balance remaining','err');return;}
   var dr=document.getElementById('durrow');var opts=[5,10,15,20,25,30];var html='';
@@ -1100,7 +1124,7 @@ function confirmBook(){
   if(nowM2<shiftStartM && shiftStartM<=nowM2+1440-1){
     showToast('Your shift starts at '+fmt12(me.shift)+' – booking not allowed yet','err');return;
   }
-  var d=gd();var daily=d.settings?(d.settings.dailyMin||60):60;var maxCon=d.settings?(d.settings.maxCon||2):2;var maxBreak=d.settings?(d.settings.maxBreak||30):30;
+  var d=gd();var daily=d.settings?(d.settings.dailyMin||45):45;var maxCon=d.settings?(d.settings.maxCon||2):2;var maxBreak=d.settings?(d.settings.maxBreak||30):30;
   if(selDur>maxBreak){showToast('Max '+maxBreak+' min per break','err');return;}
   var sched=schedMin(me.name,d);
   if(sched+selDur>daily){showToast('Not enough balance','err');return;}
@@ -1261,7 +1285,7 @@ function renderAll(){
 function renderBalance(d){
   if(me&&me.access==='readonly'){
     // Show team stats instead of personal balance
-    var tb=tdb(d);var daily=d.settings?(d.settings.dailyMin||60):60;
+    var tb=tdb(d);var daily=d.settings?(d.settings.dailyMin||45):45;
     var active=tb.filter(function(b){return b.status==='active';}).length;
     var total=tb.filter(function(b){return b.status!=='cancelled';}).length;
     var totalMins=tb.reduce(function(s,b){return b.status!=='cancelled'?s+b.duration:s;},0);
@@ -1275,7 +1299,7 @@ function renderBalance(d){
     var bcunit=document.querySelector('.bcunit');if(bcunit)bcunit.textContent='on break';
     return;
   }
-  var daily=d.settings?(d.settings.dailyMin||60):60;
+  var daily=d.settings?(d.settings.dailyMin||45):45;
   var sched=schedMin(me.name,d);var used=usedMin(me.name,d);
   var rem=Math.max(daily-sched,0);var pct=Math.min(sched/daily*100,100);
   document.getElementById('bcnum').textContent=rem;
@@ -1366,10 +1390,10 @@ function renderHistory(d){
 function renderAdmin(d){
   if(me&&me.access==='agent')return;
   var el=document.getElementById('adminOverview');if(!el)return;
-  document.getElementById('smax').value=d.settings?(d.settings.dailyMin||60):60;
+  document.getElementById('smax').value=d.settings?(d.settings.dailyMin||45):45;
   document.getElementById('scon').value=d.settings?(d.settings.maxCon||2):2;
   document.getElementById('smaxb').value=d.settings?(d.settings.maxBreak||30):30;
-  var tb=tdb(d);var daily=d.settings?(d.settings.dailyMin||60):60;
+  var tb=tdb(d);var daily=d.settings?(d.settings.dailyMin||45):45;
   var allNames=EMPLOYEES.map(function(e){return e.name;});
   var html='';
   for(var i=0;i<allNames.length;i++){
@@ -1385,7 +1409,7 @@ function renderAdmin(d){
 }
 
 function saveSett(){
-  var d=gd();d.settings={dailyMin:parseInt(document.getElementById('smax').value)||60,maxCon:parseInt(document.getElementById('scon').value)||2,maxBreak:parseInt(document.getElementById('smaxb').value)||30};
+  var d=gd();d.settings={dailyMin:parseInt(document.getElementById('smax').value)||45,maxCon:parseInt(document.getElementById('scon').value)||2,maxBreak:parseInt(document.getElementById('smaxb').value)||30};
   sv(d);renderAll();showToast('Settings saved','ok');
 }
 function clearDay(){if(!confirm("Clear today?"))return;var d=gd();d.breaks[today()]=[];sv(d);fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"clearDay",date:today()})}).catch(function(){});renderAll();showToast("Cleared","inf");}
@@ -1405,7 +1429,7 @@ function injectDemoData(){
   // ─── time anchor: now in minutes since midnight ───────────
   var now=new Date();
   var nowM=now.getHours()*60+now.getMinutes();
-  var daily=d.settings?(d.settings.dailyMin||60):60;
+  var daily=d.settings?(d.settings.dailyMin||45):45;
 
   // ─── builder ──────────────────────────────────────────────
   // minsBeforeNow: how many minutes ago this break ENDED (for completed)
@@ -1631,7 +1655,7 @@ function renderTeam(d){
   if(!me) return;
   var tb = tdb(d);
   var nowM = toMin(nowHHMM());
-  var daily = d.settings ? (d.settings.dailyMin||60) : 60;
+  var daily = d.settings ? (d.settings.dailyMin||45) : 60;
   var maxCon = d.settings ? (d.settings.maxCon||2) : 2;
 
   // Who is on break right now
