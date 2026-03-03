@@ -548,16 +548,20 @@ var EMPS=[
   {pw:'demo@1234',name:'Demo User',role:'Inbound Agent',dept:'Inbound',access:'agent'},
   {pw:'demo@mgr',name:'Demo Manager',role:'Team Leader',dept:'Supervisors',access:'readonly'}
 ];
-var SHIFTS=[
-  {label:'7AM–3PM',start:'07:00',end:'15:00',icon:'🌅'},
-  {label:'8AM–4PM',start:'08:00',end:'16:00',icon:'☀️'},
-  {label:'9AM–5PM',start:'09:00',end:'17:00',icon:'🌤'},
-  {label:'10AM–6PM',start:'10:00',end:'18:00',icon:'🌞'},
-  {label:'12PM–8PM',start:'12:00',end:'20:00',icon:'🌇'},
-  {label:'2PM–10PM',start:'14:00',end:'22:00',icon:'🌆'},
-  {label:'3PM–11PM',start:'15:00',end:'23:00',icon:'🌃'},
-  {label:'4PM–12AM',start:'16:00',end:'00:00',icon:'🌙'}
-];
+// Shifts: 8AM–9PM starts, each 7h until 18 Mar 2026, then 8h after
+var SHIFT_ICONS=['🌅','🌤','☀️','🌞','🌇','🌆','🌃','🌙','🌛','🌜','🌝','⭐','🌠','🌠'];
+function getShifts(){
+  var cut=new Date('2026-03-18T00:00:00');var dur=new Date()<cut?7:8;
+  var out=[];
+  for(var h=8;h<=21;h++){
+    var endH=h+dur;var endH24=endH%24;
+    function fh(x){x=x%24;var m=x%12||12;return m+(x<12?'AM':'PM');}
+    var lbl=fh(h)+'–'+fh(endH24)+(endH>=24?' (+1)':'');
+    out.push({label:lbl,start:pad(h)+':00',end:pad(endH24)+':00',endMinRaw:endH*60,icon:SHIFT_ICONS[h-8]||'🕐'});
+  }
+  return out;
+}
+var SHIFTS=getShifts();
 var DEPTS=[
   {key:'Inbound',label:'Inbound Agents'},
   {key:'Outbound',label:'Outbound Agents'},
@@ -633,7 +637,7 @@ function confirmShift(){
 function backToLogin(){document.getElementById('step2').className='lstep';document.getElementById('step1').className='lstep on';document.getElementById('pwInput').value='';}
 function finishLogin(emp,shift){
   me=JSON.parse(JSON.stringify(emp));me.shift=shift.start;me.shiftEnd=shift.end;me.shiftLabel=shift.label;
-  me.shiftEndMin=(shift.end==='00:00'||shift.end==='24:00')?1440:toMin(shift.end);
+  me.shiftEndMin=shift.endMinRaw; // raw minutes, may exceed 1440 for overnight
   var d=gd();if(!d.logins[today()])d.logins[today()]={};
   d.logins[today()][me.name]={time:nowHH(),shift:shift.label};sv(d);saveLoginAPI(me,shift);startApp();
 }
@@ -664,8 +668,8 @@ function renderStrip(){
   var av=document.getElementById('asav');av.textContent=ini(me.name);av.style.background=avc(me.name);
   document.getElementById('uav').textContent=ini(me.name);
   document.getElementById('asname').textContent=me.name;
-  var eL=me.shiftEndMin===1440?'12:00 AM':me.shiftEnd;
-  document.getElementById('asinfo').textContent=me.role+' · '+fmt12(me.shift)+' – '+fmt12(eL);
+  var eL=me.shiftEndMin>=1440?fmt12(pad(me.shiftEndMin%1440/60|0)+':00')+' +1d':me.shiftEnd;
+  document.getElementById('asinfo').textContent=me.role+' · '+fmt12(me.shift)+' – '+eL;
   var d=gd();var daily=(d.settings&&d.settings.dailyMin)||45;
   var used=schedMins(me.name,d);document.getElementById('balchip').textContent=Math.max(daily-used,0)+' min left';
 }
@@ -715,7 +719,8 @@ function renderHome(){
     if(b&&b.status==='booked'){bookedCard.style.display='block';document.getElementById('bookedTime').textContent=fmt12(b.breakStart);document.getElementById('bookedMeta').textContent=b.duration+' min break · Tap Start when ready';}
     else bookedCard.style.display='none';
   }
-  document.getElementById('bcshift').textContent='Shift: '+fmt12(me.shift)+' – '+fmt12(me.shiftEndMin===1440?'24:00':me.shiftEnd);
+  var shiftEndDisp=me.shiftEndMin>=1440?fmt12(fromMin(me.shiftEndMin))+' +1':fmt12(me.shiftEnd);
+  document.getElementById('bcshift').textContent='Shift: '+fmt12(me.shift)+' – '+shiftEndDisp;
   document.getElementById('bcnum').textContent=rem;
   document.getElementById('bcsub').textContent=used+' of '+daily+' minutes scheduled';
   var pct=Math.min(used/daily*100,100);document.getElementById('bcprog').style.width=pct+'%';
@@ -755,27 +760,88 @@ function buildSlotGrid(){
   if(!me)return;
   var d=gd();var s=d.settings||{};var mc=s.maxCon||2;
   var sm=toMin(me.shift);var em=me.shiftEndMin;var nm=toMin(nowHH());
-  var adjNm=(sm>720&&nm<sm&&nm<360)?nm+1440:nm;var started=adjNm>=sm;
+  // For overnight shifts (crosses midnight): if it's early morning, add 1440 to current time
+  var adjNm=(sm>=720&&nm<sm&&nm<480)?nm+1440:nm;
+  var started=adjNm>=sm;
   var h='';
   for(var m=sm;m<em;m+=30){
-    var valid=(m>=sm+15)&&(m+30<=em-15);var isPast=m<adjNm;var at=[];var myHere=null;
-    tdb(d).forEach(function(b){if(b.status==='cancelled')return;var bs=toMin(b.breakStart);if(bs<=m&&bs+b.duration>m){at.push(b);if(b.agent===me.name)myHere=b;}});
+    var displayM=m%1440;
+    var valid=(m>=sm+15)&&(m+30<=em-15);
+    var isPast=m<adjNm;
+    var at=[];var myHere=null;
+    tdb(d).forEach(function(b){
+      if(b.status==='cancelled')return;
+      var bs=toMin(b.breakStart);
+      // Overnight: break at e.g. 00:30 for a 9PM+ shift needs +1440
+      var bsAdj=(bs<480&&sm>=720)?bs+1440:bs;
+      if(bsAdj<=m&&bsAdj+b.duration>m){at.push(b);if(b.agent===me.name)myHere=b;}
+    });
     var full=at.length>=mc;var isSel=selSlot&&selSlot.min===m;
-    var cls='bslot',who='',dis=false;
-    if(myHere){cls+=' mine';who='Yours';dis=true;}
-    else if(!started&&!isPast){cls+=' blocked';who='Not started';dis=true;}
-    else if(isPast){cls+=' blocked';who='Past';dis=true;}
-    else if(!valid){cls+=' blocked';who='Blocked';dis=true;}
-    else if(full){cls+=' full';who=at.map(function(x){return x.agent.split(' ')[0];}).join(', ');dis=true;}
-    else if(at.length>0){cls+=' partial';who=at[0].agent.split(' ')[0];}
-    else who='Free';
-    if(isSel&&!dis)cls+=' sel';
-    h+='<div class="'+cls+'" onclick="'+(dis?'':'pickSlot('+m+')')+'"><div class="bst">'+fmt12(fromMin(m))+'</div><div class="bsw">'+who+'</div></div>';
+    var cls='bslot',who='',onclick='';
+    if(myHere){
+      cls+=' mine';who='Yours';
+    } else if(!started){
+      cls+=' blocked';who='Not started';
+    } else if(isPast){
+      cls+=' blocked';who='Past';
+    } else if(!valid){
+      cls+=' blocked';who='Blocked';
+    } else if(full){
+      cls+=' full';
+      who=at.map(function(x){return x.agent.split(' ')[0];}).join(', ');
+      onclick='showOccupants('+m+')'; // Clickable! Show who + offer swap
+    } else if(at.length>0){
+      cls+=' partial';who=at[0].agent.split(' ')[0];onclick='pickSlot('+m+')';
+    } else {
+      who='Free';onclick='pickSlot('+m+')';
+    }
+    if(isSel&&!myHere&&!isPast)cls+=' sel';
+    h+='<div class="'+cls+'" onclick="'+onclick+'"><div class="bst">'+fmt12(fromMin(displayM))+'</div><div class="bsw">'+who+'</div></div>';
   }
   document.getElementById('bkgrid').innerHTML=h||'<div style="grid-column:1/-1;text-align:center;font-size:12px;color:var(--t3);padding:20px">No slots in your shift</div>';
   var si=document.getElementById('slotinfo');
-  if(selSlot){si.style.display='block';si.textContent='Selected: '+fmt12(selSlot.hhmm)+' — choose duration below';buildDurBtns();}
-  else{si.style.display='none';document.getElementById('durcard').style.display='none';document.getElementById('bookbtnwrap').style.display='none';}
+  if(selSlot){
+    var oc=[];var sm2=toMin(me.shift);
+    tdb(d).forEach(function(b){if(b.status==='cancelled')return;var bs=toMin(b.breakStart);var bsAdj=(bs<480&&sm2>=720)?bs+1440:bs;if(bsAdj<=selSlot.min&&bsAdj+b.duration>selSlot.min)oc.push(b.agent);});
+    var occTxt=oc.length?' · Also booked: '+oc.join(', '):'';
+    si.style.display='block';si.textContent='Selected: '+fmt12(fromMin(selSlot.min%1440))+occTxt+' — choose duration below';
+    buildDurBtns();
+  } else {
+    si.style.display='none';document.getElementById('durcard').style.display='none';document.getElementById('bookbtnwrap').style.display='none';
+  }
+}
+// Show full-slot occupants with swap option
+function showOccupants(m){
+  var d=gd();var sm=toMin(me.shift);var at=[];
+  tdb(d).forEach(function(b){
+    if(b.status==='cancelled'||b.agent===me.name)return;
+    var bs=toMin(b.breakStart);var bsAdj=(bs<480&&sm>=720)?bs+1440:bs;
+    if(bsAdj<=m&&bsAdj+b.duration>m)at.push(b);
+  });
+  selSlot=null;document.getElementById('durcard').style.display='none';document.getElementById('bookbtnwrap').style.display='none';
+  var si=document.getElementById('slotinfo');si.style.display='block';
+  if(!at.length){si.innerHTML='Slot is full (no swappable breaks found).';return;}
+  var myB=myBreak(d);
+  var inner='<strong>'+fmt12(fromMin(m%1440))+' is full</strong> — booked by:<br>';
+  at.forEach(function(b){
+    var alreadyReq=tdb(d).find(function(x){return x.status==='takeover_req'&&x.agent===me.name&&x.targetId===b.id;});
+    inner+='<span style="font-weight:700">'+b.agent+'</span> ('+b.duration+' min) ';
+    if(alreadyReq){inner+='<span style="font-size:10px;color:var(--amber);font-weight:700">⏳ Requested</span>';}
+    else if(myB){inner+='<button onclick="requestTakeover(\''+b.id+'\')" style="margin-left:4px;padding:2px 9px;border-radius:20px;border:1.5px solid var(--navy);background:var(--bg);font-size:10px;font-weight:700;color:var(--navy);cursor:pointer">↔ Request Swap</button>';}
+    inner+='<br>';
+  });
+  if(!myB)inner+='<small style="color:var(--t2)">💡 Book a different slot first to enable swap requests</small>';
+  si.innerHTML=inner;
+}
+// Request to swap — pending approval from the other agent
+function requestTakeover(targetId){
+  var d=gd();var bs=tdb(d);var myB=myBreak(d);
+  var target=bs.find(function(b){return b.id===targetId;});
+  if(!myB||!target){showToast('Book a slot first to request a swap','err');return;}
+  var already=bs.find(function(x){return x.status==='takeover_req'&&x.agent===me.name&&x.targetId===targetId;});
+  if(already){showToast('Already sent a request','inf');return;}
+  tdb(d).push({id:uid(),agent:me.name,targetId:targetId,targetAgent:target.agent,targetSlot:target.breakStart,mySlot:myB.breakStart,myBreakId:myB.id,status:'takeover_req',createdAt:Date.now()});
+  sv(d);showToast('Swap request sent to '+target.agent+'!','ok');addNotif('🔄 Swap request sent to '+target.agent);buildSlotGrid();
 }
 function pickSlot(m){
   selSlot={min:m,hhmm:fromMin(m)};selDur=15;buildSlotGrid();
@@ -863,18 +929,115 @@ function setTF(k){tmFilter=k;renderTeam();}
 
 function renderSwap(){
   var d=gd();var bs=tdb(d);var b=myBreak(d);
-  var incoming=bs.filter(function(x){return x.status==='swap_pending'&&x.swapWith===me.name;});
-  var canReq=me.access==='agent'||me.access==='atl';
   var inEl=document.getElementById('inswap');
-  if(!incoming.length){inEl.innerHTML='<div class="empty"><div class="ei">🔄</div><div class="ep">No pending requests</div></div>';}
-  else{var h='';incoming.forEach(function(req){h+='<div class="swcard"><div class="swfrom">From '+req.agent+'</div><div class="swtitle">Swap Request</div><div class="swmeta">Their slot: '+fmt12(req.swapOffer)+' → Your slot: '+fmt12(req.breakStart)+'</div><div class="swbtns"><button class="btn btn-green btn-sm" onclick="respSwap(\''+req.id+'\',true)">✓ Accept</button><button class="btn btn-red btn-sm" onclick="respSwap(\''+req.id+'\',false)">✕ Decline</button></div></div>';});inEl.innerHTML=h;}
   var myEl=document.getElementById('myswap');
-  if(!canReq){var all=bs.filter(function(x){return x.status==='swap_pending';});myEl.innerHTML='<div class="card"><div class="cb" style="padding:2px 13px">'+(all.length?all.map(function(x){return'<div class="histrow"><div class="hinfo"><div class="htitle">'+x.agent+' ↔ '+(x.swapWith||'?')+'</div><div class="hmeta">'+fmt12(x.breakStart)+' ↔ '+fmt12(x.swapOffer||'')+'</div></div></div>';}).join(''):'<div class="empty" style="padding:12px"><div class="ep">No pending swaps</div></div>')+'</div></div>';return;}
-  if(!b){myEl.innerHTML='<div class="empty"><div class="ei">☕</div><div class="ep">Book a break first to request a swap</div></div>';return;}
-  var others=bs.filter(function(x){return x.agent!==me.name&&(x.status==='booked'||x.status==='active');});
-  if(!others.length){myEl.innerHTML='<div class="empty"><div class="ei">☕</div><div class="ep">No other agents have breaks booked</div></div>';return;}
-  var h='';others.forEach(function(oth){var sent=bs.find(function(x){return x.status==='swap_pending'&&x.agent===me.name&&x.swapWith===oth.agent;});h+='<div class="swcard"><div class="swfrom">'+oth.agent+'</div><div class="swtitle">'+fmt12(oth.breakStart)+' · '+oth.duration+' min</div><div class="swmeta">Your slot: '+fmt12(b.breakStart)+'</div><div class="swbtns">'+(sent?'<span class="pill p-amber">⏳ Request sent</span>':'<button class="btn btn-navy btn-sm" onclick="doSwapReq(\''+b.id+'\',\''+oth.id+'\')">Request Swap</button>')+'</div></div>';});
-  myEl.innerHTML=h;
+
+  // Incoming swap requests (both old swap_pending AND takeover_req directed at me)
+  var incoming=bs.filter(function(x){
+    return (x.status==='swap_pending'&&x.swapWith===me.name)||
+           (x.status==='takeover_req'&&x.targetAgent===me.name);
+  });
+  if(!incoming.length){
+    inEl.innerHTML='<div class="empty"><div class="ei">🔄</div><div class="ep">No pending requests</div></div>';
+  } else {
+    var h='';
+    incoming.forEach(function(req){
+      if(req.status==='takeover_req'){
+        // Someone wants MY slot
+        h+='<div class="swcard">'
+          +'<div class="swfrom">From '+req.agent+'</div>'
+          +'<div class="swtitle">Wants your '+fmt12(req.targetSlot)+' slot</div>'
+          +'<div class="swmeta">In exchange they offer their '+fmt12(req.mySlot)+' slot</div>'
+          +'<div class="swbtns">'
+          +'<button class="btn btn-green btn-sm" onclick="respTakeover(\''+req.id+'\',true)">✓ Accept</button>'
+          +'<button class="btn btn-red btn-sm" onclick="respTakeover(\''+req.id+'\',false)">✕ Decline</button>'
+          +'</div></div>';
+      } else {
+        h+='<div class="swcard">'
+          +'<div class="swfrom">From '+req.agent+'</div>'
+          +'<div class="swtitle">Swap Request</div>'
+          +'<div class="swmeta">Their slot: '+fmt12(req.swapOffer)+' → Your slot: '+fmt12(req.breakStart)+'</div>'
+          +'<div class="swbtns">'
+          +'<button class="btn btn-green btn-sm" onclick="respSwap(\''+req.id+'\',true)">✓ Accept</button>'
+          +'<button class="btn btn-red btn-sm" onclick="respSwap(\''+req.id+'\',false)">✕ Decline</button>'
+          +'</div></div>';
+      }
+    });
+    inEl.innerHTML=h;
+  }
+
+  // My outgoing requests
+  var myTakeovers=bs.filter(function(x){return x.status==='takeover_req'&&x.agent===me.name;});
+  var canReq=me.access==='agent'||me.access==='atl';
+
+  if(!canReq){
+    // Supervisors: see all pending swaps
+    var all=bs.filter(function(x){return x.status==='swap_pending'||x.status==='takeover_req';});
+    myEl.innerHTML='<div class="card"><div class="cb" style="padding:2px 13px">'
+      +(all.length?all.map(function(x){return'<div class="histrow"><div class="hinfo"><div class="htitle">'+x.agent+' ↔ '+(x.targetAgent||x.swapWith||'?')+'</div><div class="hmeta">'+(x.status==='takeover_req'?x.targetSlot+' slot':fmt12(x.breakStart)+' ↔ '+fmt12(x.swapOffer||''))+'</div></div></div>';}).join(''):'<div class="empty" style="padding:12px"><div class="ep">No pending swaps</div></div>')
+      +'</div></div>';
+    return;
+  }
+
+  var h2='';
+  // Show my outgoing takeover requests
+  if(myTakeovers.length){
+    h2+='<div class="sh" style="margin-top:4px">My Swap Requests</div>';
+    myTakeovers.forEach(function(req){
+      h2+='<div class="swcard"><div class="swfrom">To '+req.targetAgent+'</div>'
+        +'<div class="swtitle">Requesting their '+fmt12(req.targetSlot)+' slot</div>'
+        +'<div class="swmeta">Offering my '+fmt12(req.mySlot)+' slot</div>'
+        +'<div class="swbtns"><button class="btn btn-outline btn-sm" onclick="cancelTakeover(\''+req.id+'\')">Cancel Request</button></div></div>';
+    });
+  }
+
+  // Classic swap: my break vs others
+  if(!b){
+    h2+='<div class="empty"><div class="ei">☕</div><div class="ep">Book a break to request swaps from the grid</div></div>';
+  } else {
+    var others=bs.filter(function(x){return x.agent!==me.name&&(x.status==='booked'||x.status==='active');});
+    if(others.length){
+      h2+='<div class="sh" style="margin-top:4px">Available to Swap</div>';
+      others.forEach(function(oth){
+        var sent=bs.find(function(x){return x.status==='swap_pending'&&x.agent===me.name&&x.swapWith===oth.agent;});
+        h2+='<div class="swcard"><div class="swfrom">'+oth.agent+'</div>'
+          +'<div class="swtitle">'+fmt12(oth.breakStart)+' · '+oth.duration+' min</div>'
+          +'<div class="swmeta">Your slot: '+fmt12(b.breakStart)+'</div>'
+          +'<div class="swbtns">'+(sent?'<span class="pill p-amber">⏳ Sent</span>':'<button class="btn btn-navy btn-sm" onclick="doSwapReq(\''+b.id+'\',\''+oth.id+'\')">Request Swap</button>')+'</div></div>';
+      });
+    }
+  }
+  myEl.innerHTML=h2||'<div class="empty"><div class="ei">☕</div><div class="ep">No breaks to swap</div></div>';
+}
+function doSwapReq(myId,theirId){
+  var d=gd();var bs=tdb(d);var myB=bs.find(function(b){return b.id===myId;});var th=bs.find(function(b){return b.id===theirId;});
+  if(!myB||!th)return;myB.status='swap_pending';myB.swapWith=th.agent;myB.swapOffer=th.breakStart;sv(d);showToast('Swap request sent to '+th.agent,'inf');renderSwap();
+}
+function respSwap(sid,accept){
+  var d=gd();var bs=tdb(d);var req=bs.find(function(b){return b.id===sid;});if(!req)return;
+  if(accept){var myB=bs.find(function(b){return b.agent===me.name&&(b.status==='booked'||b.status==='active');});if(myB){var tmp=myB.breakStart;myB.breakStart=req.breakStart;req.breakStart=tmp;}req.status='booked';req.swapWith=null;req.swapOffer=null;showToast('Swap accepted!','ok');addNotif('🔄 Swap accepted with '+req.agent);}
+  else{req.status='booked';req.swapWith=null;req.swapOffer=null;showToast('Swap declined');}
+  sv(d);renderAll();
+}
+function respTakeover(reqId,accept){
+  var d=gd();var bs=tdb(d);var req=bs.find(function(b){return b.id===reqId;});if(!req)return;
+  if(accept){
+    // Swap the slots: give requester my slot, I get their slot
+    var myB=bs.find(function(b){return b.id===req.myBreakId;});
+    var targetB=bs.find(function(b){return b.id===req.targetId;});
+    if(myB&&targetB){var tmp=myB.breakStart;myB.breakStart=targetB.breakStart;targetB.breakStart=tmp;}
+    // Remove the request
+    var idx=bs.indexOf(req);if(idx>-1)bs.splice(idx,1);
+    showToast('Swap done! Breaks exchanged ✓','ok');addNotif('🔄 Accepted swap with '+req.agent);
+  } else {
+    var idx=bs.indexOf(req);if(idx>-1)bs.splice(idx,1);
+    showToast('Swap declined');
+  }
+  sv(d);renderAll();
+}
+function cancelTakeover(reqId){
+  var d=gd();var bs=tdb(d);var idx=bs.findIndex(function(b){return b.id===reqId;});
+  if(idx>-1)bs.splice(idx,1);sv(d);showToast('Request cancelled');renderAll();
 }
 function doSwapReq(myId,theirId){var d=gd();var bs=tdb(d);var myB=bs.find(function(b){return b.id===myId;});var th=bs.find(function(b){return b.id===theirId;});if(!myB||!th)return;myB.status='swap_pending';myB.swapWith=th.agent;myB.swapOffer=th.breakStart;sv(d);showToast('Swap request sent to '+th.agent,'inf');renderSwap();}
 function respSwap(sid,accept){var d=gd();var bs=tdb(d);var req=bs.find(function(b){return b.id===sid;});if(!req)return;if(accept){var myB=bs.find(function(b){return b.agent===me.name&&(b.status==='booked'||b.status==='active');});if(myB){var tmp=myB.breakStart;myB.breakStart=req.breakStart;req.breakStart=tmp;}req.status='booked';req.swapWith=null;req.swapOffer=null;showToast('Swap accepted!','ok');addNotif('🔄 Swap accepted with '+req.agent);}else{req.status='booked';req.swapWith=null;req.swapOffer=null;showToast('Swap declined');}sv(d);renderAll();}
