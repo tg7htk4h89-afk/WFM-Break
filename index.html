@@ -449,7 +449,7 @@ input,select,button{font-family:'DM Sans',sans-serif;}
   <div class="astrip">
     <div class="asav" id="asav">M</div>
     <div><div class="asname" id="asname">&#8212;</div><div class="asinfo" id="asinfo">&#8212;</div></div>
-    <div class="asr"><div class="balchip" id="bchip">60 min</div><button class="btnout" onclick="doLogout()">Sign Out</button></div>
+    <div class="asr"><div class="balchip" id="bchip">60 min</div><div id="syncDot" title="Checking sync..." style="width:9px;height:9px;border-radius:50%;background:#aaa;display:inline-block;margin:0 4px;flex-shrink:0;transition:background .4s"></div><button class="btnout" onclick="doLogout()">Sign Out</button></div>
   </div>
 
   <!-- HOME -->
@@ -703,20 +703,105 @@ var EMPLOYEES = [
 ];
 
 // ════════════════════════════════════════════
-//  STORAGE
+//  STORAGE  –  localStorage cache + Google Sheets API sync
 // ════════════════════════════════════════════
 var SK = 'kibv7';
+var API_URL = 'https://script.google.com/macros/s/AKfycbyh7qyNe6s1KFNtPlI_iT2MtOEgJf5IjyZ_i74OU12U0IqExZscrJER60DKgKmiMjbjKg/exec';
+var _apiOk = null;   // null=unknown, true=online, false=offline
+var syncInt = null;
+
 function today(){return new Date().toISOString().split('T')[0];}
 function gd(){try{var r=localStorage.getItem(SK);return r?JSON.parse(r):defData();}catch(e){return defData();}}
 function defData(){return{breaks:{},swaps:[],notifs:{},settings:{dailyMin:60,maxCon:2,maxBreak:30}};}
-function sv(d){d.ts=Date.now();localStorage.setItem(SK,JSON.stringify(d));}
 function tdb(d){var t=today();if(!d.breaks[t])d.breaks[t]=[];return d.breaks[t];}
+
+// Save locally AND push to Sheets in background
+function sv(d){
+  d.ts=Date.now();
+  localStorage.setItem(SK,JSON.stringify(d));
+  _apiPushAll(d);
+}
+
+// Push full day's breaks + settings to API (fire-and-forget)
+function _apiPushAll(d){
+  var t=today();
+  var breaks=(d.breaks&&d.breaks[t])||[];
+  // Push each unsent or modified break
+  breaks.forEach(function(brk){
+    if(brk._synced)return;
+    var payload=JSON.parse(JSON.stringify(brk));delete payload._synced;
+    fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'saveBreak',break:payload})
+    }).then(function(r){return r.json();}).then(function(res){
+      if(res&&res.success){brk._synced=true;localStorage.setItem(SK,JSON.stringify(d));}
+      _setSync(true);
+    }).catch(function(){_setSync(false);});
+  });
+  // Push settings
+  if(d.settings){
+    fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'saveSettings',settings:d.settings})
+    }).catch(function(){});
+  }
+}
+
+// Pull fresh data from API and merge into local cache
+function apiPull(){
+  var t=today();
+  fetch(API_URL+'?action=getBreaks&date='+t)
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res||!res.success)return;
+      var d=gd();
+      if(!d.breaks)d.breaks={};
+      var local=d.breaks[t]||[];
+      var apiBreaks=res.breaks||[];
+      // Build id→index map for local breaks
+      var localMap={};
+      local.forEach(function(b,i){localMap[b.id]=i;});
+      apiBreaks.forEach(function(b){
+        if(localMap[b.id]!==undefined){
+          // Merge: remote wins on status, but keep local notif/swap data
+          var lb=local[localMap[b.id]];
+          if(b.status&&b.status!==lb.status){lb.status=b.status;}
+          if(b.startedAt)lb.startedAt=b.startedAt;
+          if(b.endedAt)lb.endedAt=b.endedAt;
+          if(b.actualDuration)lb.actualDuration=b.actualDuration;
+          lb._synced=true;
+        } else {
+          b._synced=true;local.push(b);
+        }
+      });
+      d.breaks[t]=local;
+      localStorage.setItem(SK,JSON.stringify(d));
+      _setSync(true);
+      if(me)renderAll();
+    })
+    .catch(function(){_setSync(false);});
+  // Pull settings too
+  fetch(API_URL+'?action=getSettings')
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res||!res.success||!res.settings)return;
+      var d=gd();d.settings=res.settings;
+      localStorage.setItem(SK,JSON.stringify(d));
+    }).catch(function(){});
+}
+
+function _setSync(ok){
+  if(_apiOk===ok)return;
+  _apiOk=ok;
+  var el=document.getElementById('syncDot');
+  if(!el)return;
+  el.style.background=ok?'#3DB549':'#E08C00';
+  el.title=ok?'✓ Synced with Google Sheets':'⚠ Offline – local only';
+}
 
 // ════════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════════
 var me=null, pendingEmp=null, selShift=null, selSlot=null, selDur=15, teamFilterVal='';
-var timerInt=null, clockInt=null, refInt=null, toastTO=null;
+var timerInt=null, clockInt=null, refInt=null, toastTO=null, syncInt=null;
 
 // ════════════════════════════════════════════
 //  COLORS / AVATAR
@@ -828,6 +913,8 @@ function loginUser(emp, shift, shEnd, shEndMin){
     startClock();renderAll();
     gp('team');
     refInt=setInterval(renderAll,8000);
+    syncInt=setInterval(apiPull,30000);
+    setTimeout(apiPull,1500);
     showToast(isDemo?'📊 Demo Manager View loaded':'Welcome, '+me.name.split(' ')[0]+'! Monitor access','inf');
   } else {
     document.getElementById('asinfo').textContent=me.role+' · Shift '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd)+(isDemo?' · Demo':'');
@@ -860,13 +947,15 @@ function loginUser(emp, shift, shEnd, shEndMin){
       checkActiveBreak();
     }
     refInt=setInterval(renderAll,8000);
+    syncInt=setInterval(apiPull,30000);
+    setTimeout(apiPull,1500);
     showToast(isDemo?'🎭 Demo Agent View loaded':'Welcome, '+me.name.split(' ')[0]+'!','ok');
   }
 }
 
 function doLogout(){
   me=null;selShift=null;selSlot=null;selDur=15;pendingEmp=null;
-  clearInterval(clockInt);clearInterval(refInt);clearInterval(timerInt);
+  clearInterval(clockInt);clearInterval(refInt);clearInterval(timerInt);clearInterval(syncInt);
   document.getElementById('abbanner').style.display='none';
   document.getElementById('sApp').style.display='none';
   document.getElementById('sLogin').style.display='flex';
@@ -1271,8 +1360,8 @@ function saveSett(){
   var d=gd();d.settings={dailyMin:parseInt(document.getElementById('smax').value)||60,maxCon:parseInt(document.getElementById('scon').value)||2,maxBreak:parseInt(document.getElementById('smaxb').value)||30};
   sv(d);renderAll();showToast('Settings saved','ok');
 }
-function clearDay(){if(!confirm("Clear today?"))return;var d=gd();d.breaks[today()]=[];sv(d);renderAll();showToast('Cleared','inf');}
-function clearAll(){if(!confirm('Clear ALL data? This cannot be undone.'))return;localStorage.removeItem(SK);renderAll();showToast('All data cleared','inf');}
+function clearDay(){if(!confirm("Clear today?"))return;var d=gd();d.breaks[today()]=[];sv(d);fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"clearDay",date:today()})}).catch(function(){});renderAll();showToast("Cleared","inf");}
+function clearAll(){if(!confirm("Clear ALL data? This cannot be undone."))return;localStorage.removeItem(SK);fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"clearAll"})}).catch(function(){});renderAll();showToast("All data cleared","inf");}
 
 // ════════════════════════════════════════════
 //  DEMO DATA
