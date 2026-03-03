@@ -2,279 +2,1282 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>KIB · Pro Break System</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>KIB · Break Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ── PREMIUM CSS DESIGN SYSTEM ── */
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
-  --navy:#0D5CA6; --navy-dark:#0A4A8A; --navy-light:#1A75D1;
-  --gold:#00A89A; --gold-light:#00BEAE; --gold-bg:#E6F7F6;
-  --bg:#F4F7FA; --surface:#FFFFFF; --border:#E2E8F0;
-  --text-main:#0F172A; --text-muted:#64748B; --text-light:#94A3B8;
-  --green:#10B981; --green-bg:#D1FAE5;
-  --amber:#F59E0B; --amber-bg:#FEF3C7;
-  --red:#EF4444; --red-bg:#FEE2E2;
-  --radius: 16px; --radius-sm: 10px;
-  --shadow: 0 4px 20px rgba(0,0,0,0.03);
-  --shadow-hover: 0 10px 30px rgba(13,92,166,0.08);
+  --navy:#002868;--navy2:#001d4d;--navy3:#003380;
+  --gold:#b8860b;--gold2:#d4a017;--gold3:#f0c040;
+  --white:#fff;--bg:#f0f3f8;--bg2:#e8ecf4;
+  --card:#fff;--border:#dde3ef;
+  --t1:#0a1628;--t2:#3a4a6b;--t3:#8896b0;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;
+  --shadow:0 2px 12px rgba(0,40,104,.10);
+  --shadow2:0 8px 32px rgba(0,40,104,.18);
+  --r:14px;--r2:10px;--r3:8px;
+  --font:'Plus Jakarta Sans',sans-serif;
 }
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text-main);min-height:100vh;font-size:14px;}
-button,input,select{font-family:inherit;outline:none;}
-
-/* ── ANIMATIONS ── */
-@keyframes slideUp { from{opacity:0;transform:translateY(15px);} to{opacity:1;transform:translateY(0);} }
-@keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(16,185,129,0.4);} 70%{box-shadow:0 0 0 6px rgba(16,185,129,0);} 100%{box-shadow:0 0 0 0 rgba(16,185,129,0);} }
-@keyframes pulseAmber { 0%{box-shadow:0 0 0 0 rgba(245,158,11,0.4);} 70%{box-shadow:0 0 0 6px rgba(245,158,11,0);} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0);} }
-
-/* ── LOGIN ── */
-#sLogin{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at top left, #1A75D1 0%, var(--navy) 100%);}
-.login-card{background:var(--surface);width:100%;max-width:400px;border-radius:24px;box-shadow:0 24px 48px rgba(0,0,0,0.2);overflow:hidden;animation:slideUp 0.6s cubic-bezier(0.16,1,0.3,1);}
-.login-hdr{padding:30px 20px 20px;text-align:center;}
-.kib-logo{width:64px;height:64px;background:var(--gold-bg);color:var(--gold);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;font-weight:800;}
-.login-title{font-size:20px;font-weight:800;color:var(--text-main);}
-.login-sub{font-size:13px;color:var(--text-muted);margin-top:4px;}
-.lstep{display:none;padding:0 24px 30px;}
-.lstep.on{display:block;animation:slideUp 0.4s ease;}
-.fld{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;transition:0.2s;background:#F8FAFC;}
-.fld:focus{border-color:var(--navy);background:var(--surface);box-shadow:0 0 0 4px rgba(13,92,166,0.1);}
-.btn-main{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:0.2s;margin-top:10px;}
-.btn-main:active{transform:scale(0.98);}
-
-/* ── TOP NAV (GLASSMORPHISM) ── */
-.topbar{background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);height:60px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
-.tlogo{font-size:18px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;}
-.sync-badge{font-size:10px;padding:4px 8px;border-radius:20px;background:var(--green-bg);color:var(--green);font-weight:700;}
-
-/* ── CARDS ── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin:16px;box-shadow:var(--shadow);transition:0.2s;overflow:hidden;}
-.card:hover{box-shadow:var(--shadow-hover);}
-.c-hdr{padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;background:#FACBD;}
-.c-body{padding:20px;}
-
-/* ── LIVE TEAM MONITOR ── */
-.dept-title{font-size:11px;font-weight:800;text-transform:uppercase;color:var(--text-light);letter-spacing:1px;margin:20px 16px 8px;display:flex;align-items:center;gap:8px;}
-.dept-title::after{content:'';flex:1;height:1px;background:var(--border);}
-.agent-row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
-.agent-row:last-child{border-bottom:none;}
-.av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;position:relative;}
-.status-dot{position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;border:2px solid var(--surface);}
-.status-dot.free{background:var(--green);animation:pulse 2s infinite;}
-.status-dot.on{background:var(--amber);animation:pulseAmber 1.5s infinite;}
-.a-name{font-weight:600;font-size:14px;}
-.a-role{font-size:11px;color:var(--text-muted);margin-top:2px;}
-.a-right{margin-left:auto;text-align:right;}
-.a-time{font-size:12px;font-weight:700;}
-.a-prog{width:60px;height:4px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden;}
-.a-fill{height:100%;background:var(--navy);border-radius:2px;transition:width 0.3s ease;}
-
-/* ── BOTTOM NAV ── */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.9);backdrop-filter:blur(10px);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
-.nb{flex:1;padding:12px 0;background:none;border:none;color:var(--text-muted);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:0.2s;}
-.nb.on{color:var(--navy);font-weight:700;}
-.nb i{font-size:20px;font-style:normal;}
-
-/* ── UTILS ── */
-.pg{display:none;padding-bottom:80px;animation:slideUp 0.3s ease;}
-.pg.on{display:block;}
-.pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
-.pill.green{background:var(--green-bg);color:var(--green);}
-.pill.amber{background:var(--amber-bg);color:var(--amber);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t1);overflow:hidden;}
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--navy2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s;}
+#splash.fade{opacity:0;pointer-events:none;}
+.sp-logo{width:80px;height:80px;background:white;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:var(--navy);margin-bottom:16px;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.sp-name{color:white;font-size:20px;font-weight:700;}
+.sp-sub{color:rgba(255,255,255,.5);font-size:12px;margin-top:5px;}
+.sp-bar{width:100px;height:3px;background:rgba(255,255,255,.15);border-radius:2px;margin-top:28px;overflow:hidden;}
+.sp-bar-fill{height:100%;background:var(--gold3);border-radius:2px;animation:spLoad 1.2s ease forwards;}
+@keyframes spLoad{from{width:0}to{width:100%}}
+/* APP */
+#app{display:none;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;background:var(--bg);position:relative;}
+#app.show{display:flex;}
+/* TOPBAR */
+#topbar{background:var(--navy2);padding:12px 16px 10px;flex-shrink:0;z-index:100;}
+.tb-row1{display:flex;align-items:center;justify-content:space-between;}
+.tb-brand{display:flex;align-items:center;gap:9px;}
+.tb-icon{width:32px;height:32px;background:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--navy);}
+.tb-title{color:white;font-size:14px;font-weight:700;}
+.tb-clock{color:rgba(255,255,255,.55);font-size:11px;margin-top:1px;font-variant-numeric:tabular-nums;}
+.tb-right{display:flex;align-items:center;gap:7px;}
+.sync-pill{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.1);border-radius:20px;padding:4px 9px;cursor:pointer;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);transition:background .3s;}
+.sync-dot.ok{background:var(--green);}
+.sync-txt{color:rgba(255,255,255,.6);font-size:10px;}
+.tb-notif-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;}
+.tb-notif-btn svg{width:17px;height:17px;stroke:rgba(255,255,255,.7);fill:none;stroke-width:1.7;}
+.nbadge{position:absolute;top:2px;right:2px;min-width:14px;height:14px;background:var(--red);border-radius:7px;font-size:8px;font-weight:700;color:white;display:none;align-items:center;justify-content:center;}
+.nbadge.on{display:flex;}
+.tb-row2{margin-top:9px;display:flex;align-items:center;justify-content:space-between;}
+.tb-user{color:rgba(255,255,255,.95);font-size:13px;font-weight:700;}
+.tb-meta{color:rgba(255,255,255,.5);font-size:10px;margin-top:1px;}
+.tb-chips{display:flex;gap:6px;align-items:center;}
+.bal-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:var(--gold3);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.bal-chip.low{color:#fca5a5;}
+.live-badge{display:flex;align-items:center;gap:3px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);padding:2px 8px;border-radius:20px;}
+.live-dot2{width:5px;height:5px;border-radius:50%;background:var(--green);animation:lp 1.5s infinite;}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.3}}
+.live-badge span{color:var(--green);font-size:10px;font-weight:600;}
+/* MAIN */
+#main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+#main::-webkit-scrollbar{display:none;}
+/* BOTTOM NAV */
+#nav{background:white;border-top:1px solid var(--border);display:flex;flex-shrink:0;position:relative;}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 5px;cursor:pointer;}
+.ni svg{width:19px;height:19px;stroke:var(--t3);fill:none;stroke-width:1.7;transition:stroke .2s;}
+.ni span{font-size:9px;color:var(--t3);margin-top:2px;font-weight:500;transition:color .2s;}
+.ni.active svg{stroke:var(--navy);}
+.ni.active span{color:var(--navy);font-weight:700;}
+.nav-sel{position:absolute;top:0;height:2.5px;background:var(--navy);border-radius:0 0 2px 2px;transition:left .3s cubic-bezier(.34,1.56,.64,1);}
+.ni-badge{position:absolute;top:5px;right:calc(50% - 15px);min-width:14px;height:14px;background:var(--red);border-radius:7px;font-size:8px;font-weight:700;color:white;display:none;align-items:center;justify-content:center;}
+.ni-badge.on{display:flex;}
+/* PAGES */
+.page{display:none;padding:14px;animation:fadeUp .22s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page-title{font-size:17px;font-weight:800;color:var(--t1);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+/* CARDS */
+.card{background:var(--card);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.card+.card{margin-top:10px;}
+/* STATS */
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;}
+.stat-card{background:var(--card);border-radius:var(--r2);padding:13px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;}
+.stat-card.navy{background:var(--navy2);border-color:transparent;}
+.stat-card.gold{background:linear-gradient(135deg,#7a5d00,#b8860b);border-color:transparent;}
+.sv{font-size:26px;font-weight:800;color:var(--t1);line-height:1;}
+.stat-card.navy .sv,.stat-card.gold .sv{color:white;}
+.sl{font-size:10px;color:var(--t3);font-weight:500;margin-top:3px;}
+.stat-card.navy .sl,.stat-card.gold .sl{color:rgba(255,255,255,.6);}
+/* SHIFT PROGRESS */
+.sp-card{margin-bottom:12px;}
+.sp-hd{display:flex;justify-content:space-between;margin-bottom:6px;}
+.sp-label{font-size:11px;color:var(--t2);font-weight:600;}
+.sp-pct{font-size:11px;color:var(--navy);font-weight:700;}
+.sp-track{background:var(--bg2);height:7px;border-radius:4px;overflow:hidden;}
+.sp-fill{height:100%;background:linear-gradient(90deg,var(--navy),var(--blue));border-radius:4px;transition:width 1s;}
+/* BREAK STATUS BAR */
+.bsb{border-radius:var(--r2);padding:11px 13px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.bsb.active{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);animation:bglow 2s infinite;}
+.bsb.booked{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);}
+@keyframes bglow{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.3)}70%{box-shadow:0 0 0 6px rgba(245,158,11,0)}}
+.bsb-icon{font-size:22px;}
+.bsb-info{flex:1;min-width:0;}
+.bsb-main{font-size:13px;font-weight:700;color:var(--t1);}
+.bsb-sub{font-size:11px;color:var(--t3);margin-top:1px;}
+.bsb-timer{font-size:17px;font-weight:800;color:var(--amber);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.bsb-actions{display:flex;flex-direction:column;gap:5px;}
+/* UPCOMING */
+.uc-title{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.uc-slot{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.uc-slot:last-child{border-bottom:none;}
+.uc-time{min-width:65px;font-size:13px;font-weight:700;color:var(--navy);}
+.uc-bar{flex:1;height:5px;background:var(--bg2);border-radius:3px;overflow:hidden;}
+.uc-fill{height:100%;border-radius:3px;}
+.uc-fill.full{background:var(--red);}
+.uc-fill.partial{background:var(--amber);}
+.uc-fill.free{background:var(--green);}
+.uc-cnt{font-size:10px;min-width:26px;text-align:right;}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 16px;border-radius:var(--r3);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .14s;white-space:nowrap;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--navy);color:white;}
+.btn-success{background:var(--green);color:white;}
+.btn-danger{background:var(--red);color:white;}
+.btn-ghost{background:rgba(0,40,104,.08);color:var(--navy);}
+.btn-outline{background:white;color:var(--t2);border:1px solid var(--border);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-full{width:100%;display:flex;}
+.btn-lg{padding:13px 18px;font-size:14px;border-radius:var(--r);}
+.btn:disabled{opacity:.45;pointer-events:none;}
+/* BOOK PAGE */
+.legend{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:10px;}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t2);}
+.ld{width:7px;height:7px;border-radius:50%;}
+.ld.free{background:var(--green);}
+.ld.partial{background:var(--amber);}
+.ld.full{background:var(--red);}
+.ld.blocked{background:var(--border);}
+.ld.mine{background:var(--navy);}
+.slot-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
+.bslot{background:white;border:2px solid var(--border);border-radius:var(--r2);padding:11px;cursor:pointer;transition:all .16s;position:relative;overflow:hidden;}
+.bslot::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:2px 2px 0 0;}
+.bslot.free::before{background:var(--green);}
+.bslot.partial::before{background:var(--amber);}
+.bslot.full::before{background:var(--red);}
+.bslot.mine::before{background:var(--navy);}
+.bslot.blocked{background:var(--bg2);cursor:not-allowed;opacity:.65;}
+.bslot.sel{border-color:var(--navy);background:rgba(0,40,104,.04);}
+.bslot.free:hover:not(.sel){border-color:rgba(0,40,104,.3);transform:translateY(-1px);}
+.bst{font-size:14px;font-weight:700;color:var(--t1);}
+.bsw{font-size:10px;color:var(--t3);margin-top:2px;}
+.bslot.blocked .bst,.bslot.blocked .bsw{color:var(--t3);}
+.bslot.full .bsw{color:var(--red);}
+.bslot.mine .bst{color:var(--navy);}
+.bslot.partial .bsw{color:var(--amber);}
+/* DUR */
+.dur-label{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:7px;}
+.dur-btns{display:flex;gap:5px;margin-bottom:12px;}
+.dur-btn{flex:1;padding:8px;text-align:center;border:2px solid var(--border);border-radius:var(--r3);font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;background:white;transition:all .13s;}
+.dur-btn.sel{border-color:var(--navy);background:var(--navy);color:white;}
+/* CONFIRM */
+.confirm-box{background:white;border:1px solid var(--border);border-radius:var(--r2);padding:13px;margin-bottom:12px;}
+.cb-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bg2);}
+.cb-row:last-child{border-bottom:none;}
+.cb-lbl{font-size:11px;color:var(--t3);}
+.cb-val{font-size:13px;font-weight:700;color:var(--t1);}
+/* TEAM */
+.team-search{background:white;border:1.5px solid var(--border);border-radius:var(--r3);padding:9px 12px;font-size:13px;font-family:var(--font);color:var(--t1);width:100%;margin-bottom:10px;outline:none;}
+.team-search:focus{border-color:var(--navy);}
+.team-filters{display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;padding-bottom:1px;}
+.team-filters::-webkit-scrollbar{display:none;}
+.tf{padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:white;color:var(--t2);cursor:pointer;white-space:nowrap;transition:all .13s;}
+.tf.active{background:var(--navy);color:white;border-color:var(--navy);}
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.tc{background:white;border-radius:var(--r2);padding:11px;box-shadow:var(--shadow);border:1px solid var(--border);position:relative;overflow:hidden;}
+.tc-bar{position:absolute;top:0;left:0;right:0;height:3px;}
+.tc-bar.on-break{background:var(--amber);}
+.tc-bar.available{background:var(--green);}
+.tc-bar.offline{background:var(--border);}
+.tc-bar.monitoring{background:var(--blue);}
+.tc-top{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.tc-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;}
+.tc-nm{font-size:11px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tc-rl{font-size:9px;color:var(--t3);}
+.tc-bdg{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:600;}
+.tc-bdg.on-break{background:rgba(245,158,11,.12);color:#92400e;}
+.tc-bdg.available{background:rgba(16,185,129,.1);color:#065f46;}
+.tc-bdg.offline{background:var(--bg2);color:var(--t3);}
+.tc-bdg.monitoring{background:rgba(59,130,246,.1);color:#1e40af;}
+.tc-shift{font-size:9px;color:var(--t3);margin-top:3px;}
+.tc-bi{font-size:9px;color:var(--amber);font-weight:600;margin-top:2px;}
+.tc-sec{grid-column:1/-1;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;padding:7px 3px 3px;}
+/* HISTORY */
+.hi{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.hi:last-child{border-bottom:none;}
+.hi-dot{width:9px;height:9px;border-radius:50%;margin-top:3px;flex-shrink:0;}
+.hi-dot.completed{background:var(--green);}
+.hi-dot.booked{background:var(--blue);}
+.hi-dot.cancelled{background:var(--red);}
+.hi-dot.in-progress{background:var(--amber);}
+.hi-info{flex:1;}
+.hi-time{font-size:13px;font-weight:700;color:var(--t1);}
+.hi-meta{font-size:10px;color:var(--t3);margin-top:1px;}
+.hi-st{font-size:10px;font-weight:600;padding:2px 7px;border-radius:7px;}
+.hi-st.completed{background:rgba(16,185,129,.1);color:#065f46;}
+.hi-st.booked{background:rgba(59,130,246,.1);color:#1e40af;}
+.hi-st.cancelled{background:rgba(239,68,68,.1);color:#991b1b;}
+.hi-st.in-progress{background:rgba(245,158,11,.1);color:#92400e;}
+/* SWAP */
+.swap-card{border:1px solid var(--border);border-radius:var(--r2);padding:12px;margin-bottom:8px;background:white;}
+.sw-status{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;display:inline-block;}
+.sw-status.pending{background:rgba(245,158,11,.1);color:#92400e;}
+.sw-status.approved{background:rgba(16,185,129,.1);color:#065f46;}
+.sw-status.declined{background:rgba(239,68,68,.1);color:#991b1b;}
+/* ADMIN */
+.admin-sec{margin-bottom:14px;}
+.admin-sec h3{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.ar{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.ar:last-child{border-bottom:none;}
+.ar-lbl{font-size:12px;color:var(--t1);font-weight:500;}
+.ar-sub{font-size:10px;color:var(--t3);margin-top:1px;}
+.num-input{width:55px;padding:5px 7px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;font-weight:700;font-family:var(--font);text-align:center;color:var(--t1);outline:none;}
+.num-input:focus{border-color:var(--navy);}
+.at-hd{display:grid;grid-template-columns:1fr 85px 65px;gap:3px;padding:5px 7px;background:var(--bg);border-radius:5px;font-size:10px;font-weight:700;color:var(--t2);margin-bottom:5px;}
+.at-row{display:grid;grid-template-columns:1fr 85px 65px;gap:3px;padding:7px 7px;border-bottom:1px solid var(--border);align-items:center;font-size:10px;}
+.at-row:last-child{border-bottom:none;}
+/* NOTIF PANEL */
+#np{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,20,60,.55);z-index:500;display:none;align-items:flex-start;padding:56px 12px 0;}
+#np.open{display:flex;}
+.np-box{background:white;border-radius:var(--r);box-shadow:var(--shadow2);width:100%;max-height:70vh;overflow-y:auto;border:1px solid var(--border);}
+.np-hd{padding:13px 15px 9px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.np-hd h3{font-size:14px;font-weight:700;}
+.np-close{font-size:19px;cursor:pointer;color:var(--t3);}
+.np-item{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;gap:9px;}
+.np-item:last-child{border-bottom:none;}
+.npi-ic{font-size:18px;flex-shrink:0;}
+.npi-tx{font-size:12px;color:var(--t1);}
+.npi-tm{font-size:10px;color:var(--t3);margin-top:1px;}
+.np-empty{padding:26px;text-align:center;color:var(--t3);font-size:12px;}
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:linear-gradient(155deg,var(--navy2) 0%,#001430 60%,#000d22 100%);display:none;align-items:center;justify-content:center;padding:24px;z-index:300;}
+.login-box{width:100%;max-width:340px;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.ll-icon{width:64px;height:64px;background:white;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.ll-h1{color:white;font-size:20px;font-weight:800;}
+.ll-sub{color:rgba(255,255,255,.4);font-size:12px;margin-top:3px;}
+.login-card{background:rgba(255,255,255,.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:24px 20px;}
+.lc-lbl{color:rgba(255,255,255,.55);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.lc-inp{width:100%;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);border-radius:9px;padding:12px 14px;font-size:16px;font-family:var(--font);color:white;outline:none;transition:border-color .2s;-webkit-text-security:disc;text-security:disc;}
+.lc-inp::placeholder{color:rgba(255,255,255,.25);}
+.lc-inp:focus{border-color:rgba(255,255,255,.35);}
+.lc-err{color:#fca5a5;font-size:11px;margin-top:5px;display:none;}
+.lc-err.on{display:block;}
+.lc-btn{width:100%;padding:13px;background:var(--gold);border:none;border-radius:9px;color:white;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:18px;transition:all .14s;}
+.lc-btn:hover{background:var(--gold2);}
+.lc-btn:active{transform:scale(.98);}
+/* SHIFT SELECTOR */
+#shift-screen{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:200;padding:24px;}
+.ss-hd{text-align:center;margin-bottom:20px;}
+.ss-hd h2{font-size:20px;font-weight:800;color:var(--t1);}
+.ss-hd p{font-size:12px;color:var(--t3);margin-top:5px;}
+.ss-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;flex:1;}
+.ss-card{background:white;border:2px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .18s;text-align:center;}
+.ss-card:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:var(--shadow2);}
+.sc-icon{font-size:24px;margin-bottom:6px;}
+.sc-time{font-size:14px;font-weight:800;color:var(--navy);}
+.sc-dur{font-size:10px;color:var(--t3);margin-top:3px;}
+.ss-back{margin-top:14px;text-align:center;color:var(--t3);font-size:12px;cursor:pointer;}
+/* TOAST */
+#toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--t1);color:white;padding:9px 18px;border-radius:18px;font-size:12px;font-weight:500;opacity:0;pointer-events:none;transition:all .28s;z-index:1000;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.success{background:var(--green);}
+#toast.error{background:var(--red);}
+#toast.info{background:var(--blue);}
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,20,60,.55);z-index:600;display:none;align-items:flex-end;justify-content:center;}
+.mo.open{display:flex;}
+.mo-box{background:white;border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:22px;max-height:82vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mo-handle{width:32px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;}
+.mo-title{font-size:16px;font-weight:800;color:var(--t1);margin-bottom:14px;}
+.mo-close{float:right;cursor:pointer;font-size:20px;color:var(--t3);}
+/* MISC */
+.divider{height:1px;background:var(--border);margin:12px 0;}
+.empty-state{text-align:center;padding:28px 14px;color:var(--t3);}
+.es-icon{font-size:36px;margin-bottom:8px;}
+.es-txt{font-size:12px;}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.sh-title{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;}
+.sh-act{font-size:11px;color:var(--navy);font-weight:600;cursor:pointer;}
 </style>
 </head>
 <body>
 
-<div id="sLogin">
-  <div class="login-card">
-    <div class="login-hdr">
-      <div class="kib-logo">KIB</div>
-      <div class="login-title">Break System</div>
-      <div class="login-sub">Sign in to manage your schedule</div>
+<div id="splash">
+  <div class="sp-logo">KIB</div>
+  <div class="sp-name">Break Manager</div>
+  <div class="sp-sub">Contact Center · Kuwait International Bank</div>
+  <div class="sp-bar"><div class="sp-bar-fill"></div></div>
+</div>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="ll-icon">KIB</div>
+      <div class="ll-h1">Break Manager</div>
+      <div class="ll-sub">Kuwait International Bank · Contact Center</div>
     </div>
-    <div class="lstep on" id="step1">
-      <input type="password" id="pwInput" class="fld" placeholder="Enter Employee PIN" style="text-align:center;letter-spacing:2px;font-size:18px;">
-      <div id="pwerr" style="color:var(--red);font-size:12px;text-align:center;margin-top:8px;display:none;">Invalid PIN. Try again.</div>
-      <button class="btn-main" onclick="checkPw()">Secure Login</button>
+    <div class="login-card">
+      <div class="lc-lbl">Password</div>
+      <input class="lc-inp" id="pwInput" type="text" placeholder="Enter your password"
+             onkeydown="if(event.key==='Enter')checkPw()" autocomplete="off">
+      <div class="lc-err" id="pwerr">⚠ Incorrect password. Please try again.</div>
+      <button class="lc-btn" onclick="checkPw()">Sign In →</button>
     </div>
   </div>
 </div>
 
-<div id="sApp" style="display:none;">
-  <div class="topbar">
-    <div class="tlogo">KIB <span style="color:var(--text-muted);font-weight:500;font-size:14px;">| Operations</span></div>
-    <div class="sync-badge" id="syncStatus">● Live Sync</div>
+<div id="shift-screen">
+  <div class="ss-hd">
+    <h2>Select Your Shift</h2>
+    <p id="ss-greet">Please select your shift for today.</p>
   </div>
+  <div class="ss-grid" id="shiftGrid"></div>
+  <div class="ss-back" onclick="backToLogin()">← Back to login</div>
+</div>
 
-  <div class="pg on" id="pg-home">
-    <div class="card" style="background:linear-gradient(135deg, var(--navy-dark), var(--navy));color:#fff;border:none;">
-      <div class="c-body" style="display:flex;justify-content:space-between;align-items:center;">
+<div id="app">
+  <div id="topbar">
+    <div class="tb-row1">
+      <div class="tb-brand">
+        <div class="tb-icon">KIB</div>
         <div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">My Balance</div>
-          <div style="font-size:36px;font-weight:800;margin:4px 0;"><span id="balMin">60</span><span style="font-size:16px;font-weight:500;"> min left</span></div>
+          <div class="tb-title">Break Manager</div>
+          <div class="tb-clock" id="tbClock">—</div>
         </div>
-        <div style="text-align:right;">
-          <div id="clockTime" style="font-size:18px;font-weight:700;color:var(--gold-light);">00:00</div>
+      </div>
+      <div class="tb-right">
+        <div class="sync-pill" onclick="forceSync()">
+          <div class="sync-dot" id="syncDot"></div>
+          <span class="sync-txt" id="syncTxt">Sync</span>
+        </div>
+        <div class="tb-notif-btn" onclick="toggleNotifs()">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="nbadge" id="nbadge"></div>
         </div>
       </div>
     </div>
-
-    <div class="card">
-      <div class="c-hdr">My Schedule Today</div>
-      <div class="c-body" id="mySchedList">
-        <div style="text-align:center;color:var(--text-muted);font-size:13px;">No breaks booked yet.</div>
+    <div class="tb-row2">
+      <div>
+        <div class="tb-user" id="tbName">—</div>
+        <div class="tb-meta" id="tbMeta">—</div>
+      </div>
+      <div class="tb-chips">
+        <div class="bal-chip" id="balChip">— min</div>
+        <div class="live-badge"><div class="live-dot2"></div><span id="liveNum">0</span><span style="font-size:10px;color:rgba(16,185,129,.8);"> on break</span></div>
       </div>
     </div>
   </div>
 
-  <div class="pg" id="pg-team">
-    <div style="padding:16px;">
-      <h2 style="font-size:18px;font-weight:800;color:var(--navy);">Live Team Monitor</h2>
-      <p style="font-size:12px;color:var(--text-muted);">Real-time status synced with Google Database</p>
+  <div id="np" onclick="if(event.target===this)closeNotifs()">
+    <div class="np-box">
+      <div class="np-hd"><h3>Notifications</h3><span class="np-close" onclick="closeNotifs()">×</span></div>
+      <div id="npList"></div>
     </div>
-    
-    <div id="teamList"></div>
   </div>
 
-  <div class="bnav">
-    <button class="nb on" onclick="nav('home')"><i>🏠</i><span style="font-size:10px;">Home</span></button>
-    <button class="nb" onclick="nav('team')"><i>👥</i><span style="font-size:10px;">Team</span></button>
-    <button class="nb" onclick="nav('book')"><i>📅</i><span style="font-size:10px;">Book</span></button>
-    <button class="nb" onclick="doLogout()"><i>🚪</i><span style="font-size:10px;">Exit</span></button>
+  <div id="main">
+    <div class="page active" id="pg-home">
+      <div id="home-bsb"></div>
+      <div class="stats-row">
+        <div class="stat-card navy"><div class="sv" id="st-rem">—</div><div class="sl">Min Remaining</div></div>
+        <div class="stat-card gold"><div class="sv" id="st-ob">0</div><div class="sl">On Break Now</div></div>
+        <div class="stat-card"><div class="sv" id="st-pct">—</div><div class="sl">Shift Progress</div></div>
+        <div class="stat-card"><div class="sv" id="st-tot">—</div><div class="sl">Breaks Today</div></div>
+      </div>
+      <div class="card sp-card">
+        <div class="sh"><div class="sh-title">Shift Progress</div><div id="st-range" style="font-size:10px;color:var(--t3);"></div></div>
+        <div class="sp-track"><div class="sp-fill" id="sp-fill" style="width:0%"></div></div>
+      </div>
+      <div id="upcoming-card" class="card" style="margin-bottom:12px;">
+        <div class="uc-title">⏱ Next Slots</div>
+        <div id="upcoming"></div>
+      </div>
+      <div id="qactions" style="display:flex;gap:8px;margin-top:4px;"></div>
+    </div>
+
+    <div class="page" id="pg-book">
+      <div class="page-title">📅 Book a Break</div>
+      <div class="legend">
+        <div class="leg"><div class="ld free"></div>Free</div>
+        <div class="leg"><div class="ld partial"></div>1 booked</div>
+        <div class="leg"><div class="ld full"></div>Full</div>
+        <div class="leg"><div class="ld blocked"></div>Blocked</div>
+        <div class="leg"><div class="ld mine"></div>Mine</div>
+      </div>
+      <div class="slot-grid" id="bkgrid"></div>
+      <div id="dur-sec" style="display:none;">
+        <div class="dur-label">Break Duration</div>
+        <div class="dur-btns" id="durBtns"></div>
+        <div class="confirm-box" id="confirmBox"></div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="doBook()">✓ Confirm Booking</button>
+      </div>
+    </div>
+
+    <div class="page" id="pg-team">
+      <div class="page-title">👥 Team Status</div>
+      <input class="team-search" id="teamSearch" placeholder="Search name or role…" oninput="renderTeam()">
+      <div class="team-filters">
+        <div class="tf active" onclick="setTF('all',this)">All</div>
+        <div class="tf" onclick="setTF('on-break',this)">🟡 On Break</div>
+        <div class="tf" onclick="setTF('available',this)">🟢 Available</div>
+        <div class="tf" onclick="setTF('offline',this)">⚫ Offline</div>
+      </div>
+      <div class="team-grid" id="teamGrid"></div>
+    </div>
+
+    <div class="page" id="pg-swap">
+      <div class="page-title">🔄 Break Swap</div>
+      <div id="swap-content"></div>
+    </div>
+
+    <div class="page" id="pg-history">
+      <div class="page-title">📋 My Breaks</div>
+      <div class="card" id="histContent"></div>
+    </div>
+
+    <div class="page" id="pg-admin">
+      <div class="page-title">⚙️ Admin</div>
+      <div id="adminContent"></div>
+    </div>
+  </div>
+
+  <div id="nav">
+    <div class="nav-sel" id="navSel"></div>
+    <div class="ni active" onclick="goPage('home',0)">
+      <svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="ni" onclick="goPage('book',1)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Book</span>
+    </div>
+    <div class="ni" onclick="goPage('team',2)">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Team</span>
+    </div>
+    <div class="ni" onclick="goPage('swap',3)">
+      <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      <span>Swap</span>
+      <div class="ni-badge" id="swapBadge"></div>
+    </div>
+    <div class="ni" onclick="goPage('history',4)">
+      <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span>History</span>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div class="mo" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="mo-box" id="moBox">
+    <div class="mo-handle"></div>
+    <span class="mo-close" onclick="closeModal()">×</span>
+    <div id="moContent"></div>
   </div>
 </div>
 
 <script>
-// ════════════════════════════════════════════
-// PROFESSIONAL CONFIG & GOOGLE DATABASE
-// ════════════════════════════════════════════
-const API_URL = 'https://script.google.com/macros/s/AKfycbyh7qyNe6s1KFNtPlI_iT2MtOEgJf5IjyZ_i74OU12U0IqExZscrJER60DKgKmiMjbjKg/exec';
-const EMPLOYEES = [
-  {pw:'1234', name:'Saleh Aljabri', role:'Inbound Agent', dept:'Inbound'},
-  {pw:'4528', name:'Asrar Alattar', role:'Outbound Agent', dept:'Outbound'},
-  {pw:'3001', name:'Naser Bandar', role:'Team Leader', dept:'Management'},
-  {pw:'admin', name:'System Admin', role:'Admin', dept:'Management'}
-]; // Expand this list with your actual users
+// ═══════════════════════════════════
+// EMPLOYEES
+// ═══════════════════════════════════
+var EMPS=[
+  {pw:'fou@4501',name:'Fouzeyah Erzouqi',role:'Inbound Agent',access:'agent'},
+  {pw:'sar@4502',name:'Sarah Alqattan',role:'Inbound Agent',access:'agent'},
+  {pw:'dan@4503',name:'Danah Alenezi',role:'Inbound Agent',access:'agent'},
+  {pw:'yas@4504',name:'Yasmine Maraafi',role:'Inbound Agent',access:'agent'},
+  {pw:'ezz@4505',name:'Ezz Alsalem',role:'Inbound Agent',access:'agent'},
+  {pw:'abk@4506',name:'Abdullah Bakhsh',role:'Inbound Agent',access:'agent'},
+  {pw:'abz@4507',name:'Abdulaziz Bozobar',role:'Inbound Agent',access:'agent'},
+  {pw:'abr@4508',name:'Abdulrahman Abdullah',role:'Inbound Agent',access:'agent'},
+  {pw:'awm@4509',name:'Abdullah W Mohammad',role:'Inbound Agent',access:'agent'},
+  {pw:'ash@4510',name:'Abdollah Shaverdi',role:'Inbound Agent',access:'agent'},
+  {pw:'azu@4511',name:'Abdulaziz Alzuabi',role:'Inbound Agent',access:'agent'},
+  {pw:'alf@4512',name:'Abdulrahman Alfassam',role:'Inbound Agent',access:'agent'},
+  {pw:'als@4513',name:'Abdulwahab Alsaber',role:'Inbound Agent',access:'agent'},
+  {pw:'slj@4514',name:'Saleh Aljabri',role:'Inbound Agent',access:'agent'},
+  {pw:'alw@4515',name:'Ali Alwayel',role:'Inbound Agent',access:'agent'},
+  {pw:'anq@4516',name:'Ahmad Alnajdi',role:'Inbound Agent',access:'agent'},
+  {pw:'sha@4517',name:'Ali ShahAli',role:'Inbound Agent',access:'agent'},
+  {pw:'aye@4518',name:'Ayedh Alotaibi',role:'Inbound Agent',access:'agent'},
+  {pw:'fah@4519',name:'Fahad Alabdullah',role:'Inbound Agent',access:'agent'},
+  {pw:'hsa@4520',name:'Hasan Ali',role:'Inbound Agent',access:'agent'},
+  {pw:'hkh@4521',name:'Hussain Alkhabbaz',role:'Inbound Agent',access:'agent'},
+  {pw:'msh@4522',name:'Mohammad Alshakhs',role:'Inbound Agent',access:'agent'},
+  {pw:'omr@4523',name:'Omar Almutairi',role:'Inbound Agent',access:'agent'},
+  {pw:'osa@4524',name:'Omar Alsaeed',role:'Inbound Agent',access:'agent'},
+  {pw:'omm@4525',name:'Omar Mohammad',role:'Inbound Agent',access:'agent'},
+  {pw:'sah@4526',name:'Saad Alharbi',role:'Inbound Agent',access:'agent'},
+  {pw:'slk@4527',name:'Sulaiman Alkhalaf',role:'Inbound Agent',access:'agent'},
+  {pw:'asr@4528',name:'Asrar Alattar',role:'Outbound Agent',access:'agent'},
+  {pw:'lat@4529',name:'Latefah Alhouti',role:'Outbound Agent',access:'agent'},
+  {pw:'ane@4530',name:'Ahmad Alenezi',role:'ITM Agent',access:'agent'},
+  {pw:'sbq@4531',name:'Salman Albaqshi',role:'ITM Agent',access:'agent'},
+  {pw:'dhr@4532',name:'Dhari Alshammari',role:'ITM Agent',access:'agent'},
+  {pw:'bdr@4533',name:'Badreyah Alruwayeh',role:'ITM Agent',access:'agent'},
+  {pw:'mrm@4534',name:'Mariam Almutairi',role:'ITM Agent',access:'agent'},
+  {pw:'arj@4535',name:'Abdullah Rajab',role:'ITM Agent',access:'agent'},
+  {pw:'ahm@4538',name:'Ahmed Nidah',role:'Wage Agent',access:'agent'},
+  {pw:'bil@4539',name:'Bilal Faisal',role:'Wage Agent',access:'agent'},
+  {pw:'fat@4540',name:'Fatemeh Mayahi',role:'Wage Agent',access:'agent'},
+  {pw:'nah@4541',name:'Nahla Ibrahem',role:'Wage Agent',access:'agent'},
+  {pw:'nas@3001',name:'Naser Bandar',role:'Assist TL',access:'atl'},
+  {pw:'haj@3002',name:'Hasan Alajmi',role:'Assist TL',access:'atl'},
+  {pw:'ath@3003',name:'Athoub Alnoufal',role:'Assist TL',access:'atl'},
+  {pw:'shq@2001',name:'Shouq Alkandari',role:'Team Leader',access:'readonly'},
+  {pw:'ano@2002',name:'Alanoud Alotaibi',role:'Team Leader',access:'readonly'},
+  {pw:'mot@2003',name:'Mohammad Alothman',role:'Team Leader',access:'readonly'},
+  {pw:'ara@4536',name:'Abdulrahman Alahmad',role:'Back Office',access:'readonly'},
+  {pw:'nhr@4537',name:'Nourah Alhazzani',role:'Back Office',access:'readonly'},
+  {pw:'ftm@4542',name:'Fatmah Alhamar',role:'QA',access:'readonly'},
+  {pw:'brb@4543',name:'Badreyah BoRubayea',role:'QA',access:'readonly'},
+  {pw:'mqr@1001',name:'Mohammad Abdulraheem',role:'QA Supervisor',access:'readonly'},
+  {pw:'tal@0001',name:'Talal Al Jarki',role:'Head of CC',access:'readonly'},
+  {pw:'KIB@admin2026',name:'Admin',role:'System Admin',access:'admin'},
+  {pw:'demo@1234',name:'Demo User',role:'Inbound Agent',access:'agent'},
+  {pw:'demo@mgr',name:'Demo Manager',role:'Team Leader',access:'readonly'}
+];
 
-let me = null;
-let breaksDb = [];
+var SHIFTS=[
+  {label:'7:00 AM – 3:00 PM',start:'07:00',end:'15:00',icon:'🌅'},
+  {label:'8:00 AM – 4:00 PM',start:'08:00',end:'16:00',icon:'☀️'},
+  {label:'9:00 AM – 5:00 PM',start:'09:00',end:'17:00',icon:'🌤'},
+  {label:'10:00 AM – 6:00 PM',start:'10:00',end:'18:00',icon:'🌞'},
+  {label:'12:00 PM – 8:00 PM',start:'12:00',end:'20:00',icon:'🌇'},
+  {label:'2:00 PM – 10:00 PM',start:'14:00',end:'22:00',icon:'🌆'},
+  {label:'3:00 PM – 11:00 PM',start:'15:00',end:'23:00',icon:'🌃'},
+  {label:'4:00 PM – 12:00 AM',start:'16:00',end:'24:00',icon:'🌙'}
+];
 
-// App Init
-function checkPw() {
-  const pin = document.getElementById('pwInput').value;
-  me = EMPLOYEES.find(e => e.pw === pin);
-  if(me) {
-    document.getElementById('sLogin').style.display = 'none';
-    document.getElementById('sApp').style.display = 'block';
-    startClock();
-    apiPull(); // Fetch initial DB state
-    setInterval(apiPull, 10000); // Live poll every 10s
-    renderAll();
-  } else {
-    document.getElementById('pwerr').style.display = 'block';
+// ═══════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════
+var SK='kibv9';
+var API='https://script.google.com/macros/s/AKfycbyj6VEz3AdsrMLL3rB5DibHfVcPUkuMgWZBnk3Sb2exhfG9sgHn2nhDaadRDu1C5vlQSQ/exec';
+var AVCOLS=['#002868','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f'];
+var me=null,selSlot=null,selDur=15,TF='all';
+var clockInt=null,syncInt=null,refInt=null,timerInt=null;
+var _apiOk=null;
+
+// ═══════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════
+function today(){return new Date().toISOString().split('T')[0];}
+function nowHHMM(){var n=new Date();return('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2);}
+function toMin(h){var p=h.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
+function fromMin(m){return('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);}
+function fmt12(h){var p=h.split(':');var hh=parseInt(p[0])%24;var m12=hh%12||12;return m12+':'+p[1]+' '+(hh<12?'AM':'PM');}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function ac(n){var h=0;for(var i=0;i<n.length;i++)h=(h+n.charCodeAt(i))%AVCOLS.length;return AVCOLS[h];}
+function ini(n){var p=n.trim().split(' ');return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():p[0][0].toUpperCase();}
+
+function gd(){try{var r=localStorage.getItem(SK);return r?JSON.parse(r):dd();}catch(e){return dd();}}
+function dd(){return{breaks:{},logins:{},notifs:{},settings:{dailyMin:45,maxCon:2,maxBreak:30},ts:0};}
+function tdb(d){var t=today();if(!d.breaks[t])d.breaks[t]=[];return d.breaks[t];}
+function sv(d){d.ts=Date.now();localStorage.setItem(SK,JSON.stringify(d));apiPushAll(d);}
+
+function schedMins(name,d){
+  var t=today();var bs=d.breaks&&d.breaks[t]?d.breaks[t]:[];
+  return bs.reduce(function(a,b){return b.agent===name&&b.status!=='cancelled'?a+(b.actualDuration||b.duration||0):a;},0);
+}
+function myBreak(d){var bs=tdb(d);for(var i=0;i<bs.length;i++){var b=bs[i];if(b.agent===me.name&&b.status!=='cancelled')return b;}return null;}
+function onBreakNow(d){var bs=tdb(d);var nm=toMin(nowHHMM());return bs.filter(function(b){
+  if(b.status==='in-progress')return true;
+  if(b.status==='booked'){var s=toMin(b.breakStart);return nm>=s&&nm<s+b.duration;}
+  return false;
+});}
+
+// ═══════════════════════════════════
+// API
+// ═══════════════════════════════════
+function apiPushAll(d){
+  var t=today();var bs=(d.breaks&&d.breaks[t])||[];
+  bs.forEach(function(b){
+    if(b._synced)return;
+    var p=JSON.parse(JSON.stringify(b));delete p._synced;
+    fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveBreak',break:p})})
+      .then(function(r){return r.json();}).then(function(res){
+        if(res&&res.success){b._synced=true;localStorage.setItem(SK,JSON.stringify(d));}
+        setSync(true);
+      }).catch(function(){setSync(false);});
+  });
+}
+
+function apiPull(){
+  var t=today();
+  fetch(API+'?action=getBreaks&date='+t)
+    .then(function(r){return r.json();}).then(function(res){
+      if(!res||!res.success)return;
+      var d=gd();if(!d.breaks)d.breaks={};
+      var local=d.breaks[t]||[];var api=res.breaks||[];
+      var map={};local.forEach(function(b,i){map[b.id]=i;});
+      api.forEach(function(b){
+        if(map[b.id]!==undefined){
+          var lb=local[map[b.id]];
+          if(b.status&&b.status!==lb.status)lb.status=b.status;
+          if(b.startedAt)lb.startedAt=b.startedAt;
+          if(b.endedAt)lb.endedAt=b.endedAt;
+          if(b.actualDuration)lb.actualDuration=b.actualDuration;
+          lb._synced=true;
+        }else{b._synced=true;local.push(b);}
+      });
+      d.breaks[t]=local;
+      // Logins
+      var al=res.logins||{};if(!d.logins)d.logins={};if(!d.logins[t])d.logins[t]={};
+      Object.keys(al).forEach(function(k){d.logins[t][k]=al[k];});
+      localStorage.setItem(SK,JSON.stringify(d));
+      setSync(true);if(me)renderAll();
+    }).catch(function(){setSync(false);});
+  fetch(API+'?action=getSettings').then(function(r){return r.json();}).then(function(res){
+    if(!res||!res.settings)return;var d=gd();d.settings=res.settings;localStorage.setItem(SK,JSON.stringify(d));
+  }).catch(function(){});
+}
+
+function setSync(ok){
+  _apiOk=ok;
+  var dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt');
+  if(dot)dot.className='sync-dot'+(ok?' ok':'');
+  if(txt)txt.textContent=ok?'Synced':'Offline';
+}
+
+function forceSync(){
+  var txt=document.getElementById('syncTxt');if(txt)txt.textContent='…';
+  apiPull();
+}
+
+function saveLogin(emp,shift){
+  var d=gd();var t=today();
+  if(!d.logins)d.logins={};if(!d.logins[t])d.logins[t]={};
+  d.logins[t][emp.name]={shift:shift,time:nowHHMM()};
+  localStorage.setItem(SK,JSON.stringify(d));
+  fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({action:'saveLogin',agent:emp.name,shift:shift,date:t})
+  }).catch(function(){});
+}
+
+// ═══════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════
+function checkPw(){
+  var pw=document.getElementById('pwInput').value.trim();
+  var emp=null;for(var i=0;i<EMPS.length;i++){if(EMPS[i].pw===pw){emp=EMPS[i];break;}}
+  if(!emp){document.getElementById('pwerr').classList.add('on');return;}
+  document.getElementById('pwerr').classList.remove('on');
+  // Check saved shift
+  var sk='kib_shift_'+emp.name,sr=localStorage.getItem(sk);
+  if(sr){
+    try{
+      var sv2=JSON.parse(sr);var age=(Date.now()-sv2.ts)/3600000;
+      var sd=(new Date(sv2.ts).toDateString()===new Date().toDateString());
+      if(sd&&age<10&&sv2.shift){finishLogin(emp,sv2.shift);return;}
+    }catch(e){}
+  }
+  showShiftSel(emp);
+}
+
+function showShiftSel(emp){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('ss-greet').textContent='Hello '+emp.name.split(' ')[0]+'! Pick your shift.';
+  var g=document.getElementById('shiftGrid');g.innerHTML='';
+  SHIFTS.forEach(function(s){
+    var c=document.createElement('div');c.className='ss-card';
+    c.innerHTML='<div class="sc-icon">'+s.icon+'</div><div class="sc-time">'+fmt12(s.start)+'</div><div class="sc-dur">'+s.label+'</div>';
+    c.onclick=function(){finishLogin(emp,s);};
+    g.appendChild(c);
+  });
+  document.getElementById('shift-screen').style.display='flex';
+}
+
+function backToLogin(){
+  document.getElementById('shift-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+function finishLogin(emp,shift){
+  document.getElementById('shift-screen').style.display='none';
+  document.getElementById('login-screen').style.display='none';
+  me=JSON.parse(JSON.stringify(emp));
+  me.shift=shift.start;me.shiftEnd=shift.end;
+  me.shiftEndMin=toMin(shift.end);
+  if(me.shiftEndMin===0)me.shiftEndMin=1440;
+  localStorage.setItem('kib_shift_'+emp.name,JSON.stringify({shift:shift,ts:Date.now()}));
+  saveLogin(emp,shift.label||shift);
+  startApp();
+}
+
+function startApp(){
+  document.getElementById('app').classList.add('show');
+  if(me.access==='admin')addAdminTab();
+  initNavSel();
+  renderTopBar();renderAll();
+  clockInt=setInterval(tickClock,1000);
+  refInt=setInterval(renderAll,8000);
+  syncInt=setInterval(apiPull,10000);
+  timerInt=setInterval(tickTimer,1000);
+  setTimeout(apiPull,1200);
+  tickClock();
+}
+
+function addAdminTab(){
+  var nav=document.getElementById('nav');
+  var d=document.createElement('div');d.className='ni';d.onclick=function(){goPage('admin',5);};
+  d.innerHTML='<svg viewBox="0 0 24 24" style="width:19px;height:19px;stroke:var(--t3);fill:none;stroke-width:1.7;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><span>Admin</span>';
+  nav.appendChild(d);
+}
+
+function doSignOut(){
+  me=null;selSlot=null;selDur=15;
+  clearInterval(clockInt);clearInterval(refInt);clearInterval(syncInt);clearInterval(timerInt);
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('shift-screen').style.display='none';
+  document.getElementById('pwInput').value='';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+// ═══════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════
+function tickClock(){
+  var n=new Date();var h=n.getHours(),m=n.getMinutes(),s=n.getSeconds();
+  var hh=h%12||12,ap=h<12?'AM':'PM';
+  var el=document.getElementById('tbClock');
+  if(el)el.textContent=hh+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' '+ap;
+}
+
+// ═══════════════════════════════════
+// TOPBAR
+// ═══════════════════════════════════
+function renderTopBar(){
+  if(!me)return;
+  document.getElementById('tbName').textContent=me.name;
+  document.getElementById('tbMeta').textContent=me.role+' · '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
+  var d=gd();var daily=(d.settings&&d.settings.dailyMin)||45;
+  var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);
+  var c=document.getElementById('balChip');c.textContent=rem+' min left';c.className='bal-chip'+(rem<=10?' low':'');
+  var arr=onBreakNow(d);var el=document.getElementById('liveNum');if(el)el.textContent=arr.length;
+  document.getElementById('st-ob').textContent=arr.length;
+}
+
+// ═══════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════
+function renderAll(){
+  if(!me)return;
+  renderTopBar();
+  var pg=document.querySelector('.page.active');
+  if(!pg)return;var id=pg.id.replace('pg-','');
+  if(id==='home')renderHome();
+  else if(id==='book')buildSlotGrid();
+  else if(id==='team')renderTeam();
+  else if(id==='swap')renderSwap();
+  else if(id==='history')renderHistory();
+  else if(id==='admin')renderAdmin();
+  renderNBadge();
+}
+
+// ═══════════════════════════════════
+// HOME
+// ═══════════════════════════════════
+function renderHome(){
+  if(!me)return;
+  var d=gd();var settings=d.settings||{};var daily=settings.dailyMin||45;
+  var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);
+  document.getElementById('st-rem').textContent=rem;
+  var bs=tdb(d);document.getElementById('st-tot').textContent=bs.filter(function(b){return b.status!=='cancelled';}).length;
+  var sm=toMin(me.shift),em=me.shiftEndMin||toMin(me.shiftEnd),nm=toMin(nowHHMM());
+  var pct=Math.min(100,Math.max(0,Math.round((nm-sm)/(em-sm)*100)));
+  document.getElementById('sp-fill').style.width=pct+'%';
+  document.getElementById('st-pct').textContent=pct+'%';
+  document.getElementById('st-range').textContent=fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
+  renderHomeBSB(d);renderUpcoming(d);renderQActions(d,rem);
+}
+
+function renderHomeBSB(d){
+  var el=document.getElementById('home-bsb');var mb=myBreak(d);
+  if(!mb){el.innerHTML='';return;}
+  var nm=toMin(nowHHMM());var st=toMin(mb.breakStart);
+  var active=(mb.status==='in-progress')||(mb.status==='booked'&&nm>=st&&nm<st+mb.duration);
+  if(active){
+    var left=mb.startedAt?Math.max(0,Math.round(mb.duration-(Date.now()-mb.startedAt)/60000)):mb.duration;
+    var mins=Math.floor(left),secs=Math.round((left%1)*60);
+    el.innerHTML='<div class="bsb active"><div class="bsb-icon">☕</div>'
+      +'<div class="bsb-info"><div class="bsb-main">Break In Progress</div><div class="bsb-sub">'+fmt12(mb.breakStart)+' · '+mb.duration+' min</div></div>'
+      +'<div class="bsb-timer" id="bsbTimer">'+mins+':'+(secs<10?'0':'')+secs+'</div>'
+      +'<div class="bsb-actions"><button class="btn btn-danger btn-sm" onclick="doEndBreak()">■ End</button></div>'
+      +'</div>';
+  }else{
+    el.innerHTML='<div class="bsb booked"><div class="bsb-icon">📌</div>'
+      +'<div class="bsb-info"><div class="bsb-main">Break Booked</div><div class="bsb-sub">'+fmt12(mb.breakStart)+' · '+mb.duration+' min</div></div>'
+      +'<div class="bsb-actions">'
+      +(mb.status==='booked'?'<button class="btn btn-success btn-sm" onclick="doStartBreak()">▶ Start</button>':'')
+      +'<button class="btn btn-outline btn-sm" onclick="doCancel()">✕</button>'
+      +'</div></div>';
   }
 }
 
-// ════════════════════════════════════════════
-// GOOGLE SHEETS SYNC LOGIC (The "Perfect" Sync)
-// ════════════════════════════════════════════
-async function apiPull() {
-  try {
-    document.getElementById('syncStatus').textContent = "↻ Syncing...";
-    document.getElementById('syncStatus').style.color = "var(--amber)";
-    
-    // Call Google Apps Script
-    const res = await fetch(`${API_URL}?action=getBreaks&date=${new Date().toISOString().split('T')[0]}`);
-    const data = await res.json();
-    
-    if(data && data.breaks) {
-      breaksDb = data.breaks;
-      renderAll();
-      document.getElementById('syncStatus').textContent = "● Live Sync";
-      document.getElementById('syncStatus').style.color = "var(--green)";
-    }
-  } catch(e) {
-    console.error("DB Sync Error", e);
-    document.getElementById('syncStatus').textContent = "⚠ Offline";
-    document.getElementById('syncStatus').style.color = "var(--red)";
+function renderUpcoming(d){
+  var el=document.getElementById('upcoming');var settings=d.settings||{};var maxCon=settings.maxCon||2;
+  var sm=toMin(me.shift),em=me.shiftEndMin||toMin(me.shiftEnd),nm=toMin(nowHHMM());
+  var bs=tdb(d);var html='';var cnt=0;
+  for(var m=sm+15;m<em-15&&cnt<6;m+=30){
+    if(m<nm)continue;
+    var at=bs.filter(function(b){if(b.status==='cancelled')return false;var s=toMin(b.breakStart);return s<=m&&s+b.duration>m;});
+    var full=at.length>=maxCon;
+    var cls=full?'full':at.length>0?'partial':'free';
+    html+='<div class="uc-slot">'
+      +'<div class="uc-time">'+fmt12(fromMin(m))+'</div>'
+      +'<div class="uc-bar"><div class="uc-fill '+cls+'" style="width:'+(at.length/maxCon*100)+'%"></div></div>'
+      +'<div class="uc-cnt" style="color:var(--'+(full?'red':at.length>0?'amber':'green')+')">'+(full?'Full':at.length+'/'+maxCon)+'</div>'
+      +'</div>';cnt++;
+  }
+  el.innerHTML=html||'<div style="font-size:11px;color:var(--t3);padding:8px 0;">No upcoming slots in your shift.</div>';
+}
+
+function renderQActions(d,rem){
+  var el=document.getElementById('qactions');var mb=myBreak(d);var html='';
+  if(me.access==='readonly'||me.access==='admin'){
+    html='<button class="btn btn-ghost btn-full" onclick="goPage(\'team\',2)">👥 View Team Status</button>';
+  }else if(!mb&&rem>0){
+    html='<button class="btn btn-primary" style="flex:1;" onclick="goPage(\'book\',1)">📅 Book Break</button>'
+        +'<button class="btn btn-ghost" style="flex:1;" onclick="goPage(\'team\',2)">👥 Team</button>';
+  }else if(mb&&mb.status==='booked'){
+    html='<button class="btn btn-success" style="flex:1;" onclick="doStartBreak()">▶ Start Break</button>'
+        +'<button class="btn btn-outline" style="flex:1;" onclick="doCancel()">✕ Cancel</button>';
+  }else if(mb&&mb.status==='in-progress'){
+    html='<button class="btn btn-danger btn-full btn-lg" onclick="doEndBreak()">■ End Break Now</button>';
+  }
+  el.innerHTML=html;
+}
+
+// ═══════════════════════════════════
+// TIMER TICK
+// ═══════════════════════════════════
+function tickTimer(){
+  if(!me)return;var d=gd();var mb=myBreak(d);
+  if(!mb||(mb.status!=='in-progress'&&mb.status!=='booked'))return;
+  if(!mb.startedAt)return;
+  var elSec=Math.floor((Date.now()-mb.startedAt)/1000);
+  var leftSec=Math.max(0,mb.duration*60-elSec);
+  var mins=Math.floor(leftSec/60),secs=leftSec%60;
+  var el=document.getElementById('bsbTimer');
+  if(el)el.textContent=mins+':'+(secs<10?'0':'')+secs;
+  if(leftSec<=0&&mb.status==='in-progress'){
+    mb.status='completed';mb.endedAt=Date.now();mb.actualDuration=mb.duration;
+    sv(d);addNotif('Break ended automatically','info');renderAll();
   }
 }
 
-// ════════════════════════════════════════════
-// LIVE TEAM MONITOR RENDERING (WOW FEATURE)
-// ════════════════════════════════════════════
-function renderTeam() {
-  const container = document.getElementById('teamList');
-  let html = '';
-  
-  const depts = ['Inbound', 'Outbound', 'Management'];
-  
-  depts.forEach(dept => {
-    const deptAgents = EMPLOYEES.filter(e => e.dept === dept);
-    if(deptAgents.length === 0) return;
+// ═══════════════════════════════════
+// SLOT GRID
+// ═══════════════════════════════════
+function buildSlotGrid(){
+  if(!me)return;
+  var d=gd();var bs=tdb(d);var settings=d.settings||{};var maxCon=settings.maxCon||2;
+  var sm=toMin(me.shift);var raw=me.shiftEndMin||toMin(me.shiftEnd);
+  var em=(raw>sm&&raw<=sm+600)?raw:sm+480;if(em<=sm)em=sm+480;
+  var nm=toMin(nowHHMM());
+  var adj=(sm>720&&nm<360)?nm+1440:nm;
+  var started=adj>=sm;
+  var el=document.getElementById('bkgrid');var html='';
+  for(var m=sm;m<em;m+=30){
+    var valid=(m>=sm+15)&&(m+30<=em-15);
+    var isPast=m<adj;
+    var at=[],myH=null;
+    bs.forEach(function(b){
+      if(b.status==='cancelled')return;
+      var bs2=toMin(b.breakStart),be=bs2+b.duration;
+      if(bs2<=m&&be>m){at.push(b);if(b.agent===me.name)myH=b;}
+    });
+    var isFull=at.length>=maxCon;
+    var isSel=selSlot&&selSlot.min===m;
+    var cls='bslot',who='',dis=false;
+    if(myH){cls+=' mine';who='✓ Yours';dis=true;}
+    else if(isPast){cls+=' blocked';who='Past';dis=true;}
+    else if(!started){cls+=' blocked';who='Not started';dis=true;}
+    else if(!valid){cls+=' blocked';who='Blocked';dis=true;}
+    else if(isFull){cls+=' full';who=at.map(function(x){return x.agent.split(' ')[0];}).join(', ');dis=true;}
+    else if(at.length>0){cls+=' partial';who=at.map(function(x){return x.agent.split(' ')[0];}).join(', ');}
+    else{who='Free';}
+    if(isSel&&!dis)cls+=' sel';
+    var hm=fromMin(m);
+    html+='<div class="'+cls+'" onclick="'+(dis?'':'pickSlot('+m+',\''+hm+'\')')+'">'
+      +'<div class="bst">'+fmt12(hm)+'</div>'
+      +'<div class="bsw">'+who+'</div></div>';
+  }
+  el.innerHTML=html||'<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--t3);font-size:12px;">No slots for this shift.</div>';
+  var ds=document.getElementById('dur-sec');if(ds)ds.style.display=selSlot?'block':'none';
+  if(selSlot){buildDurBtns();buildConfirm();}
+}
 
-    html += `<div class="dept-title">${dept}</div>`;
-    
-    deptAgents.forEach(emp => {
-      // Check if agent is currently on break in the DB
-      const activeBrk = breaksDb.find(b => b.agent === emp.name && b.status === 'active');
-      const isOnBreak = !!activeBrk;
-      const statusCls = isOnBreak ? 'on' : 'free';
-      const statusTxt = isOnBreak ? '<span style="color:var(--amber)">On Break</span>' : 'Available';
-      
-      // Initials for Avatar
-      const inits = emp.name.split(' ').map(n=>n[0]).join('').substring(0,2);
-      const color = isOnBreak ? 'var(--amber)' : 'var(--navy)';
+function pickSlot(min,hm){
+  if(me.access==='readonly'){showToast('View-only access','error');return;}
+  var d=gd();if(myBreak(d)){showToast('Cancel current break first','error');return;}
+  selSlot={min:min,hhmm:hm};buildSlotGrid();
+}
 
-      html += `
-      <div class="agent-row">
-        <div class="av" style="background:${color}">
-          ${inits}
-          <div class="status-dot ${statusCls}"></div>
-        </div>
-        <div>
-          <div class="a-name">${emp.name}</div>
-          <div class="a-role">${emp.role}</div>
-        </div>
-        <div class="a-right">
-          <div class="a-time">${statusTxt}</div>
-          <div class="a-prog"><div class="a-fill" style="width:${isOnBreak?'50%':'0%'}"></div></div>
-        </div>
-      </div>`;
+function buildDurBtns(){
+  var d=gd();var settings=d.settings||{};var daily=settings.dailyMin||45;var maxB=settings.maxBreak||30;
+  var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);var max=Math.min(maxB,rem);
+  var opts=[15,30].filter(function(x){return x<=max;});
+  if(max>0&&max<15)opts=[max];
+  if(!opts.length){document.getElementById('durBtns').innerHTML='<div style="color:var(--red);font-size:12px;">No break time remaining</div>';return;}
+  if(opts.indexOf(selDur)===-1)selDur=opts[0];
+  document.getElementById('durBtns').innerHTML=opts.map(function(o){
+    return '<div class="dur-btn'+(selDur===o?' sel':'')+'" onclick="setDur('+o+')">'+(o===15?'15 min':'30 min')+'</div>';
+  }).join('');
+}
+
+function setDur(v){selDur=v;buildDurBtns();buildConfirm();}
+
+function buildConfirm(){
+  if(!selSlot)return;
+  var d=gd();var daily=(d.settings&&d.settings.dailyMin)||45;
+  var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);
+  document.getElementById('confirmBox').innerHTML=
+    '<div class="cb-row"><span class="cb-lbl">Start</span><span class="cb-val">'+fmt12(selSlot.hhmm)+'</span></div>'
+    +'<div class="cb-row"><span class="cb-lbl">Duration</span><span class="cb-val">'+selDur+' min</span></div>'
+    +'<div class="cb-row"><span class="cb-lbl">End</span><span class="cb-val">'+fmt12(fromMin(selSlot.min+selDur))+'</span></div>'
+    +'<div class="cb-row" style="border:none;"><span class="cb-lbl">Remaining after</span><span class="cb-val" style="color:var(--navy);">'+Math.max(0,rem-selDur)+' min</span></div>';
+}
+
+function doBook(){
+  if(!selSlot){showToast('Select a slot','error');return;}
+  var d=gd();var settings=d.settings||{};var daily=settings.dailyMin||45;var maxCon=settings.maxCon||2;
+  var used=schedMins(me.name,d);var rem=daily-used;
+  if(selDur>rem){showToast('Not enough break time','error');return;}
+  var bs=tdb(d);
+  var conflict=bs.filter(function(b){
+    if(b.status==='cancelled')return false;var s=toMin(b.breakStart);return s<=selSlot.min&&s+b.duration>selSlot.min;
+  });
+  if(conflict.length>=maxCon){showToast('Slot is now full','error');buildSlotGrid();return;}
+  var brk={id:uid(),agent:me.name,breakStart:selSlot.hhmm,duration:selDur,status:'booked',date:today(),bookedAt:Date.now()};
+  bs.push(brk);sv(d);addNotif('Break booked: '+fmt12(selSlot.hhmm),'success');
+  showToast('✓ Break booked!','success');selSlot=null;selDur=15;goPage('home',0);renderAll();
+}
+
+// ═══════════════════════════════════
+// BREAK CONTROLS
+// ═══════════════════════════════════
+function doStartBreak(){
+  var d=gd();var mb=myBreak(d);if(!mb||mb.status!=='booked'){showToast('No booked break','error');return;}
+  mb.status='in-progress';mb.startedAt=Date.now();sv(d);
+  addNotif('Break started','success');showToast('☕ Break started!','success');renderAll();
+}
+function doEndBreak(){
+  var d=gd();var mb=myBreak(d);if(!mb){showToast('No active break','error');return;}
+  mb.status='completed';mb.endedAt=Date.now();
+  mb.actualDuration=mb.startedAt?Math.min(mb.duration,Math.round((Date.now()-mb.startedAt)/60000)):mb.duration;
+  sv(d);addNotif('Break completed ('+mb.actualDuration+' min)','success');
+  showToast('Break ended. Welcome back!','success');renderAll();
+}
+function doCancel(){
+  if(!confirm('Cancel your break?'))return;
+  var d=gd();var mb=myBreak(d);if(!mb)return;
+  mb.status='cancelled';sv(d);addNotif('Break cancelled','info');showToast('Cancelled','info');
+  selSlot=null;renderAll();
+}
+
+// ═══════════════════════════════════
+// TEAM — ALL AGENTS
+// ═══════════════════════════════════
+function setTF(f,el){
+  TF=f;document.querySelectorAll('.tf').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');renderTeam();
+}
+
+function renderTeam(){
+  var d=gd();var bs=tdb(d);var nm=toMin(nowHHMM());
+  var settings=d.settings||{};var t=today();var logins=(d.logins&&d.logins[t])||{};
+  var srch=((document.getElementById('teamSearch')||{}).value||'').toLowerCase();
+
+  // Build status map
+  var smap={};
+  EMPS.forEach(function(e){smap[e.name]={status:'offline',breakInfo:null,loggedIn:!!logins[e.name]};});
+  bs.forEach(function(b){
+    if(b.status==='cancelled')return;
+    var s=toMin(b.breakStart),e=s+b.duration;
+    var active=(b.status==='in-progress')||(b.status==='booked'&&nm>=s&&nm<e);
+    if(active){smap[b.agent]={status:'on-break',breakInfo:b,loggedIn:true};}
+    else if(smap[b.agent]&&smap[b.agent].status!=='on-break')smap[b.agent].loggedIn=true;
+  });
+  Object.keys(logins).forEach(function(n){
+    if(smap[n]&&smap[n].status==='offline')smap[n].status='available';
+  });
+
+  var groups=[
+    {label:'Leadership & QA',fn:function(e){return e.access==='readonly';}},
+    {label:'Assist Team Leaders',fn:function(e){return e.access==='atl';}},
+    {label:'Inbound Agents',fn:function(e){return e.role==='Inbound Agent';}},
+    {label:'Outbound Agents',fn:function(e){return e.role==='Outbound Agent';}},
+    {label:'ITM Agents',fn:function(e){return e.role==='ITM Agent';}},
+    {label:'Wage Agents',fn:function(e){return e.role==='Wage Agent';}},
+  ];
+
+  var html='';
+  groups.forEach(function(g){
+    var members=EMPS.filter(function(emp){
+      if(emp.pw.indexOf('demo')===0||emp.access==='admin')return false;
+      if(!g.fn(emp))return false;
+      if(srch&&emp.name.toLowerCase().indexOf(srch)===-1&&emp.role.toLowerCase().indexOf(srch)===-1)return false;
+      var st=smap[emp.name]?smap[emp.name].status:'offline';
+      var disp=emp.access==='readonly'?'monitoring':st;
+      if(TF==='on-break'&&disp!=='on-break')return false;
+      if(TF==='available'&&disp!=='available')return false;
+      if(TF==='offline'&&disp!=='offline')return false;
+      return true;
+    });
+    if(!members.length)return;
+    html+='<div class="tc-sec">'+g.label+' <span style="font-weight:400;">('+members.length+')</span></div>';
+    members.forEach(function(emp){
+      var s=smap[emp.name]||{status:'offline'};
+      var st=emp.access==='readonly'?'monitoring':s.status;
+      var _BL={'on-break':'On Break',available:'Available',offline:'Offline',monitoring:'Monitoring'};var bl=_BL[st]||st;
+      var shift=logins[emp.name]?logins[emp.name].shift:'Not logged in';
+      var bi='';
+      if(s.breakInfo&&st==='on-break'){
+        var el2=s.breakInfo.startedAt?Math.max(0,Math.round(s.breakInfo.duration-(Date.now()-s.breakInfo.startedAt)/60000)):s.breakInfo.duration;
+        bi='<div class="tc-bi">~'+el2+' min left</div>';
+      }
+      html+='<div class="tc">'
+        +'<div class="tc-bar '+st+'"></div>'
+        +'<div class="tc-top">'
+        +'<div class="tc-av" style="background:'+ac(emp.name)+'">'+ini(emp.name)+'</div>'
+        +'<div><div class="tc-nm">'+emp.name+'</div><div class="tc-rl">'+emp.role+'</div></div>'
+        +'</div>'
+        +'<div class="tc-bdg '+st+'">'+bl+'</div>'
+        +(logins[emp.name]?'<div class="tc-shift">'+shift+'</div>':'')
+        +bi+'</div>';
     });
   });
-  
-  container.innerHTML = html;
+
+  document.getElementById('teamGrid').innerHTML=html||
+    '<div class="empty-state" style="grid-column:1/-1;"><div class="es-icon">🔍</div><div class="es-txt">No agents match.</div></div>';
 }
 
-// ════════════════════════════════════════════
-// UTILS & NAVIGATION
-// ════════════════════════════════════════════
-function renderAll() {
-  if(!me) return;
-  renderTeam();
-  // Add other renders (Home, Book) here based on breaksDb array
+// ═══════════════════════════════════
+// SWAP
+// ═══════════════════════════════════
+function renderSwap(){
+  var d=gd();var bs=tdb(d);var swaps=d.swaps||[];var html='';
+  if(me.access!=='readonly'){
+    var myB=bs.filter(function(b){return b.agent===me.name&&b.status==='booked';});
+    html+='<div class="card" style="margin-bottom:12px;"><div class="sh"><div class="sh-title">Request Swap</div></div>';
+    if(myB.length){
+      html+='<div class="bslot mine" style="margin-bottom:10px;cursor:default;">'
+        +'<div class="bst">'+fmt12(myB[0].breakStart)+'</div><div class="bsw">Your break · '+myB[0].duration+' min</div></div>'
+        +'<button class="btn btn-primary btn-full" onclick="openSwapModal()">Find someone to swap with →</button>';
+    }else{
+      html+='<div class="empty-state"><div class="es-icon">📅</div><div class="es-txt">Book a break first.</div></div>';
+    }
+    html+='</div>';
+  }
+  var inc=swaps.filter(function(s){return s.toAgent===me.name&&s.status==='pending';});
+  if(inc.length){
+    html+='<div class="card" style="margin-bottom:12px;"><div class="sh-title" style="margin-bottom:9px;">Incoming Requests</div>';
+    inc.forEach(function(s){
+      html+='<div class="swap-card"><div style="font-size:12px;font-weight:700;">'+s.fromAgent+'</div>'
+        +'<div style="font-size:10px;color:var(--t3);">Their: '+fmt12(s.fromSlot)+' ↔ Yours: '+fmt12(s.toSlot)+'</div>'
+        +'<div style="display:flex;gap:7px;margin-top:8px;">'
+        +'<button class="btn btn-success btn-sm" onclick="respondSwap(\''+s.id+'\',true)">✓ Accept</button>'
+        +'<button class="btn btn-danger btn-sm" onclick="respondSwap(\''+s.id+'\',false)">✕ Decline</button>'
+        +'</div></div>';
+    });
+    html+='</div>';
+    document.getElementById('swapBadge').textContent=inc.length;
+    document.getElementById('swapBadge').classList.add('on');
+  }else document.getElementById('swapBadge').classList.remove('on');
+  var hist=swaps.filter(function(s){return s.fromAgent===me.name||s.toAgent===me.name;});
+  if(hist.length){
+    html+='<div class="card"><div class="sh-title" style="margin-bottom:9px;">History</div>';
+    hist.slice(0,8).forEach(function(s){
+      html+='<div class="swap-card" style="display:flex;justify-content:space-between;align-items:center;">'
+        +'<div><div style="font-size:11px;font-weight:700;">'+s.fromAgent+' ↔ '+s.toAgent+'</div>'
+        +'<div style="font-size:10px;color:var(--t3);">'+fmt12(s.fromSlot)+' ↔ '+fmt12(s.toSlot)+'</div></div>'
+        +'<div class="sw-status '+s.status+'">'+s.status+'</div></div>';
+    });
+    html+='</div>';
+  }
+  if(!html)html='<div class="empty-state"><div class="es-icon">🔄</div><div class="es-txt">No swap requests yet.</div></div>';
+  document.getElementById('swap-content').innerHTML=html;
 }
 
-function nav(page) {
-  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
-  document.getElementById(`pg-${page}`).classList.add('on');
-  event.currentTarget.classList.add('on');
-  if(page === 'team') renderTeam();
+function openSwapModal(){
+  var d=gd();var bs=tdb(d);
+  var myB=bs.filter(function(b){return b.agent===me.name&&b.status==='booked';});
+  if(!myB.length){showToast('No break to swap','error');return;}
+  var others=bs.filter(function(b){return b.agent!==me.name&&b.status==='booked';});
+  var html='<div class="mo-title">Select Break to Swap With</div>';
+  if(!others.length)html+='<div class="empty-state"><div class="es-icon">😐</div><div class="es-txt">No booked breaks available.</div></div>';
+  else others.forEach(function(b){
+    html+='<div class="swap-card" onclick="doSwapReq(\''+myB[0].id+'\',\''+b.id+'\')" style="cursor:pointer;">'
+      +'<div style="font-size:12px;font-weight:700;">'+b.agent+'</div>'
+      +'<div style="font-size:11px;color:var(--t3);">'+fmt12(b.breakStart)+' · '+b.duration+' min</div></div>';
+  });
+  showModal(html);
 }
 
-function doLogout() {
-  window.location.reload();
+function doSwapReq(myId,theirId){
+  var d=gd();var bs=tdb(d);
+  var mine=bs.find(function(b){return b.id===myId;});
+  var theirs=bs.find(function(b){return b.id===theirId;});
+  if(!mine||!theirs)return;
+  if(!d.swaps)d.swaps=[];
+  d.swaps.push({id:uid(),fromAgent:me.name,toAgent:theirs.agent,fromSlot:mine.breakStart,toSlot:theirs.breakStart,status:'pending',ts:Date.now()});
+  sv(d);closeModal();showToast('Swap request sent','success');addNotif('Swap requested with '+theirs.agent,'info');
 }
 
-function startClock() {
-  setInterval(() => {
-    const d = new Date();
-    document.getElementById('clockTime').textContent = 
-      d.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
-  }, 1000);
+function respondSwap(sid,accept){
+  var d=gd();var sw=(d.swaps||[]).find(function(s){return s.id===sid;});if(!sw)return;
+  if(accept){
+    sw.status='approved';var bs=tdb(d);
+    var fb=bs.find(function(b){return b.agent===sw.fromAgent&&b.status==='booked';});
+    var tb=bs.find(function(b){return b.agent===sw.toAgent&&b.status==='booked';});
+    if(fb&&tb){var tmp=fb.breakStart;fb.breakStart=tb.breakStart;tb.breakStart=tmp;}
+    addNotif('Swap accepted with '+sw.fromAgent,'success');
+  }else sw.status='declined';
+  sv(d);renderAll();
 }
+
+// ═══════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════
+function renderHistory(){
+  var d=gd();var t=today();var bs=(d.breaks&&d.breaks[t])||[];
+  var mine=bs.filter(function(b){return b.agent===me.name;});
+  var el=document.getElementById('histContent');
+  if(!mine.length){el.innerHTML='<div class="empty-state"><div class="es-icon">📋</div><div class="es-txt">No breaks today.</div></div>';return;}
+  el.innerHTML=mine.slice().reverse().map(function(b){
+    var labels={booked:'Booked',completed:'Completed','in-progress':'In Progress',cancelled:'Cancelled'};
+    var dur=b.actualDuration||b.duration;
+    return '<div class="hi"><div class="hi-dot '+b.status+'"></div>'
+      +'<div class="hi-info"><div class="hi-time">'+fmt12(b.breakStart)+'</div>'
+      +'<div class="hi-meta">'+dur+' min · booked '+new Date(b.bookedAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})+'</div></div>'
+      +'<div class="hi-st '+b.status+'">'+(labels[b.status]||b.status)+'</div></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════
+function renderAdmin(){
+  var d=gd();var s=d.settings||{};var t=today();var bs=tdb(d);
+  var total=bs.filter(function(b){return b.status!=='cancelled';}).length;
+  var comp=bs.filter(function(b){return b.status==='completed';}).length;
+  var active=bs.filter(function(b){return b.status==='in-progress';}).length;
+  var mins=bs.reduce(function(a,b){return b.status==='completed'?a+(b.actualDuration||b.duration):a;},0);
+  var html='<div class="stats-row" style="margin-bottom:12px;">'
+    +'<div class="stat-card"><div class="sv">'+total+'</div><div class="sl">Booked</div></div>'
+    +'<div class="stat-card"><div class="sv">'+comp+'</div><div class="sl">Completed</div></div>'
+    +'<div class="stat-card navy"><div class="sv">'+active+'</div><div class="sl">Active</div></div>'
+    +'<div class="stat-card gold"><div class="sv">'+mins+'</div><div class="sl">Min Used</div></div>'
+    +'</div>';
+  html+='<div class="card admin-sec"><h3>Settings</h3>'
+    +'<div class="ar"><div><div class="ar-lbl">Daily Allowance</div><div class="ar-sub">Minutes per agent per day</div></div>'
+    +'<div style="display:flex;align-items:center;gap:5px;"><input class="num-input" id="sDaily" type="number" value="'+(s.dailyMin||45)+'" min="15" max="120"><span style="font-size:10px;color:var(--t3);">min</span></div></div>'
+    +'<div class="ar"><div><div class="ar-lbl">Max Concurrent</div><div class="ar-sub">On break simultaneously</div></div>'
+    +'<input class="num-input" id="sMaxC" type="number" value="'+(s.maxCon||2)+'" min="1" max="10"></div>'
+    +'<div class="ar"><div><div class="ar-lbl">Max Duration</div><div class="ar-sub">Per single break</div></div>'
+    +'<div style="display:flex;align-items:center;gap:5px;"><input class="num-input" id="sMaxB" type="number" value="'+(s.maxBreak||30)+'" min="5" max="60"><span style="font-size:10px;color:var(--t3);">min</span></div></div>'
+    +'<button class="btn btn-primary btn-full" style="margin-top:10px;" onclick="saveSettings()">💾 Save</button>'
+    +'</div>';
+  // Agent list
+  html+='<div class="card admin-sec"><h3>Breaks Today</h3><div class="at-hd"><div>Agent</div><div>Break</div><div>Status</div></div>';
+  if(bs.filter(function(b){return b.status!=='cancelled';}).length){
+    bs.filter(function(b){return b.status!=='cancelled';}).forEach(function(b){
+      var clr={booked:'var(--blue)',completed:'var(--green)','in-progress':'var(--amber)'}[b.status]||'var(--t3)';
+      html+='<div class="at-row"><div>'+b.agent.split(' ')[0]+'</div><div>'+fmt12(b.breakStart)+' '+b.duration+'m</div>'
+        +'<div style="color:'+clr+';font-weight:600;">'+(b.status==='in-progress'?'Active':b.status==='completed'?'Done':'Booked')+'</div></div>';
+    });
+  }else html+='<div style="padding:10px;font-size:11px;color:var(--t3);">No breaks today.</div>';
+  html+='</div>';
+  html+='<div class="card admin-sec"><h3>Danger Zone</h3><div style="display:flex;gap:7px;">'
+    +'<button class="btn btn-outline btn-sm" onclick="clearDay()">🗑 Clear Today</button>'
+    +'<button class="btn btn-danger btn-sm" onclick="clearAll()">⚠ Clear All</button>'
+    +'</div></div>';
+  document.getElementById('adminContent').innerHTML=html;
+}
+
+function saveSettings(){
+  var d=gd();d.settings={
+    dailyMin:parseInt(document.getElementById('sDaily').value)||45,
+    maxCon:parseInt(document.getElementById('sMaxC').value)||2,
+    maxBreak:parseInt(document.getElementById('sMaxB').value)||30
+  };sv(d);showToast('Settings saved','success');
+}
+function clearDay(){
+  if(!confirm('Clear today?'))return;var d=gd();d.breaks[today()]=[];sv(d);
+  fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'clearDay',date:today()})}).catch(function(){});
+  showToast('Cleared','info');renderAll();
+}
+function clearAll(){
+  if(!confirm('Clear ALL data?'))return;localStorage.removeItem(SK);
+  fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'clearAll'})}).catch(function(){});
+  showToast('All cleared','info');renderAll();
+}
+
+// ═══════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════
+function addNotif(text,type){
+  var d=gd();var t=today();if(!d.notifs)d.notifs={};if(!d.notifs[t])d.notifs[t]=[];
+  d.notifs[t].unshift({text:text,type:type||'info',time:nowHHMM(),id:uid()});
+  if(d.notifs[t].length>30)d.notifs[t]=d.notifs[t].slice(0,30);
+  localStorage.setItem(SK,JSON.stringify(d));renderNBadge();
+}
+function renderNBadge(){
+  var d=gd();var t=today();var ns=(d.notifs&&d.notifs[t])||[];
+  var b=document.getElementById('nbadge');
+  if(ns.length){b.textContent=Math.min(ns.length,9);b.classList.add('on');}
+  else b.classList.remove('on');
+}
+function toggleNotifs(){
+  var p=document.getElementById('np');
+  if(p.classList.contains('open')){closeNotifs();return;}
+  var d=gd();var t=today();var ns=(d.notifs&&d.notifs[t])||[];
+  var html=ns.length?ns.map(function(n){
+    var ic={'success':'✅','error':'❌','info':'ℹ️','warning':'⚠️'}[n.type]||'🔔';
+    return '<div class="np-item"><div class="npi-ic">'+ic+'</div><div><div class="npi-tx">'+n.text+'</div><div class="npi-tm">'+n.time+'</div></div></div>';
+  }).join(''):'<div class="np-empty">No notifications today.</div>';
+  document.getElementById('npList').innerHTML=html;
+  p.classList.add('open');
+}
+function closeNotifs(){document.getElementById('np').classList.remove('open');}
+
+// ═══════════════════════════════════
+// TOAST
+// ═══════════════════════════════════
+var tTO=null;
+function showToast(msg,type){
+  clearTimeout(tTO);var el=document.getElementById('toast');
+  el.textContent=msg;el.className='show '+(type||'');
+  tTO=setTimeout(function(){el.className='';},3000);
+}
+
+// ═══════════════════════════════════
+// MODAL
+// ═══════════════════════════════════
+function showModal(html){document.getElementById('moContent').innerHTML=html;document.getElementById('modal').classList.add('open');}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+// ═══════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════
+function initNavSel(){
+  var items=document.querySelectorAll('.ni');var sel=document.getElementById('navSel');
+  if(sel&&items.length)sel.style.width=(100/items.length)+'%',sel.style.left='0%';
+}
+function goPage(name,idx){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.ni').forEach(function(n,i){n.classList.toggle('active',i===idx);});
+  document.getElementById('pg-'+name).classList.add('active');
+  var items=document.querySelectorAll('.ni');var sel=document.getElementById('navSel');
+  if(sel&&items.length)sel.style.left=(100/items.length*idx)+'%';
+  renderAll();
+}
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+window.addEventListener('DOMContentLoaded',function(){
+  setTimeout(function(){
+    document.getElementById('splash').classList.add('fade');
+    setTimeout(function(){document.getElementById('splash').style.display='none';},500);
+    document.getElementById('login-screen').style.display='flex';
+    setTimeout(function(){if(document.getElementById('pwInput'))document.getElementById('pwInput').focus();},200);
+  },1300);
+  tickClock();
+});
 </script>
 </body>
 </html>
