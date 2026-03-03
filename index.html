@@ -713,7 +713,7 @@ var syncInt = null;
 
 function today(){return new Date().toISOString().split('T')[0];}
 function gd(){try{var r=localStorage.getItem(SK);return r?JSON.parse(r):defData();}catch(e){return defData();}}
-function defData(){return{breaks:{},swaps:[],notifs:{},settings:{dailyMin:60,maxCon:2,maxBreak:30}};}
+function defData(){return{breaks:{},swaps:[],notifs:{},settings:{dailyMin:60,maxCon:2,maxBreak:30},logins:{}};}
 function tdb(d){var t=today();if(!d.breaks[t])d.breaks[t]=[];return d.breaks[t];}
 
 // Save locally AND push to Sheets in background
@@ -846,6 +846,15 @@ function checkPw(){
     loginUser(emp, null, null, null);
     return;
   }
+  // Check if agent has a saved shift within last 10 hours (same day)
+  var savedShiftKey = 'kib_shift_' + emp.name;
+  try {
+    var savedShift = JSON.parse(localStorage.getItem(savedShiftKey)||'null');
+    if(savedShift && savedShift.date===today() && (Date.now()-savedShift.savedAt)<10*3600*1000){
+      loginUser(emp, savedShift.shift, savedShift.shEnd, savedShift.shEndMin);
+      return;
+    }
+  } catch(e){}
   buildShiftGrid();
   document.getElementById('step1').classList.remove('on');
   document.getElementById('step2').classList.add('on');
@@ -887,11 +896,29 @@ function confirmLogin(){
   var shEndHH=shEndH%24;
   var shEnd=('0'+shEndHH).slice(-2)+':00';
   var shEndMin=shEndH*60;
+  // Save shift for 10-hour memory
+  try {
+    var savedShiftKey = 'kib_shift_' + pendingEmp.name;
+    localStorage.setItem(savedShiftKey, JSON.stringify({
+      shift: selShift, shEnd: shEnd, shEndMin: shEndMin,
+      date: today(), savedAt: Date.now()
+    }));
+  } catch(e){}
   loginUser(pendingEmp, selShift, shEnd, shEndMin);
 }
 
 function loginUser(emp, shift, shEnd, shEndMin){
   me={name:emp.name,role:emp.role,access:emp.access,shift:shift,shiftEnd:shEnd,shiftEndMin:shEndMin};
+  // Track this login for team page
+  if(emp.access!=='readonly'){
+    try{
+      var d2=gd(); var t2=today();
+      if(!d2.logins) d2.logins={};
+      if(!d2.logins[t2]) d2.logins[t2]={};
+      d2.logins[t2][emp.name]={time:Date.now(), shift:shift};
+      localStorage.setItem(SK, JSON.stringify(d2));
+    }catch(e){}
+  }
   document.getElementById('sLogin').style.display='none';
   document.getElementById('sApp').style.display='block';
   var av1=document.getElementById('uav');av1.textContent=ini(me.name);
@@ -914,7 +941,7 @@ function loginUser(emp, shift, shEnd, shEndMin){
     startClock();renderAll();
     gp('team');
     refInt=setInterval(renderAll,8000);
-    syncInt=setInterval(apiPull,30000);
+    syncInt=setInterval(apiPull,10000);
     setTimeout(apiPull,1500);
     showToast(isDemo?'📊 Demo Manager View loaded':'Welcome, '+me.name.split(' ')[0]+'! Monitor access','inf');
   } else {
@@ -948,7 +975,7 @@ function loginUser(emp, shift, shEnd, shEndMin){
       checkActiveBreak();
     }
     refInt=setInterval(renderAll,8000);
-    syncInt=setInterval(apiPull,30000);
+    syncInt=setInterval(apiPull,10000);
     setTimeout(apiPull,1500);
     showToast(isDemo?'🎭 Demo Agent View loaded':'Welcome, '+me.name.split(' ')[0]+'!','ok');
   }
@@ -1649,7 +1676,9 @@ function renderTeam(d){
       totalMins+=(tb[i].actualDuration||tb[i].duration);
     }
   }
-  var e1=document.getElementById('ts-total'); if(e1) e1.textContent=EMPLOYEES.length;
+  // Build set of agents who logged in today
+  var todayLogins = (d.logins && d.logins[today()]) ? d.logins[today()] : {};
+  var e1=document.getElementById('ts-total'); if(e1) e1.textContent=Object.keys(todayLogins).length||EMPLOYEES.length;
   var e2=document.getElementById('ts-onbrk'); if(e2) e2.textContent=cnt;
   var e3=document.getElementById('ts-breaks'); if(e3) e3.textContent=totalBreaks;
   var e4=document.getElementById('ts-mins'); if(e4) e4.textContent=totalMins;
@@ -1666,6 +1695,8 @@ function renderTeam(d){
     for(var ei=0;ei<EMPLOYEES.length;ei++){
       var emp=EMPLOYEES[ei];
       if(dept.roles.indexOf(emp.role)<0) continue;
+      // Only show agents who logged in today (readonly/managers always show)
+      if(emp.access!=='readonly' && !todayLogins[emp.name]) continue;
       var isOnBreak=!!onBreakNames[emp.name];
       // Apply filter
       if(teamFilter==='on-break' && !isOnBreak) continue;
