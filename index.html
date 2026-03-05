@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>KIB · Staff Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>KIB WFM Portal</title>
 <style>
+
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
@@ -642,93 +643,391 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
 #global-toast.ok{border-left:3px solid var(--green);}
 #global-toast.err{border-left:3px solid var(--red);}
 #global-toast.inf{border-left:3px solid var(--navy);}
+
+/* ══════════════════════════════════════════════
+   UNIFIED PORTAL SHELL
+══════════════════════════════════════════════ */
+/* Unified topbar */
+#u-topbar{
+  height:52px;flex-shrink:0;display:flex;
+  background:linear-gradient(90deg,var(--navy2),var(--navy));
+  padding:0 13px;align-items:center;justify-content:space-between;
+  z-index:500;box-shadow:0 2px 14px rgba(13,92,166,.3);
+}
+#u-topbar.on{display:flex;}
+#u-topbar .tbl{display:flex;align-items:center;gap:9px;}
+#u-topbar .tlogo{width:28px;height:28px;background:rgba(255,255,255,.12);
+  border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;color:var(--teal2);}
+#u-topbar .ttitle{font-size:13px;font-weight:700;color:#fff;}
+#u-topbar .tsub{font-size:9px;color:rgba(255,255,255,.4);}
+#u-topbar .tbr{display:flex;align-items:center;gap:10px;}
+#u-clk{text-align:right;}
+#u-clkt{font-size:13px;font-weight:700;color:#fff;line-height:1.2;}
+#u-clkd{font-size:9px;color:rgba(255,255,255,.4);}
+#u-syncdot{width:7px;height:7px;border-radius:50%;background:var(--amber);
+  transition:background .5s;}
+#u-syncdot.ok{background:var(--teal2);}
+#u-av{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:800;color:#fff;cursor:pointer;
+  border:1.5px solid rgba(255,255,255,.25);}
+#u-signout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  color:#fff;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;
+  cursor:pointer;}
+#u-signout:hover{background:rgba(255,255,255,.2);}
+
+/* Unified bottom nav */
+#u-bnav{
+  display:none;
+  background:var(--white);border-top:1px solid var(--border);
+  z-index:500;box-shadow:0 -2px 10px rgba(0,0,0,.07);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+#u-bnav.on{display:flex;}
+#u-bnav .unb{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px 4px 10px;border:none;background:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:56px;
+}
+#u-bnav .unb .ni{font-size:20px;margin-bottom:2px;line-height:1;}
+#u-bnav .unb .nl{font-size:9px;font-weight:600;color:var(--t3);letter-spacing:.2px;}
+#u-bnav .unb.on .nl{color:var(--navy);font-weight:800;}
+#u-bnav .unb.on::after{
+  content:'';position:absolute;top:0;left:20%;right:20%;height:2.5px;
+  background:linear-gradient(90deg,var(--navy2),var(--teal));
+  border-radius:0 0 3px 3px;
+}
+#u-bnav .unb{position:relative;}
+.unbadge{position:absolute;top:6px;right:20%;min-width:16px;height:16px;
+  border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;
+  display:none;align-items:center;justify-content:center;padding:0 4px;}
+.unbadge.on{display:flex;}
+
+/* Unified home page */
+#u-home{
+  display:none;position:fixed;top:52px;bottom:56px;left:0;right:0;
+  overflow-y:auto;background:var(--bg);-webkit-overflow-scrolling:touch;
+}
+#u-home.on{display:block;}
+#u-home .upg{padding:13px;max-width:600px;margin:0 auto;}
+
+/* When unified active — suppress internal chrome */
+body.unified #sApp .topbar,
+body.unified #sp-sApp .topbar{display:none !important;}
+body.unified #bs-app .bnav,
+body.unified #sp-app #bnav{display:none !important;}
+body.unified #sApp .astrip{display:none !important;}
+/* Shift app content area to account for unified topbar */
+body.unified #sApp{padding-top:0;padding-bottom:calc(62px + env(safe-area-inset-bottom,0px));}
+body.unified #sp-sApp{padding-top:0;padding-bottom:calc(62px + env(safe-area-inset-bottom,0px));}
+body.unified #bs-app,body.unified #sp-app{
+  position:fixed;top:52px;bottom:56px;left:0;right:0;overflow-y:auto;
+}
+
+
+
+/* ════════════════════════════════════════════════════════
+   UNIFIED WFM PORTAL SHELL
+════════════════════════════════════════════════════════ */
+
+/* ── U-App wrapper ── */
+#u-app{display:none;position:fixed;inset:0;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;}
+
+/* ── Unified Topbar ── */
+#u-topbar{
+  background:linear-gradient(135deg,var(--navy2) 0%,var(--navy) 100%);
+  padding:0 16px;
+  height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+  box-shadow:0 2px 12px rgba(10,74,138,.25);
+  z-index:100;
+}
+.u-tbl{display:flex;align-items:center;gap:10px;}
+.u-tlogo{
+  width:32px;height:32px;background:rgba(255,255,255,.15);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:900;color:var(--teal2);letter-spacing:.5px;
+}
+.u-ttitle{font-size:13px;font-weight:700;color:#fff;}
+.u-tsub{font-size:9px;color:rgba(255,255,255,.4);margin-top:1px;}
+.u-tbr{display:flex;align-items:center;gap:10px;}
+#u-clkt{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);min-width:70px;text-align:right;}
+.u-syncdot{width:7px;height:7px;border-radius:50%;background:var(--amber);}
+.u-syncdot.ok{background:var(--green);}
+#u-av{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:#fff;
+  cursor:pointer;flex-shrink:0;
+}
+.u-signout{
+  background:rgba(255,255,255,.12);border:none;border-radius:8px;
+  color:rgba(255,255,255,.7);font-size:11px;font-weight:600;
+  padding:5px 10px;cursor:pointer;
+}
+.u-signout:hover{background:rgba(255,255,255,.2);color:#fff;}
+
+/* ── Content area ── */
+#u-content{flex:1;overflow-y:auto;padding-bottom:80px;position:relative;}
+
+/* ── Unified Home ── */
+#u-home{display:none;padding:14px;}
+#u-home.on{display:block;}
+
+/* ── Hide embedded app topbars (u-topbar replaces them) ── */
+#u-app #bs-app .topbar,
+#u-app #sp-app .topbar,
+#u-app #sp-app .sp2topbar{
+  display:none !important;
+}
+/* Remove extra top padding that the embedded apps add expecting their topbar */
+#u-app #bs-app #sApp{padding-top:0;}
+#u-app #sp-app #sp-sApp{padding-top:0;}
+
+/* BS and SP containers fill the content area */
+#u-app #bs-app{display:none;height:100%;overflow-y:auto;}
+#u-app #bs-app.u-active{display:block;}
+#u-app #sp-app{display:none;height:100%;overflow-y:auto;}
+#u-app #sp-app.u-active{display:block;}
+
+/* ── Unified Bottom Nav ── */
+/* u-bnav: see unified layout rules */
+.unb{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;border:none;background:none;cursor:pointer;
+  padding:6px 2px;position:relative;transition:background .15s;
+}
+.unb:active{background:var(--tealbg);}
+.unb.on .unb-ic,.unb.on .unb-lb{color:var(--navy);}
+.unb-ic{font-size:20px;line-height:1;}
+.unb-lb{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.3px;}
+.unb.on .unb-lb{color:var(--navy);font-weight:800;}
+.unb::after{
+  content:'';position:absolute;bottom:0;left:20%;right:20%;
+  height:2px;background:var(--navy);border-radius:2px 2px 0 0;
+  opacity:0;transition:opacity .15s;
+}
+.unb.on::after{opacity:1;}
+.unbadge{
+  position:absolute;top:6px;right:calc(50% - 18px);
+  min-width:16px;height:16px;border-radius:8px;
+  background:var(--red);color:#fff;font-size:9px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 4px;display:none;
+}
+.unbadge.on{display:flex;}
+
+/* ── Unified Home Cards ── */
+.u-shift-hero{
+  background:linear-gradient(135deg,var(--navy2) 0%,var(--navy) 60%,#0A7FAE 100%);
+  border-radius:14px;padding:18px 20px;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 4px 20px rgba(10,74,138,.22);
+}
+.u-break-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px;margin-bottom:12px;
+}
+.u-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.u-qcard{
+  background:var(--white);border:1.5px solid var(--border);
+  border-radius:12px;padding:16px 10px;
+  text-align:center;cursor:pointer;transition:border-color .15s,box-shadow .15s;
+}
+.u-qcard:active{border-color:var(--navy);box-shadow:0 2px 12px rgba(10,74,138,.12);}
+.u-active-break-banner{
+  background:linear-gradient(135deg,var(--amber),#c77800);
+  border-radius:12px;padding:14px 16px;margin-bottom:12px;
+  display:none;
+}
+.u-active-break-banner.on{display:block;}
+
+
+/* ── Unified WFM Portal: clean single-app layout ── */
+/* Hide internal chrome from embedded apps */
+#bs-app .topbar,
+#sp-app .topbar,
+#sp-sApp > .topbar,
+#sApp > .topbar,
+#bs-app [class="topbar"],
+#sp-app [class="topbar"] { display:none !important; }
+
+#sApp > .bnav,
+#sp-sApp .bnav,
+#bnav { display:none !important; }
+
+/* u-app full screen column layout */
+#u-app {
+  display: none;
+  flex-direction: column;
+  height: 100dvh;
+  height: -webkit-fill-available;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+#u-topbar { flex-shrink: 0; z-index: 5; }
+#u-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+/* Unified home scrolls normally */
+#u-home { display:none; padding-bottom:80px; }
+#u-home.on { display:block; }
+/* Greeting row stays in scroll flow */
+#u-greet-row { padding:14px 14px 0; }
+
+/* Embedded apps take full content area */
+#bs-app, #sp-app {
+  display:none;
+  position:absolute;
+  inset:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  background:var(--bg);
+  padding-bottom:72px;
+}
+#bs-app.u-active, #sp-app.u-active { display:block; }
+
+/* Make sApp and sp-sApp full height inside their containers */
+#sApp, #sp-sApp { min-height:100%; }
+#sp-sLogin { display:none !important; }
+
+/* Bottom nav fixed at bottom of u-app */
+
 </style>
 </head>
 <body>
-
-<!-- ════════════════════════════════════════
-     GLOBAL TOAST
-════════════════════════════════════════ -->
-<div id="global-toast"></div>
-
-<!-- ════════════════════════════════════════
-     HUB LOGIN  (shared login for both apps)
-════════════════════════════════════════ -->
 <div id="hub-login">
   <div class="lbox">
     <div class="lhdr">
-      <div class="lemb">
-        <img src="https://www.kib.com.kw/.imaging/mte/kib-theme/960x600/dam/News/Pictures/KIB-logo-only-background-960x600-E.JPG" style="width:100%;height:100%;object-fit:contain;border-radius:6px;" alt="KIB" onerror="this.style.display='none';this.parentNode.textContent='KIB'">
+      <div style="width:90px;height:90px;background:#fff;border-radius:22px;padding:8px;margin:0 auto 12px;box-shadow:0 8px 32px rgba(0,0,0,.2);overflow:hidden;">
+        <img src="https://www.kib.com.kw/.imaging/mte/kib-theme/960x600/dam/News/Pictures/KIB-logo-only-background-960x600-E.JPG/jcr:content/KIB-logo-only-background-960x600-E.JPG"
+             alt="KIB" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=&quot;width:74px;height:74px;background:var(--teal2);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;&quot;>KIB</div>'">
       </div>
-      <div class="lkib">KIB</div>
-      <div class="lfull">KUWAIT INTERNATIONAL BANK · STAFF PORTAL</div>
+      <div class="lhdr-title">KIB</div>
+      <div class="lhdr-sub">KUWAIT INTERNATIONAL BANK · WFM PORTAL</div>
     </div>
     <div class="lstep on" id="step1">
-      <h3>Welcome back 👋</h3>
+      <h3>Welcome back</h3>
       <p>Enter your staff password to access the portal</p>
-      <div class="fg"><label class="lbl">Staff Password</label>
-        <input type="password" class="fld" id="pwInput" placeholder="••••••••" autocomplete="off">
+      <div class="lfld">
+        <label class="lbl">STAFF PASSWORD</label>
+        <input id="pwInput" type="password" class="linp" placeholder="••••••••" autocomplete="off">
       </div>
-      <button class="btn-main" onclick="checkPw()">Sign In →</button>
+      <button class="btn-main" onclick="checkPw()">Sign In</button>
       <div class="errmsg" id="loginErr">Incorrect password. Please try again.</div>
     </div>
     <div class="lstep" id="step2">
-      <h3>Select Your Shift</h3>
-      <p>Confirm your working hours for today</p>
       <div class="idcard">
         <div class="idav" id="idav">?</div>
         <div><div class="idname" id="idname">—</div><div class="idrole" id="idrole">—</div></div>
       </div>
-      <label class="lbl">Today's Shift</label>
+      <h3>Select Your Shift</h3>
+      <p>Confirm your working hours for today</p>
+      <label class="lbl">SELECT SHIFT</label>
       <div class="sgrid" id="shiftGrid"></div>
-      <button class="btn-main" id="shiftBtn" onclick="confirmShift()" disabled>Confirm & Continue →</button>
-      <button class="btn-back" onclick="backToLogin()">← Back</button>
+      <button id="shiftBtn" class="btn-main" onclick="confirmShift()" disabled>Confirm &amp; Continue</button>
+      <button class="btn-back" onclick="backToLogin()">&#8592; Back</button>
     </div>
   </div>
 </div>
-
-<!-- ════════════════════════════════════════
-     HUB LAUNCHER  (pick Break or Schedule)
-════════════════════════════════════════ -->
-<div id="hub-app">
-  <div class="hub-topbar">
-    <div class="tbl">
-      <div style="width:28px;height:28px;background:rgba(255,255,255,.12);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:var(--teal2)">KIB</div>
-      <div><div style="font-size:13px;font-weight:700;color:#fff;">Staff Portal</div><div style="font-size:9px;color:rgba(255,255,255,.4);">Kuwait International Bank</div></div>
+<div id="u-app" style="display:none;">
+  <div id="u-topbar">
+    <div class="u-tbl">
+      <div class="u-tlogo">KIB</div>
+      <div>
+        <div class="u-ttitle" id="u-title">WFM Portal</div>
+        <div class="u-tsub">Contact Center</div>
+      </div>
     </div>
-    <div class="hub-user">
-      <div class="hub-av" id="hub-av">?</div>
-      <div><div class="hub-name" id="hub-name">—</div><div class="hub-role" id="hub-role">—</div></div>
-      <button class="hub-signout" onclick="hubSignOut()">Sign Out</button>
+    <div class="u-tbr">
+      <div id="u-clkt" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);">--:--</div>
+      <div class="u-syncdot" id="u-syncdot"></div>
+      <div id="u-av" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:pointer;background:var(--teal);" onclick="uNav('me')">?</div>
+      <button class="u-signout" onclick="uSignOut()">Sign Out</button>
+    </div>
+    <div style="display:none">
+      <div id="hub-av"></div><div id="hub-name"></div>
+      <div id="hub-role"></div><div id="hub-greeting"></div><div id="hub-sub"></div>
+      <div id="hub-app"></div>
     </div>
   </div>
-  <div class="hub-body">
-    <div class="hub-greeting" id="hub-greeting">Good morning 👋</div>
-    <div class="hub-sub" id="hub-sub">Select a system to get started</div>
-    <div class="hub-cards">
-      <div class="hub-card break" onclick="launchBreakSystem()">
-        <div class="hub-badge" id="break-badge" style="display:none"></div>
-        <div class="hub-icon">☕</div>
-        <div class="hub-card-title">Break System</div>
-        <div class="hub-card-desc">Book breaks, manage swaps, view team status</div>
-      </div>
-      <div class="hub-card schedule" onclick="launchSchedulePortal()">
-        <div class="hub-icon">📅</div>
-        <div class="hub-card-title">Schedule Portal</div>
-        <div class="hub-card-desc">View schedule, submit requests, team management</div>
-      </div>
+  <div id="u-content">
+
+  <!-- Greeting elements used by renderUnifiedHome -->
+  <div style="padding:14px 14px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:-4px;" id="u-greet-row">
+    <div>
+      <div id="u-greet-text" style="font-size:16px;font-weight:800;color:var(--t1);"></div>
+      <div id="u-greet-date" style="font-size:11px;color:var(--t3);margin-top:1px;"></div>
     </div>
-    <div style="margin-top:20px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;" id="hub-announce" style="display:none">
-      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">📢 Announcement</div>
-      <div style="font-size:13px;color:var(--t1);" id="hub-ann-text"></div>
+  </div>
+<div id="u-home">
+  <div class="u-active-break-banner" id="u-active-break">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.6px;">☕ Break In Progress</div>
+      <div id="u-break-timer" style="font-size:18px;font-weight:900;color:#fff;">00:00</div>
     </div>
+    <div style="height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin-bottom:12px;">
+      <div id="u-break-prog-bar" style="height:100%;background:#fff;border-radius:2px;width:0%;transition:width .5s;"></div>
+    </div>
+    <button onclick="endBreak();uNav('home')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;width:100%;">End Break Now</button>
+  </div>
+  <div id="u-booked-break" style="display:none;background:linear-gradient(135deg,var(--navy),#0A7FAE);border-radius:12px;padding:14px 16px;margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Break Booked</div>
+    <div id="u-booked-time" style="font-size:14px;font-weight:700;color:#fff;"></div>
+    <button onclick="uNav('breaks','home')" style="margin-top:10px;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;">Start When Ready</button>
+  </div>
+  <div class="u-shift-hero" id="u-shift-card">
+    <div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.9px;margin-bottom:5px;">Today's Shift</div>
+      <div id="u-shift-time" style="font-size:26px;font-weight:900;color:#fff;line-height:1.1;">Loading...</div>
+      <div id="u-shift-sub" style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px;"></div>
+      <div id="u-shift-label" style="font-size:10px;color:rgba(255,255,255,.4);margin-top:3px;"></div>
+    </div>
+    <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:12px 16px;text-align:center;min-width:72px;">
+      <div id="u-shift-icon" style="font-size:26px;line-height:1;">💼</div>
+      <div id="u-shift-status" style="font-size:9px;font-weight:700;color:#fff;margin-top:5px;text-transform:uppercase;letter-spacing:.5px;">Working</div>
+    </div>
+  </div>
+  <div id="u-announce" style="background:linear-gradient(135deg,var(--tealbg),#d4f0ee);border:1px solid var(--tealb);border-radius:12px;padding:13px 16px;margin-bottom:12px;display:none;align-items:flex-start;gap:10px;">
+    <span style="font-size:20px;flex-shrink:0;">📢</span>
+    <div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--teal);margin-bottom:3px;">Announcement</div>
+      <div id="u-announce-text" style="font-size:12px;color:var(--t1);line-height:1.5;"></div>
+    </div>
+  </div>
+  <div class="u-break-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--t1);">Break Balance</div>
+      <div id="u-break-num" style="font-size:18px;font-weight:900;color:var(--navy);">— min left</div>
+    </div>
+    <div style="height:6px;background:var(--border);border-radius:3px;margin-bottom:8px;overflow:hidden;">
+      <div id="u-break-prog" style="height:100%;background:linear-gradient(90deg,var(--teal),var(--navy));border-radius:3px;width:0%;transition:width .5s;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);">
+      <span id="u-break-used">0 min used</span><span id="u-break-total">45 min total</span>
+    </div>
+    <button onclick="uNav('breaks','book')" style="margin-top:12px;width:100%;background:var(--navy);color:#fff;border:none;border-radius:9px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;">Book a Break</button>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="ch">
+      <div class="ctitle">This Week</div>
+      <button class="btn btn-sm btn-outline" onclick="uNav('schedule')">Full Schedule</button>
+    </div>
+    <div class="cb" style="padding:4px 6px 10px;" id="u-week-grid"></div>
+  </div>
+  <div id="u-quick-grid" class="u-quick-grid"></div>
+  <div class="card">
+    <div class="ch"><div class="ctitle">Team on Break Now</div></div>
+    <div class="cb" style="padding:0;" id="u-team-now"></div>
   </div>
 </div>
-
-<!-- ════════════════════════════════════════
-     BREAK SYSTEM APP
-════════════════════════════════════════ -->
-<div id="bs-app">
+    <div id="bs-app">
 
 
 <!-- APP -->
@@ -930,7 +1229,7 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
 <!-- ════════════════════════════════════════
      SCHEDULE PORTAL APP
 ════════════════════════════════════════ -->
-<div id="sp-app">
+    <div id="sp-app">
 
 <div id="sp2-toast-inner" class="toast"></div>
 
@@ -1387,7 +1686,136 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
   <div class="toast" id="sp2-toast"></div>
 </div>
 
+  </div>
+  <div id="u-bnav"></div>
+</div>
 <script>
+
+// Patch uNav to use CSS classes for BS/SP visibility
+var __uNavPatched = false;
+(function(){
+  if(__uNavPatched) return; __uNavPatched=true;
+  var __orig = uNav;
+  uNav = function(section, subPage){
+    var bsApp=document.getElementById('bs-app');
+    var spApp=document.getElementById('sp-app');
+    var uHome=document.getElementById('u-home');
+    // Reset
+    if(bsApp){bsApp.style.display='none';bsApp.classList.remove('u-active');}
+    if(spApp){spApp.style.display='none';spApp.classList.remove('u-active');}
+    if(uHome){uHome.classList.remove('on');}
+
+    var titles={home:'WFM Portal',breaks:'Break System',schedule:'Schedule Portal',
+      requests:'My Requests',team:'Team Management',wfm:'WFM Dashboard',me:'My Profile'};
+    var tEl=document.getElementById('u-title');
+    if(tEl) tEl.textContent=titles[section]||'Staff Portal';
+
+    ['home','breaks','schedule','requests','team','wfm','me'].forEach(function(s){
+      var b=document.getElementById('unb-'+s);if(b)b.classList.toggle('on',s===section);
+    });
+
+    if(section==='home'){
+      if(uHome) uHome.classList.add('on');
+      renderUnifiedHome();
+    } else if(section==='breaks'){
+      if(bsApp){bsApp.style.display='block';bsApp.classList.add('u-active');}
+      if(document.getElementById('sApp').className!=='on')document.getElementById('sApp').className='on';
+      if(typeof renderStrip==='function') renderStrip();
+      if(typeof renderAll==='function') renderAll();
+      if(typeof gp==='function') gp(subPage||'home');
+    } else if(section==='schedule'){
+      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+      var ss=document.getElementById('sp-sApp');if(ss){ss.style.display='block';ss.classList.add('on');}
+      if(typeof showPage==='function') showPage(subPage||'schedule');
+    } else if(section==='requests'){
+      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+      var ss2=document.getElementById('sp-sApp');if(ss2){ss2.style.display='block';ss2.classList.add('on');}
+      if(typeof showPage==='function') showPage('requests');
+    } else if(section==='team'){
+      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+      var ss3=document.getElementById('sp-sApp');if(ss3){ss3.style.display='block';ss3.classList.add('on');}
+      if(typeof showPage==='function') showPage('team');
+    } else if(section==='wfm'){
+      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+      var ss4=document.getElementById('sp-sApp');if(ss4){ss4.style.display='block';ss4.classList.add('on');}
+      if(typeof showPage==='function') showPage('dashboard');
+    } else if(section==='me'){
+      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+      var ss5=document.getElementById('sp-sApp');if(ss5){ss5.style.display='block';ss5.classList.add('on');}
+      if(typeof showPage==='function') showPage('settings');
+    }
+    if(typeof uUpdateBadges==='function') uUpdateBadges();
+  };
+})();
+
+
+// ── UNIFIED PORTAL HELPERS ──────────────────────────────────────────
+function uBuildNav(){
+  var bnav=document.getElementById('u-bnav');
+  if(!bnav) return;
+  var isManager=me.access==='admin'||me.access==='manager'||me.access==='readonly'||
+                me.access==='wfm'||(me.loginRole&&['tl','atl','manager','wfm','admin'].includes(me.loginRole));
+  var items=[
+    {id:'home',   ic:'🏠', lb:'Home'},
+    {id:'breaks', ic:'☕', lb:'Breaks'},
+    {id:'schedule',ic:'📅',lb:'Schedule'},
+    {id:'requests',ic:'📝',lb:'Requests'},
+  ];
+  if(isManager) items.push({id:'team',ic:'👥',lb:'Team'});
+  if(isManager) items.push({id:'wfm', ic:'📊',lb:'WFM'});
+  items.push({id:'me',ic:'👤',lb:'Me'});
+  bnav.innerHTML='';
+  items.forEach(function(it){
+    var btn=document.createElement('div');
+    btn.className='unb'+(it.id==='home'?' on':'');
+    btn.id='unb-'+it.id;
+    btn.innerHTML='<div class="unb-ic">'+it.ic+'</div><div class="unb-lb">'+it.lb+'</div>';
+    if(it.id==='breaks')  btn.innerHTML+='<div class="unbadge" id="u-swap-badge" style="display:none"></div>';
+    if(it.id==='requests')btn.innerHTML+='<div class="unbadge" id="u-req-badge"  style="display:none"></div>';
+    btn.onclick=(function(id){return function(){uNav(id);};})(it.id);
+    bnav.appendChild(btn);
+  });
+}
+
+function uRenderClock(){
+  var now=new Date(Date.now()+3*60*60*1000);
+  var hh=now.getHours(),mm=now.getMinutes();
+  var h12=hh%12||12,ampm=hh<12?'AM':'PM';
+  var s=String(mm).padStart(2,'0');
+  var el=document.getElementById('u-clkt');
+  if(el) el.textContent=h12+':'+s+' '+ampm;
+}
+
+function uSignOut(){
+  me=null;
+  try{Object.keys(localStorage).filter(function(k){return k.startsWith('kib_sh_');}).forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+  location.reload();
+}
+
+// Override uNav 'me' section (settings)
+var _uNavOrig=uNav;
+uNav=function(section,subPage){
+  if(section==='me'){
+    // Show SP settings page
+    var spApp=document.getElementById('sp-app');
+    var bsApp=document.getElementById('bs-app');
+    var uHome=document.getElementById('u-home');
+    if(uHome) uHome.classList.remove('on');
+    if(bsApp) bsApp.style.display='none';
+    if(spApp) spApp.style.display='block';
+    var spSApp=document.getElementById('sp-sApp');
+    if(spSApp) spSApp.style.display='block';
+    ['home','breaks','schedule','requests','team','wfm','me'].forEach(function(s){
+      var b=document.getElementById('unb-'+s);if(b)b.classList.toggle('on',s==='me');
+    });
+    var tEl=document.getElementById('u-title');if(tEl)tEl.textContent='My Profile';
+    if(typeof showPage==='function') showPage('settings');
+    if(typeof uUpdateBadges==='function') uUpdateBadges();
+    return;
+  }
+  _uNavOrig(section,subPage);
+};
+
 // ════════════════════════════════════════════════════════
 // SHARED: EMPLOYEE DATA  (same passwords as break system)
 // ════════════════════════════════════════════════════════
@@ -1804,11 +2232,32 @@ function renderStrip(){
   var used=schedMins(me.name,d);document.getElementById('balchip').textContent=Math.max(daily-used,0)+' min left';
 }
 function tickTimer(){
-  if(!me)return;var d=gd();var b=myBreak(d);
-  if(b&&b.status==='active'&&b.startedAt){
-    var el=elapseMin(b.startedAt);var pct=Math.min(el/b.duration*100,100);
-    var t=document.getElementById('abtimer');if(t)t.textContent=elapse(b.startedAt);
-    var p=document.getElementById('abprog');if(p)p.style.width=pct+'%';
+  if(!me) return;
+  var d=gd(); var b=myBreak(d);
+  if(b && b.status==='active' && b.startedAt){
+    var el=elapseMin(b.startedAt); var pct=Math.min(el/b.duration*100,100);
+    // BS internal timers
+    var t=document.getElementById('abtimer'); if(t) t.textContent=elapse(b.startedAt);
+    var p=document.getElementById('abprog');  if(p) p.style.width=pct+'%';
+    // Unified home timers
+    var ut=document.getElementById('u-break-timer'); if(ut) ut.textContent=elapse(b.startedAt);
+    var up=document.getElementById('u-break-prog-bar'); if(up) up.style.width=pct+'%';
+    // Show active break banner on home
+    var ub=document.getElementById('u-active-break');
+    if(ub) ub.style.display='block';
+    var ubb=document.getElementById('u-booked-break');
+    if(ubb) ubb.style.display='none';
+  } else if(b && b.status==='booked'){
+    var ub2=document.getElementById('u-active-break');
+    if(ub2) ub2.style.display='none';
+    var ubb2=document.getElementById('u-booked-break');
+    if(ubb2){ubb2.style.display='block';
+      var ubt=document.getElementById('u-booked-time');
+      if(ubt) ubt.textContent='Booked for '+fmt12(b.breakStart)+' · '+b.duration+' min';
+    }
+  } else {
+    var ub3=document.getElementById('u-active-break'); if(ub3) ub3.style.display='none';
+    var ubb3=document.getElementById('u-booked-break'); if(ubb3) ubb3.style.display='none';
   }
 }
 
@@ -1838,6 +2287,10 @@ function renderAll(){
   var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;});
   var badge=document.getElementById('swbadge');if(badge){badge.className='nbadge'+(pend.length?' on':'');if(pend.length)badge.textContent=pend.length;}
   document.getElementById('bdot').className='bdot'+(pend.length?' on':'');
+  if(typeof uUpdateBadges==='function') uUpdateBadges();
+  if(document.getElementById('u-home')&&document.getElementById('u-home').classList.contains('on')){
+    renderUnifiedHome();
+  }
 }
 
 function renderHome(){
@@ -1907,7 +2360,7 @@ function renderHome(){
   }
 }
 function startBreak(){var d=gd();var b=myBreak(d);if(!b||b.status!=='booked')return;b.status='active';b.startedAt=Date.now();sv(d);showToast('Break started! Enjoy ☕','ok');addNotif('☕ Break started at '+fmt12(b.breakStart));renderAll();}
-function endBreak(){var d=gd();var b=myBreak(d);if(!b||b.status!=='active')return;var el=Math.ceil((Date.now()-b.startedAt)/60000);b.status='done';b.duration=el;b.endedAt=Date.now();sv(d);showToast('Break ended · '+el+' min','ok');renderAll();}
+function endBreak(){var d=gd();var b=myBreak(d);if(!b||b.status!=='active')return;var el=Math.ceil((Date.now()-b.startedAt)/60000);b.status='done';b.duration=el;b.endedAt=Date.now();sv(d);showToast('Break ended · '+el+' min','ok');renderAll();if(typeof uUpdateBadges==='function')uUpdateBadges();if(typeof renderUnifiedHome==='function'&&document.getElementById('u-home')&&document.getElementById('u-home').classList.contains('on'))renderUnifiedHome();}
 function cancelBreak(){var d=gd();var b=myBreak(d);if(!b)return;b.status='cancelled';sv(d);showToast('Break cancelled');renderAll();}
 
 function buildSlotGrid(){
@@ -2269,33 +2722,11 @@ function hubSignOut(){
   document.getElementById('hub-login').style.display='flex';
 }
 
-function launchBreakSystem(){
-  document.getElementById('hub-app').style.display='none';
-  document.getElementById('bs-app').style.display='block';
-  patchBsTopbar();
-  document.getElementById('sApp').className='on'; // inside #bs-app
-  if(me.access==='admin'||me.access==='readonly')document.getElementById('nav-admin').style.display='';
-  renderStrip();renderAll();gp('home');
-  clkInt=clkInt||setInterval(renderClock,1000);
-  syncInt=syncInt||setInterval(function(){apiPull();},3000);
-  tmrInt=tmrInt||setInterval(tickTimer,1000);
-  renderClock();apiPull();
-}
+function launchBreakSystem(){uNav('breaks');}
 
-function launchSchedulePortal(){
-  document.getElementById('hub-app').style.display='none';
-  document.getElementById('sp-app').style.display='block';
-  // Set SP me object from BS me
-  sp_init();
-}
+function launchSchedulePortal(){uNav('schedule');}
 
-function goToHub(){
-  document.getElementById('bs-app').style.display='none';
-  document.getElementById('sp-app').style.display='none';
-  document.getElementById('hub-app').style.display='block';
-  hubRefreshBadge();
-  renderHubHome();
-}
+function goToHub(){uNav('home');}
 
 function renderHubHome(){
   hubRefreshBadge();
@@ -2322,38 +2753,53 @@ function hubRefreshBadge(){
 
 // Override startApp to go to hub instead of directly to BS
 function startApp(){
+  // Hide login, show unified app
   document.getElementById('hub-login').style.display='none';
-  // Set up hub
-  var av=document.getElementById('hub-av');
-  av.textContent=ini(me.name);av.style.background=avc(me.name);
-  av.style.color='#fff';
-  document.getElementById('hub-name').textContent=me.name;
-  document.getElementById('hub-role').textContent=me.role+' · '+me.dept;
-  var h=new Date(Date.now()+3*60*60*1000).getHours();
-  document.getElementById('hub-greeting').textContent=(h<12?'Good morning 👋':h<17?'Good afternoon 👋':'Good evening 👋')+' '+me.name.split(' ')[0];
-  document.getElementById('hub-sub').textContent='Select a system to get started';
-  // Set up intervals first
-  clkInt=clkInt||setInterval(renderClock,1000);
+  document.getElementById('u-app').style.display='flex';
+
+  // Set topbar user info
+  var av=document.getElementById('u-av');
+  if(av){av.textContent=ini(me.name);av.style.background=avc(me.name);av.style.color='#fff';}
+  // Keep hub-* IDs working (used by old code paths)
+  var hav=document.getElementById('hub-av');
+  if(hav){hav.textContent=ini(me.name);hav.style.background=avc(me.name);hav.style.color='#fff';}
+  var hn=document.getElementById('hub-name');     if(hn) hn.textContent=me.name;
+  var hr=document.getElementById('hub-role');     if(hr) hr.textContent=me.role+' · '+me.dept;
+  var hg=document.getElementById('hub-greeting'); if(hg) hg.textContent='';
+  var hs=document.getElementById('hub-sub');      if(hs) hs.textContent='';
+
+  // Build role-based bottom nav
+  uBuildNav();
+
+  // Setup BS app silently in background
+  var sApp=document.getElementById('sApp');
+  if(sApp) sApp.className='on';
+  if(me.access==='admin'||me.access==='readonly'){
+    var na=document.getElementById('nav-admin');if(na)na.style.display='';
+  }
+  renderStrip();
+
+  // Setup SP app silently — hide its own login, show its main app
+  var spLogin=document.getElementById('sp-sLogin');
+  var spSApp=document.getElementById('sp-sApp');
+  if(spLogin){spLogin.style.display='none';}
+  if(spSApp){spSApp.style.display='block';spSApp.classList.add('on');}
+  var spAgent=AGENTS.find(function(a){return a.n===me.name;});
+  if(spAgent) me=Object.assign({},me,{n:me.name,t:spAgent.t,id:spAgent.id,sch:spAgent.sch||[],loginRole:spAgent.loginRole||me.access||'agent'});
+  else me=Object.assign({},me,{n:me.name,t:me.dept,loginRole:me.access||'agent'});
+  if(typeof buildNav==='function') buildNav();
+  if(typeof buildSwapWith==='function') buildSwapWith();
+  if(typeof sp_renderNotifs==='function') sp_renderNotifs();
+  if(typeof buildSwapWith==='function') buildSwapWith();
+
+  // Start intervals
+  clkInt=clkInt||setInterval(function(){renderClock();uRenderClock();},1000);
   syncInt=syncInt||setInterval(function(){apiPull();},3000);
   tmrInt=tmrInt||setInterval(tickTimer,1000);
-  apiPull(); renderClock();
+  apiPull(); uRenderClock();
 
-  // Agents & TLs → go straight to Break System
-  var isManager=(me.access==='admin'||me.access==='manager'||me.access==='readonly');
-  if(!isManager){
-    // Setup BS first
-    if(me.access==='admin'||me.access==='readonly')document.getElementById('nav-admin').style.display='';
-    renderStrip(); renderAll();
-    // Go direct to break system
-    launchBreakSystem();
-  } else {
-    // Managers → show hub with today info
-    if(me.access==='admin'||me.access==='readonly')document.getElementById('nav-admin').style.display='';
-    renderStrip(); renderAll();
-    document.getElementById('hub-app').style.display='block';
-    hubRefreshBadge();
-    renderHubHome();
-  }
+  // Show home
+  uNav('home');
 }
 
 // Add "← Hub" to break system topbar
@@ -3627,6 +4073,354 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&me){apiPull();setTimeout(renderAll,600);}});
 window.addEventListener('focus',function(){if(me){apiPull();setTimeout(renderAll,600);}});
+
+// ════════════════════════════════════════════════════════════════
+// UNIFIED PORTAL — One login, one nav, all features
+// ════════════════════════════════════════════════════════════════
+
+var _uSection = 'home';  // current active section
+
+// ── Navigate to a section ────────────────────────────────────────
+function uNav(section, subPage){
+  _uSection = section;
+
+  // Update nav buttons
+  ['home','breaks','schedule','requests','team','wfm'].forEach(function(s){
+    var btn=document.getElementById('unb-'+s);
+    if(btn) btn.classList.toggle('on', s===section);
+  });
+
+  // Hide all content areas
+  document.getElementById('u-home').classList.remove('on');
+  var bsApp=document.getElementById('bs-app');
+  var spApp=document.getElementById('sp-app');
+  if(bsApp) bsApp.style.display='none';
+  if(spApp) spApp.style.display='none';
+
+  // Update unified topbar title
+  var titles={home:'WFM Portal',breaks:'Break System',schedule:'Schedule Portal',
+    requests:'My Requests',team:'Team Management',wfm:'WFM Dashboard'};
+  var tEl=document.getElementById('u-title');
+  if(tEl) tEl.textContent=titles[section]||'Staff Portal';
+
+  // Show selected section
+  if(section==='home'){
+    document.getElementById('u-home').classList.add('on');
+    renderUnifiedHome();
+
+  }else if(section==='breaks'){
+    if(bsApp) bsApp.style.display='block';
+    // Make sure BS is initialised
+    if(document.getElementById('sApp').className!=='on'){
+      document.getElementById('sApp').className='on';
+      if(typeof renderStrip==='function') renderStrip();
+    }
+    if(typeof renderAll==='function') renderAll();
+    if(typeof gp==='function') gp(subPage||'home');
+
+  }else if(section==='schedule'){
+    if(spApp) spApp.style.display='block';
+    var spSApp=document.getElementById('sp-sApp');
+    if(spSApp) spSApp.style.display='block';
+    if(typeof showPage==='function') showPage(subPage||'schedule');
+
+  }else if(section==='requests'){
+    if(spApp) spApp.style.display='block';
+    var spSApp2=document.getElementById('sp-sApp');
+    if(spSApp2) spSApp2.style.display='block';
+    if(typeof showPage==='function') showPage('requests');
+
+  }else if(section==='team'){
+    if(spApp) spApp.style.display='block';
+    var spSApp3=document.getElementById('sp-sApp');
+    if(spSApp3) spSApp3.style.display='block';
+    if(typeof showPage==='function') showPage('team');
+
+  }else if(section==='wfm'){
+    if(spApp) spApp.style.display='block';
+    var spSApp4=document.getElementById('sp-sApp');
+    if(spSApp4) spSApp4.style.display='block';
+    if(typeof showPage==='function') showPage('dashboard');
+  }
+
+  // Update badges after nav
+  uUpdateBadges();
+}
+
+// ── Render unified home page ─────────────────────────────────────
+function renderUnifiedHome(){
+  if(!me) return;
+  var d   = gd();
+  var s   = d.settings||{};
+  var now = new Date(Date.now()+3*60*60*1000); // Kuwait UTC+3
+
+  // ── Greeting ────────────────────────────────────────────────────
+  var h = now.getHours();
+  var greet = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  if(h<12) greet='Good morning';
+  else if(h<17) greet='Good afternoon';
+  else greet='Good evening';
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var grEl=document.getElementById('u-greet-text');
+  var dtEl=document.getElementById('u-greet-date');
+  if(grEl) grEl.textContent=greet+' '+me.name.split(' ')[0]+' 👋';
+  if(dtEl) dtEl.textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
+
+  // ── Today's shift ────────────────────────────────────────────────
+  var agEnt = AGENTS.find(function(a){return a.n===me.name;});
+  var ts    = agEnt ? gTodayS(agEnt) : '—';
+  var isOff = ['OFF','P-Leave','Leave','Sick'].indexOf(ts)>=0;
+  var stEl  = document.getElementById('u-shift-time');
+  var sbEl  = document.getElementById('u-shift-sub');
+  var icEl  = document.getElementById('u-shift-icon');
+  var ssEl  = document.getElementById('u-shift-status');
+  var scEl  = document.getElementById('u-shift-card');
+  if(stEl){
+    stEl.textContent = ts;
+    sbEl.textContent = isOff?'No shift today':'Your working hours today';
+    icEl.textContent = ts==='Sick'?'🏥':ts==='Leave'||ts==='P-Leave'?'🌴':isOff?'😴':'💼';
+    ssEl.textContent = ts==='Sick'?'Sick':ts==='Leave'||ts==='P-Leave'?'On Leave':isOff?'Day Off':'Working';
+    scEl.style.background = isOff
+      ? 'linear-gradient(135deg,#555,#333)'
+      : 'linear-gradient(135deg,var(--navy2) 0%,var(--navy) 60%,#0A7FAE 100%)';
+  }
+
+  // ── Break balance ────────────────────────────────────────────────
+  var daily = s.dailyMin||45;
+  var used  = typeof schedMins==='function' ? schedMins(me.name,d) : 0;
+  var rem   = Math.max(daily-used,0);
+  var pct   = Math.min(used/daily*100,100);
+  var el    = function(id){return document.getElementById(id);};
+  if(el('u-break-num'))  el('u-break-num').textContent  = rem+' min left';
+  if(el('u-break-used')) el('u-break-used').textContent = used+' min used';
+  if(el('u-break-total'))el('u-break-total').textContent= daily+' min total';
+  if(el('u-break-prog')) el('u-break-prog').style.width = pct+'%';
+  if(el('u-shift-label'))el('u-shift-label').textContent= 'Shift: '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
+
+  // Active / booked break
+  var b = typeof myBreak==='function' ? myBreak(d) : null;
+  if(b && b.status==='active'){
+    if(el('u-active-break')) el('u-active-break').style.display='block';
+    if(el('u-booked-break')) el('u-booked-break').style.display='none';
+    // Timer updated by tickTimer
+  } else if(b && b.status==='booked'){
+    if(el('u-active-break')) el('u-active-break').style.display='none';
+    if(el('u-booked-break')){
+      el('u-booked-break').style.display='block';
+      el('u-booked-time').textContent='Booked for '+fmt12(b.breakStart)+' · '+b.duration+' min';
+    }
+  } else {
+    if(el('u-active-break')) el('u-active-break').style.display='none';
+    if(el('u-booked-break')) el('u-booked-break').style.display='none';
+  }
+
+  // ── Week mini grid ────────────────────────────────────────────────
+  var wkEl = el('u-week-grid');
+  if(wkEl && agEnt){
+    var wh='<div style="display:grid;grid-template-columns:repeat('+DATES.length+',1fr);gap:3px;">';
+    DATES.forEach(function(date,i){
+      var sch  = agEnt.sch[i]||'OFF';
+      var isT  = date===TODAY;
+      var isWk = WKND.indexOf(i)>=0;
+      var off  = ['OFF','P-Leave','Leave','Sick'].indexOf(sch)>=0;
+      var bg   = isT?'var(--navy)':isWk?'var(--bg)':off?'var(--rbg)':'var(--tealbg)';
+      var clr  = isT?'#fff':isWk?'var(--t3)':off?'var(--red)':'var(--teal)';
+      var bdr  = isT?'2px solid var(--navy)':'1px solid var(--border)';
+      var dl   = DL[i]?DL[i].split(' '):['-','-'];
+      wh+='<div style="border-radius:8px;padding:5px 2px;text-align:center;background:'+bg+
+        ';border:'+bdr+';min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;">'+
+        '<div style="font-size:8px;font-weight:700;color:'+clr+';opacity:.7">'+dl[0]+'</div>'+
+        '<div style="font-size:11px;font-weight:900;color:'+clr+'">'+dl[1]+'</div>'+
+        '<div style="font-size:7px;color:'+clr+';opacity:.8;margin-top:1px;">'+(isWk?'Off':off?'—':sch.split('-')[0])+'</div>'+
+        '</div>';
+    });
+    wkEl.innerHTML=wh+'</div>';
+  }
+
+  // ── Announcement ─────────────────────────────────────────────────
+  var ann = s.announce||'';
+  var annEl=el('u-announce');
+  if(annEl){
+    if(ann.trim()){annEl.style.display='block';el('u-announce-text').textContent=ann;}
+    else annEl.style.display='none';
+  }
+
+  // ── Team on break now ─────────────────────────────────────────────
+  var tnEl = el('u-team-now');
+  if(tnEl){
+    var nm = typeof toMin==='function'?toMin(nowHH()):0;
+    var sm = me.shift?toMin(me.shift):0;
+    var adjNm = (sm>=720&&nm<sm&&nm<480)?nm+1440:nm;
+    var onNow = typeof tdb==='function'?tdb(d).filter(function(brk){
+      if(brk.status!=='active'&&brk.status!=='booked')return false;
+      var bs=toMin(brk.breakStart);
+      var bsAdj=(bs<480&&sm>=720)?bs+1440:bs;
+      return bsAdj<=adjNm&&bsAdj+brk.duration>adjNm;
+    }):[];
+    if(!onNow.length){
+      tnEl.innerHTML='<div class="empty" style="padding:12px"><div class="ep">No one on break right now ✓</div></div>';
+    } else {
+      var th='';
+      onNow.forEach(function(brk){
+        var isAct=brk.status==='active';
+        th+='<div class="histrow"><div style="width:34px;height:34px;border-radius:9px;background:'+avc(brk.agent)+
+          ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">'+
+          ini(brk.agent)+'</div>'+
+          '<div class="hinfo"><div class="htitle">'+brk.agent+'</div>'+
+          '<div class="hmeta">'+fmt12(brk.breakStart)+' · '+brk.duration+' min</div></div>'+
+          '<span class="pill '+(isAct?'p-amber':'p-navy')+'"><span class="pdot"></span>'+(isAct?'Active':'Booked')+'</span></div>';
+      });
+      tnEl.innerHTML=th;
+    }
+  }
+
+  // ── Quick nav grid (role-based) ───────────────────────────────────
+  var qEl = el('u-quick-grid');
+  if(qEl){
+    var isManager=me.access==='admin'||me.access==='manager'||me.access==='readonly';
+    var cards=[
+      {ic:'☕',title:'Book Break',sub:'Start or schedule',fn:"uNav('breaks','book')"},
+      {ic:'📋',title:'My Schedule',sub:'View all shifts',fn:"uNav('schedule')"},
+      {ic:'🔄',title:'Swap Request',sub:'Trade your shift',fn:"uNav('breaks','swap')"},
+      {ic:'📝',title:'Leave Request',sub:'Submit absence',fn:"uNav('requests')"},
+    ];
+    if(isManager){
+      cards=[
+        {ic:'📊',title:'Dashboard',sub:'Team overview',fn:"uNav('wfm')"},
+        {ic:'📅',title:'Full Schedule',sub:'All agents',fn:"uNav('schedule');showPage('fullsch')"},
+        {ic:'👥',title:'Team Mgmt',sub:'View requests',fn:"uNav('team')"},
+        {ic:'⚙️',title:'Admin',sub:'Settings & data',fn:"uNav('wfm');showPage('admin')"},
+      ];
+    }
+    var qh='';
+    cards.forEach(function(card){
+      qh+='<div class="card" style="cursor:pointer;text-align:center;padding:15px 10px;border:1.5px solid var(--border);" onclick="'+card.fn+'">'+
+        '<div style="font-size:24px;margin-bottom:6px;">'+card.ic+'</div>'+
+        '<div style="font-size:12px;font-weight:700;color:var(--t1);">'+card.title+'</div>'+
+        '<div style="font-size:10px;color:var(--t3);margin-top:2px;">'+card.sub+'</div>'+
+        '</div>';
+    });
+    qEl.innerHTML=qh;
+  }
+
+  uUpdateBadges();
+}
+
+// ── Update badge counts on nav ────────────────────────────────────
+function uUpdateBadges(){
+  if(!me) return;
+  var swpBadge = document.getElementById('u-swap-badge');
+  var reqBadge = document.getElementById('u-req-badge');
+  var d = gd();
+  // Swap badge (pending swap requests for me)
+  var pendSwap = typeof tdb==='function'?tdb(d).filter(function(b){
+    return b.status==='swap_pending'&&b.swapWith===me.name;
+  }).length:0;
+  if(swpBadge){swpBadge.textContent=pendSwap;swpBadge.className='unbadge'+(pendSwap?' on':'');}
+  // Request badge (pending leaves/swaps I submitted)
+  var myPend = SWAPS.filter(function(s){return (s.from===me.name||s.to===me.name)&&s.status==='pending';}).length
+             + LEAVES.filter(function(l){return l.agent===me.name&&l.status==='pending';}).length;
+  if(reqBadge){reqBadge.textContent=myPend;reqBadge.className='unbadge'+(myPend?' on':'');}
+}
+
+// ── Init unified chrome ───────────────────────────────────────────
+function initUnified(){
+  // Apply unified class so CSS overrides kick in
+  document.body.classList.add('unified');
+
+  // Show chrome
+  document.getElementById('u-topbar').classList.add('on');
+  document.getElementById('u-bnav').classList.add('on');
+
+  // Avatar
+  var av=document.getElementById('u-av');
+  if(av){av.textContent=ini(me.name);av.style.background=avc(me.name);}
+
+  // Show Team / WFM nav buttons based on role
+  var isManager = me.access==='admin'||me.access==='manager'||me.access==='readonly';
+  var isTL = me.role==='Team Leader'||me.access==='admin'||me.access==='manager'||me.access==='readonly'||me.loginRole==='tl';
+  var teamBtn = document.getElementById('unb-team');
+  var wfmBtn  = document.getElementById('unb-wfm');
+  if(teamBtn) teamBtn.style.display = isTL?'':'none';
+  if(wfmBtn)  wfmBtn.style.display  = isManager?'':'none';
+
+  // Hide old hub
+  document.getElementById('hub-app').style.display='none';
+
+  // Make sure both apps are hidden initially (uNav will show the right one)
+  var bsApp=document.getElementById('bs-app');
+  var spApp=document.getElementById('sp-app');
+  if(bsApp) bsApp.style.display='none';
+  if(spApp) spApp.style.display='none';
+
+  // Init BS internals silently
+  if(me.access==='admin'||me.access==='readonly'){
+    var na=document.getElementById('nav-admin');if(na)na.style.display='';
+  }
+  if(typeof renderStrip==='function') renderStrip();
+  if(typeof renderAll==='function') renderAll();
+
+  // Init SP internals
+  var spSApp=document.getElementById('sp-sApp');
+  if(spSApp) spSApp.style.display='block';
+  if(typeof buildNav==='function') buildNav();
+}
+
+// ── Unified sign out ──────────────────────────────────────────────
+function doUnifiedSignOut(){
+  me=null;pendEmp=null;selShift=null;
+  [clkInt,syncInt,tmrInt,sp_clkTO].forEach(function(t){clearInterval(t);});
+  clkInt=syncInt=tmrInt=sp_clkTO=null;
+
+  // Remove unified class
+  document.body.classList.remove('unified');
+  document.getElementById('u-topbar').classList.remove('on');
+  document.getElementById('u-bnav').classList.remove('on');
+  document.getElementById('u-home').classList.remove('on');
+  document.getElementById('bs-app').style.display='none';
+  document.getElementById('sp-app').style.display='none';
+
+  // Back to login
+  document.getElementById('pwInput').value='';
+  document.getElementById('step1').className='lstep on';
+  document.getElementById('step2').className='lstep';
+  document.getElementById('hub-login').style.display='flex';
+}
+
+
+
+var _ttOrig = typeof tickTimer === "function" ? tickTimer : null;
+if(_ttOrig){
+  tickTimer = function(){
+    _ttOrig();
+    var d=gd(); var b=typeof myBreak==="function"?myBreak(d):null;
+    var uab=document.getElementById("u-active-break");
+    if(!uab) return;
+    if(b&&b.status==="active"&&b.startedAt){
+      uab.classList.add("on");
+      var elap=Math.floor((Date.now()-b.startedAt)/1000);
+      var mm=Math.floor(elap/60),ss=elap%60;
+      var te=document.getElementById("u-break-timer");
+      if(te) te.textContent=String(mm).padStart(2,"0")+":"+String(ss).padStart(2,"0");
+      var pct=Math.min(elap/(b.duration*60)*100,100);
+      var pb=document.getElementById("u-break-prog-bar");
+      if(pb) pb.style.width=pct+"%";
+    } else { uab.classList.remove("on"); }
+  };
+}
+var _setSyO = typeof setSy === "function" ? setSy : null;
+if(_setSyO){
+  setSy = function(ok){
+    _setSyO(ok);
+    var usd=document.getElementById("u-syncdot");
+    if(usd) usd.className="u-syncdot"+(ok?" ok":"");
+  };
+}
+
+document.getElementById('pwInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&me){apiPull();setTimeout(renderUnifiedHome,600);}});
+window.addEventListener('focus',function(){if(me){apiPull();setTimeout(renderUnifiedHome,600);}});
 </script>
 </body>
 </html>
