@@ -668,7 +668,7 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
 #u-app{
   display:none;position:fixed;inset:0;
   background:#EEF4FB;
-  overflow:hidden;display:flex;flex-direction:column;
+  overflow:hidden;flex-direction:column;
 }
 
 /* ── Topbar ── */
@@ -2187,7 +2187,7 @@ function today(){
   var d=new Date(Date.now()+3*60*60*1000);
   return d.toISOString().split('T')[0];
 }
-function nowHH(){var n=new Date(Date.now()+3*60*60*1000);return pad(n.getHours())+':'+pad(n.getMinutes());}
+function nowHH(){var n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes());}
 function pad(v){return('0'+v).slice(-2);}
 function toMin(h){if(!h)return 0;var p=h.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
 function fromMin(m){m=((m%1440)+1440)%1440;return pad(Math.floor(m/60))+':'+pad(m%60);}
@@ -2367,7 +2367,7 @@ function _applyRemote(remote){
   if(Array.isArray(remote.leaves)) { LEAVES=remote.leaves; }
   if(Array.isArray(remote.actlog)) { ACTLOG=remote.actlog; }
 
-  if((wasChanged||remote.swaps||remote.leaves)&&me) renderAll();
+  if((wasChanged||remote.swaps||remote.leaves)&&me&&me.n) renderAll();
 }
 
 // ── Sync indicator dot ──
@@ -2483,7 +2483,7 @@ function doSignOut(){
 }
 
 function bs_originalStartApp(){
-  document.getElementById('sLogin').style.display='none';
+  var _sLogin=document.getElementById('sLogin');if(_sLogin)_sLogin.style.display='none';
   document.getElementById('sApp').className='on'; // inside #bs-app
   if(me.access==='admin'||me.access==='readonly')document.getElementById('nav-admin').style.display='';
   renderStrip();renderAll();gp('home');
@@ -2498,9 +2498,9 @@ function renderClock(){
 }
 function renderStrip(){
   if(!me)return;
-  var av=document.getElementById('asav');av.textContent=ini(me.name);av.style.background=avc(me.name);
-  document.getElementById('uav').textContent=ini(me.name);
-  document.getElementById('asname').textContent=me.name;
+  var av=document.getElementById('asav');if(av){av.textContent=ini(me.name);av.style.background=avc(me.name);}
+  var _uav=document.getElementById('uav');if(_uav)_uav.textContent=ini(me.name);
+  var _asn=document.getElementById('asname');if(_asn)_asn.textContent=me.name;
   var eL=me.shiftEndMin>=1440?fmt12(pad(me.shiftEndMin%1440/60|0)+':00')+' +1d':fmt12(me.shiftEnd);
   document.getElementById('asinfo').textContent=me.role+' · '+fmt12(me.shift)+' – '+eL;
   var d=gd();var daily=(d.settings&&d.settings.dailyMin)||45;
@@ -2555,13 +2555,13 @@ function gp(p){
   window.scrollTo(0,0);
 }
 function renderAll(){
-  if(!me)return;renderStrip();
+  if(!me||!me.n)return;renderStrip();
   var bsApp=document.getElementById('bs-app');
   var ac=bsApp?bsApp.querySelector('.pg.on'):document.querySelector('.pg.on');
   if(ac){var id=ac.id.replace('pg-','');if(id==='home')renderHome();else if(id==='book')buildSlotGrid();else if(id==='team')renderTeam();else if(id==='swap')renderSwap();else if(id==='hist')renderHistory();else if(id==='admin')renderAdmin();}
   var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;});
   var badge=document.getElementById('swbadge');if(badge){badge.className='nbadge'+(pend.length?' on':'');if(pend.length)badge.textContent=pend.length;}
-  document.getElementById('bdot').className='bdot'+(pend.length?' on':'');
+  var _bd=document.getElementById('bdot');if(_bd)_bd.className='bdot'+(pend.length?' on':'');
   if(typeof uUpdateBadges==='function') uUpdateBadges();
   if(document.getElementById('u-home')&&document.getElementById('u-home').classList.contains('on')){
     renderUnifiedHome();
@@ -3066,6 +3066,28 @@ function hubRefreshBadge(){
 }
 
 // Override startApp to go to hub instead of directly to BS
+
+// ── Populate SP UI elements after unified login ──────────────────
+function _spUiInit(){
+  if(!me) return;
+  var n   = me.n||me.name||'';
+  var t   = me.t||me.dept||'';
+  var role= (me.loginRole||me.access||'agent').toUpperCase();
+  function se(id,txt){var e=document.getElementById(id);if(e)e.textContent=txt;}
+  function ss(id,prop,val){var e=document.getElementById(id);if(e)e.style[prop]=val;}
+  ss('setAv','background',avc(n)); se('setAv',ini(n));
+  se('setName',n);
+  se('setRole',t+' · '+role);
+  se('setTeam',t);
+  var shEl=document.getElementById('setShift');
+  if(shEl)shEl.innerHTML='<span class="sc '+scCls(gTodayS(me))+'">'+gTodayS(me)+'</span>';
+  ss('sp2-asav','background',avc(n)); se('sp2-asav',ini(n));
+  se('sp2-asname',n);
+  se('sp2-asinfo',t+' · '+role);
+  se('sp2-uav',ini(n));
+  se('rolchip',role);
+}
+
 function startApp(){
   // Hide login, show unified app
   var hl=document.getElementById('hub-login');if(hl)hl.classList.add('hidden');
@@ -3107,13 +3129,17 @@ function startApp(){
   if(typeof sp_renderNotifs==='function') sp_renderNotifs();
   if(typeof buildSwapWith==='function') buildSwapWith();
 
+  // Populate SP profile fields
+  initSpProfile();
+
   // Start intervals
-  clkInt=clkInt||setInterval(function(){renderClock();uRenderClock();},1000);
-  syncInt=syncInt||setInterval(function(){apiPull();},3000);
-  tmrInt=tmrInt||setInterval(tickTimer,1000);
+  clkInt=clkInt||setInterval(function(){try{renderClock();}catch(e){}try{uRenderClock();}catch(e){}},1000);
+  syncInt=syncInt||setInterval(function(){try{apiPull();}catch(e){}},3000);
+  tmrInt=tmrInt||setInterval(function(){try{tickTimer();}catch(e){}},1000);
   apiPull(); uRenderClock();
 
   // Show home
+  _spUiInit();
   uNav('home');
 }
 
@@ -3379,6 +3405,7 @@ function sp_doSignOut(){
 // INIT APP
 // ════════════════════════════════════════════════
 function initApp(){
+  if(!me||!me.n) return;
   document.getElementById('sp-sLogin').style.display='none';
   document.getElementById('sp-sApp').style.display='block';
   document.getElementById('sp-sApp').classList.add('on');
@@ -3459,7 +3486,7 @@ function showPage(id){
   sp_currentPage=id;
   // Lazy render
   if(id==='home') sp_renderHome();
-  if(id==='settings') renderProfilePage();
+  if(id==='settings'){_spUiInit();renderProfilePage();}
   if(id==='schedule') renderMySchedule();
   if(id==='fullsch') renderFullSchedule();
   if(id==='requests') renderRequests();
@@ -3572,7 +3599,8 @@ function sp_renderHome(){
 // MY SCHEDULE
 // ════════════════════════════════════════════════
 function renderMySchedule(){
-  document.getElementById('schAgentName').textContent=me.n+' · '+me.t;
+  if(!me||!me.n||!me.sch) return;
+  document.getElementById('schAgentName').textContent=(me.n||me.name||'')+' · '+(me.t||me.dept||'');
   var h='<table style="width:100%;border-collapse:collapse;">'
     +'<thead><tr style="background:var(--bg);"><th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Date</th>'
     +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Status</th>'
@@ -4350,8 +4378,8 @@ function srfSubmit(){
     .then(function(r){return r.json();})
     .then(function(res){
       if(res&&res.ok){
-        document.getElementById('srfRef2').textContent=payload.ref;
-        document.getElementById('srfStep4').style.display='none';
+        var _srfR2=document.getElementById('srfRef2');if(_srfR2)_srfR2.textContent=payload.ref;
+        var _srf4=document.getElementById('srfStep4');if(_srf4)_srf4.style.display='none';
         document.getElementById('srfSuccess').style.display='block';
         logA&&logA('SCHEDULE_REQUEST',me.n+' submitted SR '+payload.ref,'ok');
         setSy(true);
@@ -4719,7 +4747,7 @@ function renderUnifiedHome(){
       {ic:'☕',title:'Book Break',sub:'Start or schedule',fn:"uNav('breaks','book')"},
       {ic:'📋',title:'My Schedule',sub:'View all shifts',fn:"uNav('schedule')"},
       {ic:'🔄',title:'Swap Request',sub:'Trade your shift',fn:"uNav('breaks','swap')"},
-      {ic:'📝',title:'Leave Request',sub:'Submit absence',fn:"uNav('requests')"},
+      {ic:'👤',title:'My Profile',sub:'Breaks & attendance',fn:"uNav('me')"},
     ];
     if(isManager){
       cards=[
@@ -4880,6 +4908,7 @@ document.addEventListener('visibilitychange',function(){
 
 function renderProfilePage(){
   if(!me) return;
+  initSpProfile();
   var d=gd(); var s=d.settings||{}; var daily=s.dailyMin||45;
   // -- Break usage today
   var used=schedMins(me.n||me.name,d); var rem=Math.max(daily-used,0);
@@ -4928,6 +4957,82 @@ function renderProfilePage(){
       return '<div style="padding:11px 13px;border-bottom:1px solid var(--border);">'        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'        +'<span style="font-size:11px;font-weight:700;color:var(--t2);">'+sw.id+' &middot; '+sw.date+'</span>'        +pill(sw.status.toUpperCase(),sw.status==='approved'?'p-green':sw.status==='rejected'?'p-red':'p-amber')+'</div>'        +'<div style="font-size:12px;font-weight:600;color:var(--t1);">'+(isFrom?'Swap request to '+sw.to:'Swap request from '+sw.from)+'</div>'        +'<div style="font-size:11px;color:var(--t2);margin-top:3px;">&#x1F4DD; '+sw.reason+'</div>'        +'</div>';
     }).join('');
   }
+}
+
+// ── Missing function stubs (unified portal shims) ──────────────
+
+// Updates the topbar clock in the unified shell
+function uRenderClock(){
+  var n=new Date();
+  var hh=n.getHours(),mm=n.getMinutes();
+  var h12=hh%12||12,ampm=hh<12?'AM':'PM';
+  var ts=h12+':'+pad(mm)+' '+ampm;
+  var ce=document.getElementById('u-clock');
+  if(ce) ce.textContent=ts;
+  var te=document.getElementById('topTime');
+  if(te) te.textContent=ts;
+}
+
+// Builds the unified bottom navigation
+function uBuildNav(){
+  var nav=document.getElementById('u-bnav');
+  if(!nav||!me) return;
+  var isManager=me.access==='admin'||me.access==='manager'||me.access==='readonly';
+  var tabs=[
+    {id:'home',  ic:'🏠', lb:'Home'},
+    {id:'breaks',ic:'☕', lb:'Breaks'},
+    {id:'schedule',ic:'📅',lb:'Schedule'},
+    {id:'requests',ic:'📝',lb:'Requests'},
+    {id:'me',    ic:'👤', lb:'Me'}
+  ];
+  if(isManager) tabs.splice(3,0,{id:'wfm',ic:'📊',lb:'Dashboard'});
+  tabs.forEach(function(t){
+    var btn=document.createElement('button');
+    btn.className='unb'; btn.id='unb-'+t.id;
+    btn.innerHTML='<span class="unb-ic">'+t.ic+'</span><span class="unb-lb">'+t.lb+'</span>';
+    btn.onclick=(function(id){return function(){uNav(id);};})(t.id);
+    nav.appendChild(btn);
+  });
+}
+
+// SP notification render shim
+function sp_renderNotifs(){ 
+  if(typeof renderNotifs==='function') renderNotifs(); 
+}
+
+// SP team page (alias)
+function sp_renderTeam(){ 
+  if(typeof renderTeam==='function') renderTeam(); 
+}
+
+// SP admin page (alias)
+function sp_renderAdmin(){ 
+  if(typeof renderAdmin==='function') renderAdmin(); 
+}
+
+// Profile fields initialiser — called from startApp & renderProfilePage
+function initSpProfile(){
+  if(!me||!me.n) return;
+  var n=me.n||me.name||'';
+  var t=me.t||me.dept||'';
+  var role=(me.loginRole||me.access||'agent').toUpperCase();
+  var setEl=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+  var setBg=function(id,v){var e=document.getElementById(id);if(e)e.style.background=v;};
+  setEl('setName',n);
+  setEl('setRole',t+' · '+role);
+  setEl('setTeam',t);
+  setBg('setAv',avc(n));
+  setEl('setAv',ini(n));
+  var ssEl=document.getElementById('setShift');
+  if(ssEl) ssEl.innerHTML='<span class="sc '+scCls(gTodayS(me))+'">'+gTodayS(me)+'</span>';
+  // Also update SP topbar avatar/name
+  var sp2av=document.getElementById('sp2-asav');
+  if(sp2av){sp2av.style.background=avc(n);sp2av.textContent=ini(n);}
+  setEl('sp2-asname',n);
+  setEl('sp2-asinfo',t+' · '+role);
+  setEl('sp2-uav',ini(n));
+  var rc=document.getElementById('rolchip');if(rc)rc.textContent=role;
+  setEl('schAgentName',n+' · '+t);
 }
 </script>
 </body>
