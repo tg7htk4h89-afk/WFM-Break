@@ -2,10 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#071e49">
 <title>KIB WFM Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+
+
 
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -644,260 +651,690 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
 #global-toast.err{border-left:3px solid var(--red);}
 #global-toast.inf{border-left:3px solid var(--navy);}
 
-/* ══════════════════════════════════════════════
-   UNIFIED PORTAL SHELL
-══════════════════════════════════════════════ */
-/* Unified topbar */
+
+/* ═══════════════════════════════════════════════════
+   KIB WFM PORTAL — UNIFIED SHELL v4
+   Mobile-first, polished, KIB brand
+═══════════════════════════════════════════════════ */
+:root{
+  --radius:14px; --radius-sm:10px;
+  --shadow-card:0 2px 12px rgba(10,74,138,.08);
+  --shadow-top:0 -2px 16px rgba(10,74,138,.10);
+  --shadow-nav:0 -1px 0 rgba(10,74,138,.08);
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Layout shell ── */
+#u-app{
+  display:none;position:fixed;inset:0;
+  background:#EEF4FB;
+  overflow:hidden;display:flex;flex-direction:column;
+}
+
+/* ── Topbar ── */
 #u-topbar{
-  height:52px;flex-shrink:0;display:flex;
-  background:linear-gradient(90deg,var(--navy2),var(--navy));
-  padding:0 13px;align-items:center;justify-content:space-between;
-  z-index:500;box-shadow:0 2px 14px rgba(13,92,166,.3);
+  height:56px;flex-shrink:0;
+  background:linear-gradient(135deg,#0A3A7A 0%,#0D5CA6 55%,#0A7FAE 100%);
+  display:flex;align-items:center;padding:0 14px;
+  box-shadow:0 3px 16px rgba(10,58,122,.35);
+  z-index:600;position:relative;
 }
-#u-topbar.on{display:flex;}
-#u-topbar .tbl{display:flex;align-items:center;gap:9px;}
-#u-topbar .tlogo{width:28px;height:28px;background:rgba(255,255,255,.12);
-  border-radius:7px;display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:900;color:var(--teal2);}
-#u-topbar .ttitle{font-size:13px;font-weight:700;color:#fff;}
-#u-topbar .tsub{font-size:9px;color:rgba(255,255,255,.4);}
-#u-topbar .tbr{display:flex;align-items:center;gap:10px;}
-#u-clk{text-align:right;}
-#u-clkt{font-size:13px;font-weight:700;color:#fff;line-height:1.2;}
-#u-clkd{font-size:9px;color:rgba(255,255,255,.4);}
-#u-syncdot{width:7px;height:7px;border-radius:50%;background:var(--amber);
-  transition:background .5s;}
-#u-syncdot.ok{background:var(--teal2);}
-#u-av{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
-  justify-content:center;font-size:11px;font-weight:800;color:#fff;cursor:pointer;
-  border:1.5px solid rgba(255,255,255,.25);}
-#u-signout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
-  color:#fff;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;
-  cursor:pointer;}
-#u-signout:hover{background:rgba(255,255,255,.2);}
-
-/* Unified bottom nav */
-#u-bnav{
-  display:none;
-  background:var(--white);border-top:1px solid var(--border);
-  z-index:500;box-shadow:0 -2px 10px rgba(0,0,0,.07);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+.u-tb-left{display:flex;align-items:center;gap:0;flex:1;min-width:0;}
+#u-back-btn{
+  display:none;width:34px;height:34px;background:rgba(255,255,255,.12);
+  border:none;border-radius:9px;cursor:pointer;
+  color:#fff;font-size:18px;font-weight:700;
+  align-items:center;justify-content:center;
+  margin-right:8px;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;transition:var(--transition);
 }
-#u-bnav.on{display:flex;}
-#u-bnav .unb{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:8px 4px 10px;border:none;background:none;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:56px;
-}
-#u-bnav .unb .ni{font-size:20px;margin-bottom:2px;line-height:1;}
-#u-bnav .unb .nl{font-size:9px;font-weight:600;color:var(--t3);letter-spacing:.2px;}
-#u-bnav .unb.on .nl{color:var(--navy);font-weight:800;}
-#u-bnav .unb.on::after{
-  content:'';position:absolute;top:0;left:20%;right:20%;height:2.5px;
-  background:linear-gradient(90deg,var(--navy2),var(--teal));
-  border-radius:0 0 3px 3px;
-}
-#u-bnav .unb{position:relative;}
-.unbadge{position:absolute;top:6px;right:20%;min-width:16px;height:16px;
-  border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;
-  display:none;align-items:center;justify-content:center;padding:0 4px;}
-.unbadge.on{display:flex;}
-
-/* Unified home page */
-#u-home{
-  display:none;position:fixed;top:52px;bottom:56px;left:0;right:0;
-  overflow-y:auto;background:var(--bg);-webkit-overflow-scrolling:touch;
-}
-#u-home.on{display:block;}
-#u-home .upg{padding:13px;max-width:600px;margin:0 auto;}
-
-/* When unified active — suppress internal chrome */
-body.unified #sApp .topbar,
-body.unified #sp-sApp .topbar{display:none !important;}
-body.unified #bs-app .bnav,
-body.unified #sp-app #bnav{display:none !important;}
-body.unified #sApp .astrip{display:none !important;}
-/* Shift app content area to account for unified topbar */
-body.unified #sApp{padding-top:0;padding-bottom:calc(62px + env(safe-area-inset-bottom,0px));}
-body.unified #sp-sApp{padding-top:0;padding-bottom:calc(62px + env(safe-area-inset-bottom,0px));}
-body.unified #bs-app,body.unified #sp-app{
-  position:fixed;top:52px;bottom:56px;left:0;right:0;overflow-y:auto;
-}
-
-
-
-/* ════════════════════════════════════════════════════════
-   UNIFIED WFM PORTAL SHELL
-════════════════════════════════════════════════════════ */
-
-/* ── U-App wrapper ── */
-#u-app{display:none;position:fixed;inset:0;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;}
-
-/* ── Unified Topbar ── */
-#u-topbar{
-  background:linear-gradient(135deg,var(--navy2) 0%,var(--navy) 100%);
-  padding:0 16px;
-  height:56px;
-  display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;
-  box-shadow:0 2px 12px rgba(10,74,138,.25);
-  z-index:100;
-}
-.u-tbl{display:flex;align-items:center;gap:10px;}
+#u-back-btn.show{display:flex;}
+#u-back-btn:active{background:rgba(255,255,255,.25);}
 .u-tlogo{
-  width:32px;height:32px;background:rgba(255,255,255,.15);border-radius:9px;
+  width:30px;height:30px;border-radius:8px;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);
   display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:900;color:var(--teal2);letter-spacing:.5px;
+  font-size:10px;font-weight:900;color:#00BEAE;
+  letter-spacing:.5px;flex-shrink:0;margin-right:9px;
 }
-.u-ttitle{font-size:13px;font-weight:700;color:#fff;}
-.u-tsub{font-size:9px;color:rgba(255,255,255,.4);margin-top:1px;}
-.u-tbr{display:flex;align-items:center;gap:10px;}
-#u-clkt{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);min-width:70px;text-align:right;}
-.u-syncdot{width:7px;height:7px;border-radius:50%;background:var(--amber);}
-.u-syncdot.ok{background:var(--green);}
+.u-ttitle{
+  font-size:14px;font-weight:700;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.u-tsub{font-size:9px;color:rgba(255,255,255,.45);margin-top:1px;}
+.u-tb-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+#u-clkt{font-size:12px;font-weight:600;color:rgba(255,255,255,.65);}
+#u-syncdot{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(255,255,255,.3);transition:background .6s;
+}
+#u-syncdot.ok{background:#00BEAE;}
 #u-av{
-  width:32px;height:32px;border-radius:50%;
+  width:32px;height:32px;border-radius:9px;
   display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:800;color:#fff;
-  cursor:pointer;flex-shrink:0;
+  font-size:12px;font-weight:800;color:#fff;cursor:pointer;
+  border:2px solid rgba(255,255,255,.25);
+  -webkit-tap-highlight-color:transparent;
 }
 .u-signout{
-  background:rgba(255,255,255,.12);border:none;border-radius:8px;
-  color:rgba(255,255,255,.7);font-size:11px;font-weight:600;
-  padding:5px 10px;cursor:pointer;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.8);border-radius:8px;padding:5px 10px;
+  font-size:11px;font-weight:600;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:var(--transition);
 }
-.u-signout:hover{background:rgba(255,255,255,.2);color:#fff;}
+.u-signout:active{background:rgba(255,255,255,.2);}
 
-/* ── Content area ── */
-#u-content{flex:1;overflow-y:auto;padding-bottom:80px;position:relative;}
-
-/* ── Unified Home ── */
-#u-home{display:none;padding:14px;}
-#u-home.on{display:block;}
-
-/* ── Hide embedded app topbars (u-topbar replaces them) ── */
-#u-app #bs-app .topbar,
-#u-app #sp-app .topbar,
-#u-app #sp-app .sp2topbar{
-  display:none !important;
+/* ── Scrollable content ── */
+#u-content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;
+  padding-bottom:calc(68px + env(safe-area-inset-bottom,0px));
 }
-/* Remove extra top padding that the embedded apps add expecting their topbar */
-#u-app #bs-app #sApp{padding-top:0;}
-#u-app #sp-app #sp-sApp{padding-top:0;}
 
-/* BS and SP containers fill the content area */
-#u-app #bs-app{display:none;height:100%;overflow-y:auto;}
-#u-app #bs-app.u-active{display:block;}
-#u-app #sp-app{display:none;height:100%;overflow-y:auto;}
-#u-app #sp-app.u-active{display:block;}
-
-/* ── Unified Bottom Nav ── */
-/* u-bnav: see unified layout rules */
+/* ── Bottom Nav ── */
+#u-bnav{
+  flex-shrink:0;
+  background:#fff;border-top:1px solid rgba(10,74,138,.08);
+  box-shadow:var(--shadow-top);
+  display:none;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  z-index:600;
+}
+#u-bnav.on{display:flex;}
 .unb{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;border:none;background:none;cursor:pointer;
-  padding:6px 2px;position:relative;transition:background .15s;
+  padding:8px 2px 10px;border:none;background:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;position:relative;min-height:56px;
+  transition:var(--transition);
 }
-.unb:active{background:var(--tealbg);}
-.unb.on .unb-ic,.unb.on .unb-lb{color:var(--navy);}
-.unb-ic{font-size:20px;line-height:1;}
-.unb-lb{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.3px;}
-.unb.on .unb-lb{color:var(--navy);font-weight:800;}
-.unb::after{
-  content:'';position:absolute;bottom:0;left:20%;right:20%;
-  height:2px;background:var(--navy);border-radius:2px 2px 0 0;
-  opacity:0;transition:opacity .15s;
+.unb:active{background:rgba(10,74,138,.04);}
+.unb-ic{
+  font-size:21px;line-height:1;transition:transform .15s ease;
 }
-.unb.on::after{opacity:1;}
+.unb.on .unb-ic{transform:scale(1.1);}
+.unb-lb{
+  font-size:9px;font-weight:600;color:#8AAACF;
+  letter-spacing:.2px;margin-top:2px;transition:color .15s;
+}
+.unb.on .unb-lb{color:#0D5CA6;font-weight:800;}
+.unb.on::after{
+  content:'';position:absolute;top:0;left:25%;right:25%;
+  height:2.5px;background:linear-gradient(90deg,#00A89A,#0D5CA6);
+  border-radius:0 0 3px 3px;
+}
 .unbadge{
-  position:absolute;top:6px;right:calc(50% - 18px);
+  position:absolute;top:5px;left:calc(50% + 5px);
   min-width:16px;height:16px;border-radius:8px;
-  background:var(--red);color:#fff;font-size:9px;font-weight:800;
-  display:flex;align-items:center;justify-content:center;
-  padding:0 4px;display:none;
+  background:#C0392B;color:#fff;font-size:9px;font-weight:800;
+  display:none;align-items:center;justify-content:center;padding:0 4px;
 }
 .unbadge.on{display:flex;}
 
-/* ── Unified Home Cards ── */
-.u-shift-hero{
-  background:linear-gradient(135deg,var(--navy2) 0%,var(--navy) 60%,#0A7FAE 100%);
-  border-radius:14px;padding:18px 20px;margin-bottom:12px;
+/* ── Hide embedded topbars ── */
+#u-app #bs-app .topbar,
+#u-app #sp-app .topbar,
+#u-app #bs-app .astrip{display:none!important;}
+
+/* ── Hide embedded bottom navs (use unified nav) ── */
+#u-app #bs-app .bnav,
+#u-app #bs-app .snav,
+#u-app #sp-app .snav,
+#u-app #sp-app #bnav{display:none!important;}
+
+/* ── Embedded apps fill content area ── */
+#u-app #bs-app,
+#u-app #sp-app{
+  display:none;width:100%;min-height:100%;
+}
+#u-app #bs-app.u-active,
+#u-app #sp-app.u-active{display:block;}
+#u-app #bs-app #sApp,
+#u-app #sp-app #sp-sApp{
+  padding-top:0!important;min-height:100vh;
+}
+
+/* ══════════════════════════════════════════
+   HOME PAGE
+══════════════════════════════════════════ */
+#u-home{display:none;padding:0 0 16px;}
+#u-home.on{display:block;}
+
+/* Hero greeting */
+.u-hero{
+  background:linear-gradient(145deg,#0A3A7A 0%,#0D5CA6 50%,#0A7FAE 100%);
+  padding:22px 18px 28px;position:relative;overflow:hidden;
+}
+.u-hero::before{
+  content:'';position:absolute;top:-60px;right:-40px;
+  width:180px;height:180px;border-radius:50%;
+  background:rgba(255,255,255,.04);
+}
+.u-hero::after{
+  content:'';position:absolute;bottom:-50px;left:-30px;
+  width:140px;height:140px;border-radius:50%;
+  background:rgba(0,190,174,.07);
+}
+.u-hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;position:relative;}
+.u-hero-av{
+  width:46px;height:46px;border-radius:13px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;color:#fff;
+  border:2px solid rgba(255,255,255,.3);flex-shrink:0;
+}
+.u-hero-info{flex:1;margin-left:12px;}
+.u-hero-greet{font-size:11px;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.3px;}
+.u-hero-name{font-size:17px;font-weight:800;color:#fff;margin-top:1px;}
+.u-hero-date{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px;}
+
+/* Shift tile in hero */
+.u-shift-tile{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+  border-radius:14px;padding:14px 16px;
   display:flex;align-items:center;justify-content:space-between;
-  box-shadow:0 4px 20px rgba(10,74,138,.22);
+  position:relative;backdrop-filter:blur(10px);
 }
-.u-break-card{
-  background:var(--white);border:1px solid var(--border);
-  border-radius:14px;padding:16px;margin-bottom:12px;
+.u-shift-tile-left{}
+.u-shift-tile-tag{
+  font-size:9px;font-weight:700;color:rgba(255,255,255,.5);
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;
 }
-.u-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.u-qcard{
-  background:var(--white);border:1.5px solid var(--border);
-  border-radius:12px;padding:16px 10px;
-  text-align:center;cursor:pointer;transition:border-color .15s,box-shadow .15s;
+.u-shift-time{font-size:22px;font-weight:900;color:#fff;letter-spacing:.3px;line-height:1.1;}
+.u-shift-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:4px;}
+.u-shift-badge{
+  background:rgba(255,255,255,.15);border-radius:11px;
+  padding:10px 14px;text-align:center;min-width:64px;
 }
-.u-qcard:active{border-color:var(--navy);box-shadow:0 2px 12px rgba(10,74,138,.12);}
-.u-active-break-banner{
-  background:linear-gradient(135deg,var(--amber),#c77800);
-  border-radius:12px;padding:14px 16px;margin-bottom:12px;
+.u-shift-badge-ic{font-size:22px;line-height:1;}
+.u-shift-badge-lbl{
+  font-size:8px;font-weight:800;color:#fff;
+  margin-top:4px;text-transform:uppercase;letter-spacing:.5px;
+}
+
+/* Content padding */
+.u-content-pad{padding:14px 14px 0;}
+
+/* Active break banner */
+.u-break-active{
+  background:linear-gradient(135deg,#B86B00,#E08C00);
+  border-radius:14px;padding:14px 16px;margin-bottom:12px;
   display:none;
 }
-.u-active-break-banner.on{display:block;}
-
-
-/* ── Unified WFM Portal: clean single-app layout ── */
-/* Hide internal chrome from embedded apps */
-#bs-app .topbar,
-#sp-app .topbar,
-#sp-sApp > .topbar,
-#sApp > .topbar,
-#bs-app [class="topbar"],
-#sp-app [class="topbar"] { display:none !important; }
-
-#sApp > .bnav,
-#sp-sApp .bnav,
-#bnav { display:none !important; }
-
-/* u-app full screen column layout */
-#u-app {
-  display: none;
-  flex-direction: column;
-  height: 100dvh;
-  height: -webkit-fill-available;
-  overflow: hidden;
-  position: fixed;
-  inset: 0;
-  z-index: 10;
+.u-break-active.on{display:block;}
+.u-break-active-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.u-break-active-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.6px;}
+.u-break-active-timer{font-size:22px;font-weight:900;color:#fff;}
+.u-break-prog{height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin-bottom:12px;overflow:hidden;}
+.u-break-prog-bar{height:100%;background:#fff;border-radius:2px;width:0%;transition:width 1s linear;}
+.u-break-end-btn{
+  width:100%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);
+  color:#fff;border-radius:9px;padding:9px;
+  font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.2px;
+  -webkit-tap-highlight-color:transparent;
 }
-#u-topbar { flex-shrink: 0; z-index: 5; }
-#u-content {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  position: relative;
-}
-/* Unified home scrolls normally */
-#u-home { display:none; padding-bottom:80px; }
-#u-home.on { display:block; }
-/* Greeting row stays in scroll flow */
-#u-greet-row { padding:14px 14px 0; }
+.u-break-end-btn:active{background:rgba(255,255,255,.35);}
 
-/* Embedded apps take full content area */
-#bs-app, #sp-app {
-  display:none;
-  position:absolute;
-  inset:0;
-  overflow-y:auto;
+/* Booked break pill */
+.u-break-booked{
+  background:linear-gradient(135deg,#0A4A8A,#0A7FAE);
+  border-radius:12px;padding:12px 16px;
+  display:none;margin-bottom:12px;
+  align-items:center;justify-content:space-between;
+}
+.u-break-booked.on{display:flex;}
+.u-break-booked-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.6px;}
+.u-break-booked-time{font-size:14px;font-weight:800;color:#fff;margin-top:3px;}
+.u-break-booked-btn{
+  background:rgba(255,255,255,.15);border:none;color:#fff;
+  border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;
+  cursor:pointer;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* Balance card */
+.u-bal-card{
+  background:#fff;border-radius:14px;padding:16px;
+  box-shadow:var(--shadow-card);margin-bottom:12px;
+  border:1px solid rgba(10,74,138,.07);
+}
+.u-bal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.u-bal-label{font-size:12px;font-weight:700;color:#0A2E5A;}
+.u-bal-num{font-size:22px;font-weight:900;color:#0D5CA6;}
+.u-bal-bar-wrap{height:7px;background:#EEF4FB;border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.u-bal-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,#00A89A,#0D5CA6);transition:width .6s ease;}
+.u-bal-meta{display:flex;justify-content:space-between;font-size:10px;color:#8AAACF;}
+.u-book-btn{
+  margin-top:13px;width:100%;
+  background:linear-gradient(135deg,#0D5CA6,#0A7FAE);
+  color:#fff;border:none;border-radius:10px;padding:12px;
+  font-size:13px;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 14px rgba(13,92,166,.3);letter-spacing:.2px;
+  -webkit-tap-highlight-color:transparent;transition:var(--transition);
+}
+.u-book-btn:active{transform:scale(.98);box-shadow:0 2px 8px rgba(13,92,166,.2);}
+
+/* Announcement */
+.u-ann{
+  background:linear-gradient(135deg,#E6F7F6,#d0f0ed);
+  border:1px solid #7DD4CE;border-radius:12px;
+  padding:13px 16px;margin-bottom:12px;
+  display:none;align-items:flex-start;gap:11px;
+}
+.u-ann.on{display:flex;}
+.u-ann-text{font-size:12px;color:#0A2E5A;line-height:1.55;}
+
+/* Week grid */
+.u-week-card{
+  background:#fff;border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow-card);margin-bottom:12px;
+  border:1px solid rgba(10,74,138,.07);
+}
+.u-week-header{
+  padding:12px 16px 10px;border-bottom:1px solid #EEF4FB;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.u-week-title{font-size:12px;font-weight:700;color:#0A2E5A;}
+.u-week-link{
+  font-size:11px;font-weight:700;color:#0D5CA6;
+  background:none;border:none;cursor:pointer;padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+#u-week-grid{padding:10px 12px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.u-week-inner{display:grid;grid-template-columns:repeat(13,minmax(36px,1fr));gap:5px;min-width:440px;}
+.u-week-day{
+  border-radius:9px;padding:6px 3px;text-align:center;
+  border:1.5px solid transparent;transition:var(--transition);
+}
+.u-week-day.today{background:#0D5CA6;border-color:#0D5CA6;}
+.u-week-day.today .wd-n,.u-week-day.today .wd-d{color:#fff!important;}
+.u-week-day.working{background:#E6F7F6;border-color:#B0E4E0;}
+.u-week-day.off{background:#F6F8FA;border-color:transparent;}
+.u-week-day.leave{background:#FEF3CD;border-color:#F5D57A;}
+.u-week-day.sick{background:#FDECEA;border-color:#F0B0AA;}
+.wd-dow{font-size:8px;font-weight:700;color:#8AAACF;letter-spacing:.2px;}
+.u-week-day.today .wd-dow{color:rgba(255,255,255,.65)!important;}
+.u-week-day.working .wd-dow{color:#00A89A;}
+.wd-d{font-size:13px;font-weight:900;color:#0A2E5A;line-height:1.1;margin:2px 0;}
+.wd-n{font-size:8px;font-weight:700;color:#8AAACF;margin-top:1px;}
+.u-week-day.working .wd-n{color:#0D5CA6;}
+
+/* Quick actions */
+.u-actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.u-action-card{
+  background:#fff;border-radius:14px;padding:16px 12px;
+  text-align:center;cursor:pointer;
+  box-shadow:var(--shadow-card);border:1.5px solid rgba(10,74,138,.07);
+  transition:var(--transition);-webkit-tap-highlight-color:transparent;
+}
+.u-action-card:active{transform:scale(.97);border-color:#0D5CA6;box-shadow:0 2px 12px rgba(13,92,166,.15);}
+.u-action-ic{font-size:26px;margin-bottom:7px;line-height:1;}
+.u-action-title{font-size:12px;font-weight:700;color:#0A2E5A;}
+.u-action-sub{font-size:10px;color:#8AAACF;margin-top:2px;}
+
+/* Team on break */
+.u-team-card{
+  background:#fff;border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow-card);
+  border:1px solid rgba(10,74,138,.07);
+}
+.u-team-header{padding:12px 16px;border-bottom:1px solid #EEF4FB;font-size:12px;font-weight:700;color:#0A2E5A;}
+#u-team-now{padding:4px 0;}
+
+/* Section headers inside BS/SP embedded content */
+#u-app #bs-app .pg,
+#u-app #sp-app .pg{padding-top:0!important;}
+
+/* Sub-nav tabs (top of BS/SP content areas) */
+.u-subnav{
+  display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  background:#fff;border-bottom:1px solid #EEF4FB;
+  padding:0 14px;gap:0;flex-shrink:0;
+  -ms-overflow-style:none;scrollbar-width:none;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 8px rgba(10,74,138,.06);
+}
+.u-subnav::-webkit-scrollbar{display:none;}
+.u-stab{
+  padding:12px 16px;font-size:12px;font-weight:600;color:#8AAACF;
+  border:none;background:none;cursor:pointer;white-space:nowrap;
+  border-bottom:2.5px solid transparent;position:relative;top:1px;
+  -webkit-tap-highlight-color:transparent;transition:color .15s;flex-shrink:0;
+}
+.u-stab.on{color:#0D5CA6;font-weight:800;border-bottom-color:#0D5CA6;}
+.u-stab:active{color:#0D5CA6;}
+body,input,select,button,textarea{font-family:'Plus Jakarta Sans',sans-serif!important;}
+
+/* ═══════════════════════════════════════════════
+   KIB WFM PORTAL — SHELL v5 (clean rebuild)
+   Mobile-first · Plus Jakarta Sans · KIB navy/teal
+═══════════════════════════════════════════════ */
+html,body{height:100%;overflow:hidden;}
+body{background:#0a3d7a;}
+#sLogin,#sp-sLogin{display:none!important;}
+
+/* ── LOGIN ─────────────────────────────────── */
+#hub-login{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  background:linear-gradient(155deg,#071e49 0%,#0D5CA6 50%,#0a7a8e 100%);
+  overflow:hidden;
+}
+#hub-login::before{
+  content:'';position:absolute;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,190,174,.12) 0%,transparent 70%);
+  top:-100px;right:-100px;pointer-events:none;
+}
+#hub-login::after{
+  content:'';position:absolute;
+  width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.04) 0%,transparent 70%);
+  bottom:-60px;left:-60px;pointer-events:none;
+}
+#hub-login.hidden{display:none!important;}
+
+.lbox{
+  position:relative;z-index:1;
+  width:100%;max-width:340px;
+  background:#fff;border-radius:28px;
+  box-shadow:0 32px 80px rgba(7,30,73,.55);
+  overflow:hidden;
+  animation:lbUp .5s cubic-bezier(.34,1.1,.64,1) both;
+}
+@keyframes lbUp{from{opacity:0;transform:translateY(32px);}to{opacity:1;transform:translateY(0);}}
+
+.lhdr{
+  padding:32px 28px 26px;text-align:center;
+  background:linear-gradient(150deg,#071e49 0%,#0D5CA6 60%,#0a7a8e 100%);
+  position:relative;overflow:hidden;
+}
+.lhdr::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#00BEAE 40%,#00BEAE 60%,transparent);
+}
+.lhdr-logo{
+  width:68px;height:68px;margin:0 auto 14px;border-radius:18px;
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  box-shadow:0 8px 28px rgba(0,0,0,.28);
+}
+.lhdr-logo img{width:100%;height:100%;object-fit:contain;padding:7px;}
+.lhdr-title{font-size:28px;font-weight:900;color:#fff;letter-spacing:6px;}
+.lhdr-sub{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:2.5px;margin-top:5px;}
+
+.lstep{display:none;padding:26px 24px;}
+.lstep.on{display:block;}
+.lstep h3{font-size:17px;font-weight:800;color:#0A2E5A;margin-bottom:3px;}
+.lstep p{font-size:12px;color:#4A6D99;line-height:1.5;margin-bottom:20px;}
+.lbl{display:block;font-size:10px;font-weight:800;color:#4A6D99;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:7px;}
+.linp{
+  width:100%;padding:14px 16px;
+  border:2px solid #C9DDF0;border-radius:14px;
+  font-size:20px;color:#0A2E5A;background:#F4F8FD;
+  outline:none;transition:.2s;-webkit-appearance:none;
+  letter-spacing:8px;
+}
+.linp:focus{border-color:#0D5CA6;background:#fff;box-shadow:0 0 0 4px rgba(13,92,166,.1);}
+.lfld{margin-bottom:18px;}
+.btn-main{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,#0A4A8A,#0D5CA6 50%,#0a7a8e);
+  color:#fff;border:none;border-radius:14px;
+  font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;
+  box-shadow:0 4px 20px rgba(13,92,166,.4);transition:.15s;
+}
+.btn-main:active{transform:scale(.98);}
+.btn-main:disabled{opacity:.5;cursor:default;}
+.btn-back{
+  width:100%;padding:12px;margin-top:10px;
+  background:none;border:2px solid #C9DDF0;border-radius:14px;
+  color:#4A6D99;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;
+}
+.btn-back:active{background:#F4F8FD;}
+.errmsg{
+  font-size:12px;color:#C0392B;background:#FEF0EF;
+  border-radius:10px;padding:10px 14px;margin-top:12px;display:none;text-align:center;
+}
+.errmsg.on{display:block;}
+.idcard{display:flex;align-items:center;gap:12px;background:#F4F8FD;border-radius:14px;padding:13px 15px;margin-bottom:20px;}
+.idav{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;}
+.idname{font-size:14px;font-weight:800;color:#0A2E5A;}
+.idrole{font-size:11px;color:#4A6D99;margin-top:2px;}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;max-height:230px;overflow-y:auto;}
+.stile{background:#F4F8FD;border:2px solid #C9DDF0;border-radius:13px;padding:12px 8px;text-align:center;cursor:pointer;transition:.15s;}
+.stile.sel,.stile:active{background:#EBF2FF;border-color:#0D5CA6;}
+.sticon{font-size:20px;margin-bottom:5px;}
+.sttime{font-size:11px;font-weight:700;color:#0A2E5A;}
+
+/* ── U-APP SHELL ────────────────────────────── */
+#u-app{
+  display:none;position:fixed;inset:0;
+  flex-direction:column;background:#F0F5FB;overflow:hidden;
+}
+#u-app.visible{display:flex;}
+
+/* ── TOPBAR ─────────────────────────────────── */
+#u-topbar{
+  flex-shrink:0;
+  background:linear-gradient(135deg,#071e49 0%,#0D5CA6 60%,#0a7a8e 100%);
+  height:56px;
+  padding:0 14px;
+  padding-top:env(safe-area-inset-top,0);
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 2px 20px rgba(7,30,73,.4);
+  position:relative;z-index:100;
+}
+#u-back{
+  width:36px;height:36px;flex-shrink:0;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;color:#fff;font-size:17px;
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;transition:.15s;
+}
+#u-back.show{display:flex;}
+#u-back:active{background:rgba(255,255,255,.22);}
+.u-tbl{flex:1;min-width:0;display:flex;align-items:center;gap:9px;}
+.u-tlogo{
+  width:30px;height:30px;flex-shrink:0;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.16);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;color:#00BEAE;
+}
+.u-title-wrap{min-width:0;flex:1;}
+#u-title{
+  font-size:14px;font-weight:800;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.u-tsub{font-size:9px;color:rgba(255,255,255,.38);margin-top:1px;}
+.u-tbr{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+#u-clkt{font-size:11px;font-weight:600;color:rgba(255,255,255,.55);}
+.u-syncdot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);flex-shrink:0;}
+.u-syncdot.ok{background:#3DB549;}
+#u-av{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:#fff;cursor:pointer;
+  border:2px solid rgba(255,255,255,.22);
+}
+
+/* ── SUBNAV TABS ─────────────────────────────── */
+.u-subnav{
+  display:flex;overflow-x:auto;gap:6px;
+  padding:10px 14px;
+  background:#fff;
+  border-bottom:1px solid #E2EBF4;
+  flex-shrink:0;
   -webkit-overflow-scrolling:touch;
-  background:var(--bg);
-  padding-bottom:72px;
+  scrollbar-width:none;
 }
-#bs-app.u-active, #sp-app.u-active { display:block; }
+.u-subnav::-webkit-scrollbar{display:none;}
+.u-stab{
+  flex-shrink:0;
+  display:flex;align-items:center;gap:5px;
+  padding:7px 13px;
+  background:#F4F8FD;border:1.5px solid #C9DDF0;border-radius:20px;
+  font-size:12px;font-weight:700;color:#4A6D99;
+  cursor:pointer;white-space:nowrap;transition:.15s;
+}
+.u-stab.on{background:#EBF2FF;border-color:#0D5CA6;color:#0D5CA6;}
+.u-stab:active{opacity:.75;}
 
-/* Make sApp and sp-sApp full height inside their containers */
-#sApp, #sp-sApp { min-height:100%; }
-#sp-sLogin { display:none !important; }
+/* ── CONTENT AREA ───────────────────────────── */
+#u-content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
 
-/* Bottom nav fixed at bottom of u-app */
+/* ── BOTTOM NAV ─────────────────────────────── */
+#u-bnav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(60px + env(safe-area-inset-bottom,0px));
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid rgba(201,221,240,.7);
+  display:none;align-items:stretch;
+  box-shadow:0 -4px 24px rgba(7,30,73,.09);
+  z-index:500;
+}
+#u-bnav.visible{display:flex;}
+.unb{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;border:none;background:none;cursor:pointer;padding:6px 2px;
+  position:relative;-webkit-tap-highlight-color:transparent;
+}
+.unb:active{opacity:.6;}
+.unb-ic{font-size:22px;line-height:1;transition:transform .2s cubic-bezier(.34,1.5,.64,1);}
+.unb.on .unb-ic{transform:scale(1.12);}
+.unb-lb{font-size:9px;font-weight:700;color:#8AAACF;letter-spacing:.3px;text-transform:uppercase;}
+.unb.on .unb-lb{color:#0D5CA6;font-weight:800;}
+.unb::after{
+  content:'';position:absolute;top:4px;left:50%;
+  width:0;height:3px;border-radius:2px;
+  background:#0D5CA6;transform:translateX(-50%);
+  transition:width .2s cubic-bezier(.34,1.5,.64,1);
+}
+.unb.on::after{width:28px;}
+.unbadge{
+  position:absolute;top:3px;right:calc(50% - 22px);
+  min-width:17px;height:17px;border-radius:9px;
+  background:#C0392B;color:#fff;font-size:9px;font-weight:900;
+  display:none;align-items:center;justify-content:center;padding:0 5px;
+}
+.unbadge.on{display:flex;}
+
+/* ── HOME PAGE ──────────────────────────────── */
+#u-home{display:none;padding-bottom:80px;}
+#u-home.on{display:block;}
+
+/* Hero */
+.u-hero{
+  background:linear-gradient(150deg,#071e49 0%,#0D5CA6 55%,#0a7a8e 100%);
+  padding:22px 18px 28px;position:relative;overflow:hidden;
+}
+.u-hero::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='28' stroke='rgba(255,255,255,0.03)' fill='none'/%3E%3C/svg%3E") center/60px;
+  pointer-events:none;
+}
+.u-hero-greet{font-size:13px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:1px;}
+.u-hero-name{font-size:24px;font-weight:900;color:#fff;margin-bottom:3px;}
+.u-hero-date{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:18px;}
+
+.u-hero-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.u-hero-card{
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;padding:14px;
+  backdrop-filter:blur(6px);
+}
+.u-hc-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.u-hc-val{font-size:20px;font-weight:900;color:#fff;line-height:1;margin-bottom:3px;}
+.u-hc-sub{font-size:10px;color:rgba(255,255,255,.5);}
+.u-hc-icon{font-size:20px;float:right;margin-top:-2px;}
+/* Balance card specific */
+.u-hc-bar{height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin-top:8px;overflow:hidden;}
+.u-hc-bar-fill{height:100%;background:linear-gradient(90deg,#00BEAE,#fff);border-radius:2px;transition:width .6s ease;}
+
+/* Quick actions below hero */
+.u-body{padding:14px;}
+.u-section-title{font-size:11px;font-weight:800;color:#4A6D99;text-transform:uppercase;letter-spacing:.8px;margin-bottom:9px;}
+
+.u-quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:14px;}
+.u-qcard{
+  background:#fff;border:1.5px solid #E2EBF4;border-radius:16px;
+  padding:16px 12px;text-align:center;cursor:pointer;
+  transition:.15s;-webkit-tap-highlight-color:transparent;
+}
+.u-qcard:active{border-color:#0D5CA6;transform:scale(.97);}
+.u-qcard-ic{font-size:28px;line-height:1;margin-bottom:7px;}
+.u-qcard-title{font-size:12px;font-weight:800;color:#0A2E5A;margin-bottom:2px;}
+.u-qcard-sub{font-size:10px;color:#8AAACF;}
+
+/* Week grid card */
+.u-card{background:#fff;border:1px solid #E2EBF4;border-radius:16px;margin-bottom:12px;overflow:hidden;}
+.u-card-hdr{
+  padding:13px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid #F0F5FB;
+}
+.u-card-title{font-size:13px;font-weight:800;color:#0A2E5A;}
+.u-card-link{font-size:11px;font-weight:700;color:#0D5CA6;background:none;border:none;cursor:pointer;padding:0;}
+.u-card-body{padding:12px 14px;}
+
+/* Active break banner */
+.u-break-live{
+  background:linear-gradient(135deg,#C77800,#E08C00);
+  border-radius:14px;padding:14px 16px;margin-bottom:12px;
+  display:none;
+}
+.u-break-live.on{display:block;}
+/* Booked break */
+.u-break-booked{
+  background:linear-gradient(135deg,#0A4A8A,#0D5CA6);
+  border-radius:14px;padding:14px 16px;margin-bottom:12px;
+  display:none;
+}
+.u-break-booked.on{display:block;}
+
+/* Announce */
+.u-ann{
+  margin:0 14px 12px;
+  background:#fff;border:1px solid #C9DDF0;border-left:3px solid #00A89A;
+  border-radius:12px;padding:12px 14px;
+  display:none;align-items:flex-start;gap:10px;
+}
+.u-ann.on{display:flex;}
+
+/* Team now */
+.u-team-empty{padding:20px;text-align:center;color:#8AAACF;font-size:13px;}
+
+/* ── HIDE EMBEDDED CHROME ────────────────────── */
+#u-app #bs-app .topbar,
+#u-app #bs-app .astrip,
+#u-app #sp-app .topbar{display:none!important;}
+#u-app #bs-app .bnav,
+#u-app #sp-app .bnav{display:none!important;}
+#u-app #bs-app{
+  display:none;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;height:100%;padding-bottom:70px;
+}
+#u-app #bs-app.u-active{display:block;}
+#u-app #sp-app{
+  display:none;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;height:100%;
+}
+#u-app #sp-app.u-active{display:block;}
+#u-app #bs-app #sApp,
+#u-app #sp-app #sp-sApp{padding-top:0!important;margin-top:0!important;}
+
+@media(max-width:380px){
+  .u-hero-name{font-size:21px;}
+  .u-hc-val{font-size:18px;}
+  .u-qcard{padding:13px 8px;}
+  .u-qcard-ic{font-size:24px;}
+}
 
 </style>
 </head>
@@ -905,126 +1342,143 @@ body.unified #bs-app,body.unified #sp-app{
 <div id="hub-login">
   <div class="lbox">
     <div class="lhdr">
-      <div style="width:90px;height:90px;background:#fff;border-radius:22px;padding:8px;margin:0 auto 12px;box-shadow:0 8px 32px rgba(0,0,0,.2);overflow:hidden;">
-        <img src="https://www.kib.com.kw/.imaging/mte/kib-theme/960x600/dam/News/Pictures/KIB-logo-only-background-960x600-E.JPG/jcr:content/KIB-logo-only-background-960x600-E.JPG"
-             alt="KIB" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=&quot;width:74px;height:74px;background:var(--teal2);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;&quot;>KIB</div>'">
+      <div class="lhdr-logo">
+        <img src="https://www.kib.com.kw/.imaging/mte/kib-theme/960x600/dam/News/Pictures/KIB-logo-only-background-960x600-E.JPG/jcr:content/KIB-logo-only-background-960x600-E.JPG" alt="KIB"
+             onerror="this.style.display='none';this.parentNode.innerHTML='<span style=&quot;font-size:20px;font-weight:900;color:#00BEAE;&quot;>KIB</span>'">
       </div>
       <div class="lhdr-title">KIB</div>
-      <div class="lhdr-sub">KUWAIT INTERNATIONAL BANK · WFM PORTAL</div>
+      <div class="lhdr-sub">KUWAIT INTERNATIONAL BANK &bull; WFM PORTAL</div>
     </div>
     <div class="lstep on" id="step1">
-      <h3>Welcome back</h3>
-      <p>Enter your staff password to access the portal</p>
+      <h3>Welcome back 👋</h3>
+      <p>Enter your staff password to sign in</p>
       <div class="lfld">
-        <label class="lbl">STAFF PASSWORD</label>
-        <input id="pwInput" type="password" class="linp" placeholder="••••••••" autocomplete="off">
+        <label class="lbl">Staff Password</label>
+        <input id="pwInput" type="password" class="linp" placeholder="••••••" autocomplete="current-password">
       </div>
-      <button class="btn-main" onclick="checkPw()">Sign In</button>
+      <button class="btn-main" onclick="checkPw()">Sign In &rarr;</button>
       <div class="errmsg" id="loginErr">Incorrect password. Please try again.</div>
     </div>
     <div class="lstep" id="step2">
       <div class="idcard">
         <div class="idav" id="idav">?</div>
-        <div><div class="idname" id="idname">—</div><div class="idrole" id="idrole">—</div></div>
+        <div><div class="idname" id="idname">&mdash;</div><div class="idrole" id="idrole">&mdash;</div></div>
       </div>
       <h3>Select Your Shift</h3>
-      <p>Confirm your working hours for today</p>
-      <label class="lbl">SELECT SHIFT</label>
+      <p>Choose your working hours for today</p>
+      <label class="lbl">Shift</label>
       <div class="sgrid" id="shiftGrid"></div>
-      <button id="shiftBtn" class="btn-main" onclick="confirmShift()" disabled>Confirm &amp; Continue</button>
-      <button class="btn-back" onclick="backToLogin()">&#8592; Back</button>
+      <button id="shiftBtn" class="btn-main" onclick="confirmShift()" disabled>Confirm &amp; Enter &rarr;</button>
+      <button class="btn-back" onclick="backToLogin()">&larr; Back</button>
     </div>
   </div>
 </div>
-<div id="u-app" style="display:none;">
+<div id="u-app">
   <div id="u-topbar">
-    <div class="u-tbl">
-      <div class="u-tlogo">KIB</div>
-      <div>
-        <div class="u-ttitle" id="u-title">WFM Portal</div>
-        <div class="u-tsub">Contact Center</div>
+  <button id="u-back" onclick="uNav('home')" aria-label="Back">&larr;</button>
+  <div class="u-tbl">
+    <div class="u-tlogo">KIB</div>
+    <div class="u-title-wrap">
+      <div id="u-title">KIB WFM Portal</div>
+      <div class="u-tsub">Contact Center</div>
+    </div>
+  </div>
+  <div class="u-tbr">
+    <div id="u-clkt"></div>
+    <div class="u-syncdot" id="u-syncdot"></div>
+    <div id="u-av" onclick="uNav('me')">?</div>
+  </div>
+  <div style="display:none;">
+    <div id="hub-av"></div><div id="hub-name"></div>
+    <div id="hub-role"></div><div id="hub-greeting"></div>
+    <div id="hub-sub"></div><div id="hub-app"></div>
+    <div id="u-greet-text"></div><div id="u-greet-date"></div>
+  </div>
+</div>
+  <div id="u-content">
+    <div id="u-home">
+
+  <!-- Hero -->
+  <div class="u-hero">
+    <div class="u-hero-greet" id="u-hero-greet">Good morning,</div>
+    <div class="u-hero-name" id="u-hero-name">Loading&hellip;</div>
+    <div class="u-hero-date" id="u-hero-date"></div>
+
+    <div class="u-hero-cards">
+      <!-- Shift card -->
+      <div class="u-hero-card" id="u-hero-shift">
+        <div class="u-hc-label">Today&rsquo;s Shift
+          <span class="u-hc-icon" id="u-hero-shift-icon">💼</span>
+        </div>
+        <div class="u-hc-val" id="u-hero-shift-time">&mdash;</div>
+        <div class="u-hc-sub" id="u-hero-shift-sub">Your working hours</div>
+        <div style="font-size:8px;color:rgba(255,255,255,.35);margin-top:4px;" id="u-hero-shift-label"></div>
+        <div style="margin-top:8px;display:inline-block;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;font-size:9px;font-weight:800;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.5px;" id="u-hero-shift-status">Working</div>
+      </div>
+      <!-- Break balance card -->
+      <div class="u-hero-card">
+        <div class="u-hc-label">Break Balance
+          <span class="u-hc-icon">☕</span>
+        </div>
+        <div class="u-hc-val" id="u-balance-num">&mdash;</div>
+        <div class="u-hc-sub" id="u-balance-used">0 min used</div>
+        <div class="u-hc-bar"><div class="u-hc-bar-fill" id="u-balance-fill" style="width:0%;"></div></div>
+        <div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:4px;" id="u-balance-total">45 min total</div>
       </div>
     </div>
-    <div class="u-tbr">
-      <div id="u-clkt" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);">--:--</div>
-      <div class="u-syncdot" id="u-syncdot"></div>
-      <div id="u-av" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:pointer;background:var(--teal);" onclick="uNav('me')">?</div>
-      <button class="u-signout" onclick="uSignOut()">Sign Out</button>
-    </div>
-    <div style="display:none">
-      <div id="hub-av"></div><div id="hub-name"></div>
-      <div id="hub-role"></div><div id="hub-greeting"></div><div id="hub-sub"></div>
-      <div id="hub-app"></div>
-    </div>
   </div>
-  <div id="u-content">
 
-  <!-- Greeting elements used by renderUnifiedHome -->
-  <div style="padding:14px 14px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:-4px;" id="u-greet-row">
-    <div>
-      <div id="u-greet-text" style="font-size:16px;font-weight:800;color:var(--t1);"></div>
-      <div id="u-greet-date" style="font-size:11px;color:var(--t3);margin-top:1px;"></div>
-    </div>
-  </div>
-<div id="u-home">
-  <div class="u-active-break-banner" id="u-active-break">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.6px;">☕ Break In Progress</div>
-      <div id="u-break-timer" style="font-size:18px;font-weight:900;color:#fff;">00:00</div>
-    </div>
-    <div style="height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin-bottom:12px;">
-      <div id="u-break-prog-bar" style="height:100%;background:#fff;border-radius:2px;width:0%;transition:width .5s;"></div>
-    </div>
-    <button onclick="endBreak();uNav('home')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;width:100%;">End Break Now</button>
-  </div>
-  <div id="u-booked-break" style="display:none;background:linear-gradient(135deg,var(--navy),#0A7FAE);border-radius:12px;padding:14px 16px;margin-bottom:12px;">
-    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Break Booked</div>
-    <div id="u-booked-time" style="font-size:14px;font-weight:700;color:#fff;"></div>
-    <button onclick="uNav('breaks','home')" style="margin-top:10px;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;">Start When Ready</button>
-  </div>
-  <div class="u-shift-hero" id="u-shift-card">
-    <div>
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.9px;margin-bottom:5px;">Today's Shift</div>
-      <div id="u-shift-time" style="font-size:26px;font-weight:900;color:#fff;line-height:1.1;">Loading...</div>
-      <div id="u-shift-sub" style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px;"></div>
-      <div id="u-shift-label" style="font-size:10px;color:rgba(255,255,255,.4);margin-top:3px;"></div>
-    </div>
-    <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:12px 16px;text-align:center;min-width:72px;">
-      <div id="u-shift-icon" style="font-size:26px;line-height:1;">💼</div>
-      <div id="u-shift-status" style="font-size:9px;font-weight:700;color:#fff;margin-top:5px;text-transform:uppercase;letter-spacing:.5px;">Working</div>
-    </div>
-  </div>
-  <div id="u-announce" style="background:linear-gradient(135deg,var(--tealbg),#d4f0ee);border:1px solid var(--tealb);border-radius:12px;padding:13px 16px;margin-bottom:12px;display:none;align-items:flex-start;gap:10px;">
+  <!-- Announcement -->
+  <div class="u-ann" id="u-ann-bar">
     <span style="font-size:20px;flex-shrink:0;">📢</span>
     <div>
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--teal);margin-bottom:3px;">Announcement</div>
-      <div id="u-announce-text" style="font-size:12px;color:var(--t1);line-height:1.5;"></div>
+      <div style="font-size:9px;font-weight:800;color:#00A89A;text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px;">Announcement</div>
+      <div id="u-ann-text" style="font-size:12px;color:#0A2E5A;line-height:1.5;"></div>
     </div>
   </div>
-  <div class="u-break-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:12px;font-weight:700;color:var(--t1);">Break Balance</div>
-      <div id="u-break-num" style="font-size:18px;font-weight:900;color:var(--navy);">— min left</div>
+
+  <div class="u-body">
+
+    <!-- Active break -->
+    <div class="u-break-live" id="u-active-break">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:11px;font-weight:800;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.5px;">☕ Break in Progress</span>
+        <span id="u-tmr" style="font-size:20px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;">00:00</span>
+      </div>
+      <div style="height:5px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden;margin-bottom:11px;">
+        <div id="u-tmr-bar" style="height:100%;background:#fff;border-radius:3px;width:0%;transition:width .5s;"></div>
+      </div>
+      <button onclick="endBreak();uNav('home')" style="width:100%;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.3);color:#fff;border-radius:11px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;">&#10003; End Break</button>
     </div>
-    <div style="height:6px;background:var(--border);border-radius:3px;margin-bottom:8px;overflow:hidden;">
-      <div id="u-break-prog" style="height:100%;background:linear-gradient(90deg,var(--teal),var(--navy));border-radius:3px;width:0%;transition:width .5s;"></div>
+
+    <!-- Booked break -->
+    <div class="u-break-booked" id="u-booked-break">
+      <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Break Booked</div>
+      <div id="u-booked-time" style="font-size:14px;font-weight:800;color:#fff;"></div>
+      <button onclick="uNav('breaks','home')" style="margin-top:10px;background:rgba(255,255,255,.14);border:none;color:#fff;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;">Start When Ready &rarr;</button>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);">
-      <span id="u-break-used">0 min used</span><span id="u-break-total">45 min total</span>
+
+    <!-- Quick actions -->
+    <div class="u-section-title">Quick Actions</div>
+    <div id="u-quick-grid" class="u-quick-grid"></div>
+
+    <!-- This week -->
+    <div class="u-card" style="margin-bottom:12px;">
+      <div class="u-card-hdr">
+        <div class="u-card-title">&#128197; This Week</div>
+        <button class="u-card-link" onclick="uNav('schedule')">Full Schedule &rarr;</button>
+      </div>
+      <div class="u-card-body" id="u-wk-grid" style="padding:10px 14px;"></div>
     </div>
-    <button onclick="uNav('breaks','book')" style="margin-top:12px;width:100%;background:var(--navy);color:#fff;border:none;border-radius:9px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;">Book a Break</button>
-  </div>
-  <div class="card" style="margin-bottom:12px;">
-    <div class="ch">
-      <div class="ctitle">This Week</div>
-      <button class="btn btn-sm btn-outline" onclick="uNav('schedule')">Full Schedule</button>
+
+    <!-- Team on break -->
+    <div class="u-card">
+      <div class="u-card-hdr">
+        <div class="u-card-title">&#128101; On Break Now</div>
+      </div>
+      <div id="u-team-list"></div>
     </div>
-    <div class="cb" style="padding:4px 6px 10px;" id="u-week-grid"></div>
-  </div>
-  <div id="u-quick-grid" class="u-quick-grid"></div>
-  <div class="card">
-    <div class="ch"><div class="ctitle">Team on Break Now</div></div>
-    <div class="cb" style="padding:0;" id="u-team-now"></div>
+
   </div>
 </div>
     <div id="bs-app">
@@ -1111,6 +1565,10 @@ body.unified #bs-app,body.unified #sp-app{
       </div>
     </div>
     <div id="schedPanel"><div class="empty"><div class="ei">📅</div><div class="ep">No breaks booked yet.</div></div></div>
+    <div class="sh">Full Team Status</div>
+    <div class="card" style="overflow:hidden;margin-bottom:12px;">
+      <div id="teamFullPanel"><div class="empty" style="padding:16px;text-align:center;font-size:12px;color:var(--t3);">Loading…</div></div>
+    </div>
   </div>
 
   <!-- BOOK -->
@@ -1555,7 +2013,7 @@ body.unified #bs-app,body.unified #sp-app{
   <div class="pg" id="pg-requests">
     <div class="ftabs">
       <div class="ftab on" onclick="swTab('reqTabs','rt-swap',this)">🔄 Swap</div>
-      <div class="ftab" onclick="swTab('reqTabs','rt-leave',this)">🌴 Leave</div>
+      
       <div class="ftab" onclick="swTab('reqTabs','rt-att',this)">✅ Attendance</div>
     </div>
     <div id="reqTabs">
@@ -1578,7 +2036,7 @@ body.unified #bs-app,body.unified #sp-app{
         <div id="mySwapHist"></div>
       </div>
       <!-- LEAVE -->
-      <div id="rt-leave" style="display:none;">
+      <div id="rt-leave" style="display:none!important;">
         <div class="card">
           <div class="ch"><div class="ctitle">🌴 New Leave Request</div></div>
           <div class="cb">
@@ -1661,9 +2119,15 @@ body.unified #bs-app,body.unified #sp-app{
         <div class="idav" id="setAv" style="background:var(--navy);">KB</div>
         <div><div class="idname" id="setName">—</div><div class="idrole" id="setRole">—</div></div>
       </div>
-      <div class="srow2"><div><div class="srl">Today's Shift</div></div><div id="setShift"></div></div>
+      <div class="srow2"><div><div class="srl">Today&#39;s Shift</div></div><div id="setShift"></div></div>
       <div class="srow2"><div><div class="srl">Team</div></div><div id="setTeam" style="font-size:13px;font-weight:700;color:var(--navy);"></div></div>
     </div></div>
+    <div class="sh">Break Usage Today</div>
+    <div class="card"><div class="cb" id="prof-break-body"><div style="text-align:center;padding:14px;font-size:12px;color:var(--t3);">Loading…</div></div></div>
+    <div class="sh">Monthly Attendance</div>
+    <div class="card" style="overflow:hidden;"><div id="prof-att-body"><div style="text-align:center;padding:14px;font-size:12px;color:var(--t3);">Loading…</div></div></div>
+    <div class="sh">Swap Request History</div>
+    <div class="card" style="overflow:hidden;"><div id="prof-swap-body"><div style="text-align:center;padding:14px;font-size:12px;color:var(--t3);">No swap history</div></div></div>
     <div class="sh">Change PIN</div>
     <div class="card"><div class="cb">
       <div class="fg"><label class="lbl">New PIN (4–6 digits)</label><input type="password" class="fld" id="newPin" placeholder="Enter new PIN"></div>
@@ -1687,204 +2151,15 @@ body.unified #bs-app,body.unified #sp-app{
 </div>
 
   </div>
+  </div>
   <div id="u-bnav"></div>
 </div>
-<script>
-
-// Patch uNav to use CSS classes for BS/SP visibility
-var __uNavPatched = false;
-(function(){
-  if(__uNavPatched) return; __uNavPatched=true;
-  var __orig = uNav;
-  uNav = function(section, subPage){
-    var bsApp=document.getElementById('bs-app');
-    var spApp=document.getElementById('sp-app');
-    var uHome=document.getElementById('u-home');
-    // Reset
-    if(bsApp){bsApp.style.display='none';bsApp.classList.remove('u-active');}
-    if(spApp){spApp.style.display='none';spApp.classList.remove('u-active');}
-    if(uHome){uHome.classList.remove('on');}
-
-    var titles={home:'WFM Portal',breaks:'Break System',schedule:'Schedule Portal',
-      requests:'My Requests',team:'Team Management',wfm:'WFM Dashboard',me:'My Profile'};
-    var tEl=document.getElementById('u-title');
-    if(tEl) tEl.textContent=titles[section]||'Staff Portal';
-
-    ['home','breaks','schedule','requests','team','wfm','me'].forEach(function(s){
-      var b=document.getElementById('unb-'+s);if(b)b.classList.toggle('on',s===section);
-    });
-
-    if(section==='home'){
-      if(uHome) uHome.classList.add('on');
-      renderUnifiedHome();
-    } else if(section==='breaks'){
-      if(bsApp){bsApp.style.display='block';bsApp.classList.add('u-active');}
-      if(document.getElementById('sApp').className!=='on')document.getElementById('sApp').className='on';
-      if(typeof renderStrip==='function') renderStrip();
-      if(typeof renderAll==='function') renderAll();
-      if(typeof gp==='function') gp(subPage||'home');
-    } else if(section==='schedule'){
-      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
-      var ss=document.getElementById('sp-sApp');if(ss){ss.style.display='block';ss.classList.add('on');}
-      if(typeof showPage==='function') showPage(subPage||'schedule');
-    } else if(section==='requests'){
-      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
-      var ss2=document.getElementById('sp-sApp');if(ss2){ss2.style.display='block';ss2.classList.add('on');}
-      if(typeof showPage==='function') showPage('requests');
-    } else if(section==='team'){
-      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
-      var ss3=document.getElementById('sp-sApp');if(ss3){ss3.style.display='block';ss3.classList.add('on');}
-      if(typeof showPage==='function') showPage('team');
-    } else if(section==='wfm'){
-      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
-      var ss4=document.getElementById('sp-sApp');if(ss4){ss4.style.display='block';ss4.classList.add('on');}
-      if(typeof showPage==='function') showPage('dashboard');
-    } else if(section==='me'){
-      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
-      var ss5=document.getElementById('sp-sApp');if(ss5){ss5.style.display='block';ss5.classList.add('on');}
-      if(typeof showPage==='function') showPage('settings');
-    }
-    if(typeof uUpdateBadges==='function') uUpdateBadges();
-  };
-})();
-
-
-// ── UNIFIED PORTAL HELPERS ──────────────────────────────────────────
-function uBuildNav(){
-  var bnav=document.getElementById('u-bnav');
-  if(!bnav) return;
-  var isManager=me.access==='admin'||me.access==='manager'||me.access==='readonly'||
-                me.access==='wfm'||(me.loginRole&&['tl','atl','manager','wfm','admin'].includes(me.loginRole));
-  var items=[
-    {id:'home',   ic:'🏠', lb:'Home'},
-    {id:'breaks', ic:'☕', lb:'Breaks'},
-    {id:'schedule',ic:'📅',lb:'Schedule'},
-    {id:'requests',ic:'📝',lb:'Requests'},
-  ];
-  if(isManager) items.push({id:'team',ic:'👥',lb:'Team'});
-  if(isManager) items.push({id:'wfm', ic:'📊',lb:'WFM'});
-  items.push({id:'me',ic:'👤',lb:'Me'});
-  bnav.innerHTML='';
-  items.forEach(function(it){
-    var btn=document.createElement('div');
-    btn.className='unb'+(it.id==='home'?' on':'');
-    btn.id='unb-'+it.id;
-    btn.innerHTML='<div class="unb-ic">'+it.ic+'</div><div class="unb-lb">'+it.lb+'</div>';
-    if(it.id==='breaks')  btn.innerHTML+='<div class="unbadge" id="u-swap-badge" style="display:none"></div>';
-    if(it.id==='requests')btn.innerHTML+='<div class="unbadge" id="u-req-badge"  style="display:none"></div>';
-    btn.onclick=(function(id){return function(){uNav(id);};})(it.id);
-    bnav.appendChild(btn);
-  });
-}
-
-function uRenderClock(){
-  var now=new Date(Date.now()+3*60*60*1000);
-  var hh=now.getHours(),mm=now.getMinutes();
-  var h12=hh%12||12,ampm=hh<12?'AM':'PM';
-  var s=String(mm).padStart(2,'0');
-  var el=document.getElementById('u-clkt');
-  if(el) el.textContent=h12+':'+s+' '+ampm;
-}
-
-function uSignOut(){
-  me=null;
-  try{Object.keys(localStorage).filter(function(k){return k.startsWith('kib_sh_');}).forEach(function(k){localStorage.removeItem(k);});}catch(e){}
-  location.reload();
-}
-
-// Override uNav 'me' section (settings)
-var _uNavOrig=uNav;
-uNav=function(section,subPage){
-  if(section==='me'){
-    // Show SP settings page
-    var spApp=document.getElementById('sp-app');
-    var bsApp=document.getElementById('bs-app');
-    var uHome=document.getElementById('u-home');
-    if(uHome) uHome.classList.remove('on');
-    if(bsApp) bsApp.style.display='none';
-    if(spApp) spApp.style.display='block';
-    var spSApp=document.getElementById('sp-sApp');
-    if(spSApp) spSApp.style.display='block';
-    ['home','breaks','schedule','requests','team','wfm','me'].forEach(function(s){
-      var b=document.getElementById('unb-'+s);if(b)b.classList.toggle('on',s==='me');
-    });
-    var tEl=document.getElementById('u-title');if(tEl)tEl.textContent='My Profile';
-    if(typeof showPage==='function') showPage('settings');
-    if(typeof uUpdateBadges==='function') uUpdateBadges();
-    return;
-  }
-  _uNavOrig(section,subPage);
-};
-
-// ════════════════════════════════════════════════════════
-// SHARED: EMPLOYEE DATA  (same passwords as break system)
-// ════════════════════════════════════════════════════════
-
-var EMPS=[
-  {pw:'fou@4501',name:'Fouzeyah Erzouqi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'sar@4502',name:'Sarah Alqattan',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'dan@4503',name:'Danah Alenezi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'yas@4504',name:'Yasmine Maraafi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'ezz@4505',name:'Ezz Alsalem',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'abk@4506',name:'Abdullah Bakhsh',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'abz@4507',name:'Abdulaziz Bozobar',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'abr@4508',name:'Abdulrahman Abdullah',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'awm@4509',name:'Abdullah W Mohammad',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'ash@4510',name:'Abdollah Shaverdi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'azu@4511',name:'Abdulaziz Alzuabi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'alf@4512',name:'Abdulrahman Alfassam',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'als@4513',name:'Abdulwahab Alsaber',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'slj@4514',name:'Saleh Aljabri',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'alw@4515',name:'Ali Alwayel',role:'Inbound Agent',dept:'Inbound',access:'agent'},  {pw:'sha@4517',name:'Ali ShahAli',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'aye@4518',name:'Ayedh Alotaibi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'fah@4519',name:'Fahad Alabdullah',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'hsa@4520',name:'Hasan Ali',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'hkh@4521',name:'Hussain Alkhabbaz',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'msh@4522',name:'Mohammad Alshakhs',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'omr@4523',name:'Omar Almutairi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'osa@4524',name:'Omar Alsaeed',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'omm@4525',name:'Omar Mohammad',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'sah@4526',name:'Saad Alharbi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'slk@4527',name:'Sulaiman Alkhalaf',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'asr@4528',name:'Asrar Alattar',role:'Outbound Agent',dept:'Outbound',access:'agent'},
-  {pw:'lat@4529',name:'Latefah Alhouti',role:'Outbound Agent',dept:'Outbound',access:'agent'},
-  {pw:'ane@4530',name:'Ahmad Alenezi',role:'ITM Agent',dept:'ITM',access:'agent'},
-  {pw:'sbq@4531',name:'Salman Albaqshi',role:'ITM Agent',dept:'ITM',access:'agent'},
-  {pw:'dhr@4532',name:'Dhari Alshammari',role:'ITM Agent',dept:'ITM',access:'agent'},
-  {pw:'bdr@4533',name:'Badreyah Alruwayeh',role:'ITM Agent',dept:'ITM',access:'agent'},
-  {pw:'mrm@4534',name:'Mariam Almutairi',role:'ITM Agent',dept:'ITM',access:'agent'},
-  {pw:'arj@4535',name:'Abdullah Rajab',role:'ITM Agent',dept:'ITM',access:'agent'},
-  {pw:'ahm@4538',name:'Ahmed Nidah',role:'Wage Agent',dept:'Wage',access:'agent'},
-  {pw:'bil@4539',name:'Bilal Faisal',role:'Wage Agent',dept:'Wage',access:'agent'},
-  {pw:'fat@4540',name:'Fatemeh Mayahi',role:'Wage Agent',dept:'Wage',access:'agent'},
-  {pw:'nah@4541',name:'Nahla Ibrahim',role:'Wage Agent',dept:'Wage',access:'agent'},
-  {pw:'nas@3001',name:'Naser Bandar',role:'Assist TL',dept:'Supervisors',access:'atl'},
-  {pw:'haj@3002',name:'Hasan Alajmi',role:'Assist TL',dept:'Supervisors',access:'atl'},
-  {pw:'ath@3003',name:'Athoub Alnoufal',role:'Assist TL',dept:'Supervisors',access:'atl'},
-  {pw:'shq@2001',name:'Shouq Alkandari',role:'Team Leader',dept:'Supervisors',access:'readonly'},
-  {pw:'ano@2002',name:'Alanoud Alotaibi',role:'Team Leader',dept:'Supervisors',access:'readonly'},
-  {pw:'mot@2003',name:'Mohammad Alothman',role:'Team Leader',dept:'Supervisors',access:'readonly'},
-  {pw:'ara@4536',name:'Abdulrahman Alahmad',role:'Back Office',dept:'Back Office',access:'readonly'},
-  {pw:'nhr@4537',name:'Nourah Alhazzani',role:'Back Office',dept:'Back Office',access:'readonly'},
-  {pw:'ftm@4542',name:'Fatmah Alhamar',role:'QA',dept:'Quality',access:'readonly'},
-  {pw:'brb@4543',name:'Badreyah BoRubayea',role:'QA',dept:'Quality',access:'readonly'},
-  {pw:'mqr@1001',name:'Mohammad Abdulraheem',role:'QA Supervisor',dept:'Quality',access:'readonly'},
-  {pw:'tal@0001',name:'Talal Al Jarki',role:'Head of CC',dept:'Management',access:'readonly'},
-  {pw:'KIB@admin2026',name:'Admin',role:'System Admin',dept:'Management',access:'admin'},
-  {pw:'demo@1234',name:'Demo User',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'demo@mgr',name:'Demo Manager',role:'Team Leader',dept:'Supervisors',access:'readonly'},
-  {pw:'ham@4501',name:'Hamad AlEidan',role:'ITM Agent',dept:'ITM',access:''},
-  {pw:'fou2@4501',name:'Fouzeyah Erzouqi I',role:'Inbound Agent',dept:'Inbound',access:''},
-  {pw:'wae@4501',name:'Wael Anwar',role:'OP Agent',dept:'OP',access:''},
-  {pw:'tah@4501',name:'Taher Al Baghli',role:'Manager',dept:'Management',access:'manager'},
-];
-// Shifts: 8AM–9PM starts, each 7h until 18 Mar 2026, then 8h after
-var SHIFT_ICONS=['🌅','🌤','☀️','🌞','🌇','🌆','🌃','🌙','🌛','🌜','🌝','⭐','🌠','🌠'];
+<script>var SHIFT_ICONS=['🌅','🌤','☀️','🌞','🌇','🌆','🌃','🌙','🌛','🌜','🌝','⭐','🌠','🌠'];
 function getShifts(){
   var cut=new Date('2026-03-18T00:00:00');var dur=new Date()<cut?7:8;
   var out=[];
   function fh(x){x=x%24;var m=x%12||12;return m+(x<12?'AM':'PM');}
-  for(var h=8;h<=21;h++){
+  for(var h=5;h<=21;h++){
     var endH=h+dur;var endH24=endH%24;
     var lbl=fh(h)+'–'+fh(endH24)+(endH>=24?' (+1)':'');
     out.push({label:lbl,start:pad(h)+':00',end:pad(endH24)+':00',endMinRaw:endH*60,icon:SHIFT_ICONS[h-8]||'🕐'});
@@ -2244,12 +2519,12 @@ function tickTimer(){
     var up=document.getElementById('u-break-prog-bar'); if(up) up.style.width=pct+'%';
     // Show active break banner on home
     var ub=document.getElementById('u-active-break');
-    if(ub) ub.style.display='block';
+    if(ub) ub.classList.add('on');
     var ubb=document.getElementById('u-booked-break');
     if(ubb) ubb.style.display='none';
   } else if(b && b.status==='booked'){
     var ub2=document.getElementById('u-active-break');
-    if(ub2) ub2.style.display='none';
+    if(ub2) ub2.classList.remove('on');
     var ubb2=document.getElementById('u-booked-break');
     if(ubb2){ubb2.style.display='block';
       var ubt=document.getElementById('u-booked-time');
@@ -2358,8 +2633,49 @@ function renderHome(){
     });
     schedEl.innerHTML=h+'</div></div>';
   }
-}
-function startBreak(){var d=gd();var b=myBreak(d);if(!b||b.status!=='booked')return;b.status='active';b.startedAt=Date.now();sv(d);showToast('Break started! Enjoy ☕','ok');addNotif('☕ Break started at '+fmt12(b.breakStart));renderAll();}
+  // ── Full Team Status Panel ──────────────────────────
+  var teamEl=document.getElementById('teamFullPanel');
+  if(!teamEl) return;
+  var daily2=s.dailyMin||45;
+  var logins2=(d.logins&&d.logins[today()])||{};
+  var smap2={};
+  EMPS.forEach(function(e){smap2[e.name]={st:'off',sched:0,used:0,brk:null};});
+  Object.keys(logins2).forEach(function(n){if(smap2[n])smap2[n].st='on';});
+  if(me&&smap2[me.name])smap2[me.name].st='on';
+  tdb(d).forEach(function(b){
+    if(!smap2[b.agent]||b.status==='cancelled')return;
+    smap2[b.agent].sched+=b.duration;
+    if(b.status==='done')smap2[b.agent].used+=b.duration;
+    if(b.status==='active'||b.status==='booked'){smap2[b.agent].st='brk';smap2[b.agent].brk=b;}
+  });
+  var th='';
+  DEPTS.forEach(function(dept){
+    var list=EMPS.filter(function(e){return e.dept===dept.key&&e.access!=='admin';});
+    if(!list.length)return;
+    th+='<div style="font-size:10px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;padding:10px 13px 5px;background:var(--bg);border-bottom:1px solid var(--border);">'+dept.label+'</div>';
+    list.forEach(function(e){
+      var st=smap2[e.name]||{st:'off',sched:0,used:0};
+      var isMe=e.name===me.name;
+      var balLeft=Math.max(daily2-st.sched,0);
+      var pct=Math.min(st.sched/daily2*100,100);
+      var balcol=st.sched>=daily2?'var(--red)':st.sched>daily2*.7?'var(--amber)':'var(--green)';
+      var dotColor=st.st==='brk'?'var(--amber)':st.st==='on'?'var(--green)':'#ccc';
+      var brkInfo='';
+      if(st.brk){
+        if(st.brk.status==='active'&&st.brk.startedAt){
+          var rem2=st.brk.duration-elapseMin(st.brk.startedAt);
+          brkInfo='<span style="color:'+(rem2<=0?'var(--red)':'var(--amber)')+';font-weight:700;font-size:10px;">'+(rem2>0?rem2+'m left':'Overdue')+'</span>';
+        }else if(st.brk.status==='booked'){
+          brkInfo='<span style="color:var(--navy);font-size:10px;">Booked '+fmt12(st.brk.breakStart)+'</span>';
+        }
+      }
+      var todSch=AGENTS.find(function(a){return a.n===e.name;});
+      var todShift=todSch?gTodayS(todSch):'—';
+      th+='<div style="display:flex;align-items:center;padding:9px 13px;border-bottom:1px solid var(--border);">'        +'<div style="width:34px;height:34px;border-radius:9px;background:'+avc(e.name)+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;position:relative;">'        +ini(e.name)+'<div style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;border:2px solid #fff;background:'+dotColor+';"></div></div>'        +'<div style="flex:1;min-width:0;padding:0 9px;">'        +'<div style="font-size:12px;font-weight:700;color:var(--t1);">'+e.name+(isMe?'<span style="font-size:9px;background:var(--tealbg);color:var(--teal);border-radius:3px;padding:1px 4px;margin-left:4px;">Me</span>':'')+'</div>'        +'<div style="font-size:10px;color:var(--t2);display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:2px;">'        +'<span class="sc '+scCls(todShift)+'">'+todShift+'</span>'+(brkInfo?'<span>·</span>'+brkInfo:'')+'</div>'        +'<div style="height:4px;background:var(--border);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:'+balcol+';border-radius:2px;"></div></div></div>'        +'<div style="text-align:right;flex-shrink:0;">'        +(st.st==='brk'?'<span class="pill p-amber" style="font-size:9px;padding:2px 6px;"><span class="pdot"></span>Break</span>':st.st==='on'?'<span class="pill p-green" style="font-size:9px;padding:2px 6px;"><span class="pdot"></span>Online</span>':'<span class="pill" style="font-size:9px;padding:2px 6px;background:var(--bg);color:var(--t3);"><span class="pdot" style="background:#ccc"></span>Offline</span>')+'<div style="font-size:10px;margin-top:3px;color:'+balcol+';font-weight:700;">'+balLeft+'m</div></div>'        +'</div>';
+    });
+  });
+  teamEl.innerHTML=th||'<div style="padding:16px;text-align:center;font-size:12px;color:var(--t3);">No agents found</div>';
+}function startBreak(){var d=gd();var b=myBreak(d);if(!b||b.status!=='booked')return;b.status='active';b.startedAt=Date.now();sv(d);showToast('Break started! Enjoy ☕','ok');addNotif('☕ Break started at '+fmt12(b.breakStart));renderAll();}
 function endBreak(){var d=gd();var b=myBreak(d);if(!b||b.status!=='active')return;var el=Math.ceil((Date.now()-b.startedAt)/60000);b.status='done';b.duration=el;b.endedAt=Date.now();sv(d);showToast('Break ended · '+el+' min','ok');renderAll();if(typeof uUpdateBadges==='function')uUpdateBadges();if(typeof renderUnifiedHome==='function'&&document.getElementById('u-home')&&document.getElementById('u-home').classList.contains('on'))renderUnifiedHome();}
 function cancelBreak(){var d=gd();var b=myBreak(d);if(!b)return;b.status='cancelled';sv(d);showToast('Break cancelled');renderAll();}
 
@@ -2387,8 +2703,6 @@ function buildSlotGrid(){
     var cls='bslot',who='',onclick='';
     if(myHere){
       cls+=' mine';who='Yours';
-    } else if(!started){
-      cls+=' blocked';who='Not started';
     } else if(isPast){
       cls+=' blocked';who='Past';
     } else if(!valid){
@@ -2754,8 +3068,9 @@ function hubRefreshBadge(){
 // Override startApp to go to hub instead of directly to BS
 function startApp(){
   // Hide login, show unified app
-  document.getElementById('hub-login').style.display='none';
-  document.getElementById('u-app').style.display='flex';
+  var hl=document.getElementById('hub-login');if(hl)hl.classList.add('hidden');
+  document.getElementById('u-app').classList.add('visible');
+  document.getElementById('u-bnav').classList.add('visible');
 
   // Set topbar user info
   var av=document.getElementById('u-av');
@@ -2903,7 +3218,62 @@ const AGENTS=[
 ];
 
 var SWAPS=[];  // populated from Sheets via apiPull
+var EMPS=[
+  {pw:'fou@4501',name:'Fouzeyah Erzouqi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'sar@4502',name:'Sarah Alqattan',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'dan@4503',name:'Danah Alenezi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'yas@4504',name:'Yasmine Maraafi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'ezz@4505',name:'Ezz Alsalem',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'abk@4506',name:'Abdullah Bakhsh',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'abz@4507',name:'Abdulaziz Bozobar',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'abr@4508',name:'Abdulrahman Abdullah',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'awm@4509',name:'Abdullah W Mohammad',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'ash@4510',name:'Abdollah Shaverdi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'azu@4511',name:'Abdulaziz Alzuabi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'alf@4512',name:'Abdulrahman Alfassam',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'als@4513',name:'Abdulwahab Alsaber',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'slj@4514',name:'Saleh Aljabri',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'alw@4515',name:'Ali Alwayel',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'anq@4516',name:'Ahmad Alnajdi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'sha@4517',name:'Ali ShahAli',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'aye@4518',name:'Ayedh Alotaibi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'fah@4519',name:'Fahad Alabdullah',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'hsa@4520',name:'Hasan Ali',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'hkh@4521',name:'Hussain Alkhabbaz',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'msh@4522',name:'Mohammad Alshakhs',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'omr@4523',name:'Omar Almutairi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'osa@4524',name:'Omar Alsaeed',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'omm@4525',name:'Omar Mohammad',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'sah@4526',name:'Saad Alharbi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'slk@4527',name:'Sulaiman Alkhalaf',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'asr@4528',name:'Asrar Alattar',role:'Outbound Agent',dept:'Outbound',access:'agent'},
+  {pw:'lat@4529',name:'Latefah Alhouti',role:'Outbound Agent',dept:'Outbound',access:'agent'},
+  {pw:'ane@4530',name:'Ahmad Alenezi',role:'ITM Agent',dept:'ITM',access:'agent'},
+  {pw:'sbq@4531',name:'Salman Albaqshi',role:'ITM Agent',dept:'ITM',access:'agent'},
+  {pw:'dhr@4532',name:'Dhari Alshammari',role:'ITM Agent',dept:'ITM',access:'agent'},
+  {pw:'bdr@4533',name:'Badreyah Alruwayeh',role:'ITM Agent',dept:'ITM',access:'agent'},
+  {pw:'mrm@4534',name:'Mariam Almutairi',role:'ITM Agent',dept:'ITM',access:'agent'},
+  {pw:'arj@4535',name:'Abdullah Rajab',role:'ITM Agent',dept:'ITM',access:'agent'},
+  {pw:'ahm@4538',name:'Ahmed Nidah',role:'Wage Agent',dept:'Wage',access:'agent'},
+  {pw:'bil@4539',name:'Bilal Faisal',role:'Wage Agent',dept:'Wage',access:'agent'},
+  {pw:'fat@4540',name:'Fatemeh Mayahi',role:'Wage Agent',dept:'Wage',access:'agent'},
+  {pw:'nah@4541',name:'Nahla Ibrahem',role:'Wage Agent',dept:'Wage',access:'agent'},
+  {pw:'nas@3001',name:'Naser Bandar',role:'Assist TL',dept:'Supervisors',access:'atl'},
+  {pw:'haj@3002',name:'Hasan Alajmi',role:'Assist TL',dept:'Supervisors',access:'atl'},
+  {pw:'ath@3003',name:'Athoub Alnoufal',role:'Assist TL',dept:'Supervisors',access:'atl'},
+  {pw:'shq@2001',name:'Shouq Alkandari',role:'Team Leader',dept:'Supervisors',access:'readonly'},
+  {pw:'ano@2002',name:'Alanoud Alotaibi',role:'Team Leader',dept:'Supervisors',access:'readonly'},
+  {pw:'mot@2003',name:'Mohammad Alothman',role:'Team Leader',dept:'Supervisors',access:'readonly'},
+  {pw:'ara@4536',name:'Abdulrahman Alahmad',role:'Back Office',dept:'Back Office',access:'readonly'},
+  {pw:'nhr@4537',name:'Nourah Alhazzani',role:'Back Office',dept:'Back Office',access:'readonly'},
+  {pw:'ftm@4542',name:'Fatmah Alhamar',role:'QA',dept:'Quality',access:'readonly'},
+  {pw:'brb@4543',name:'Badreyah BoRubayea',role:'QA',dept:'Quality',access:'readonly'},
+  {pw:'mqr@1001',name:'Mohammad Abdulraheem',role:'QA Supervisor',dept:'Quality',access:'readonly'},
+  {pw:'tal@0001',name:'Talal Al Jarki',role:'Head of CC',dept:'Management',access:'readonly'},
+  {pw:'KIB@admin2026',name:'Admin',role:'System Admin',dept:'Management',access:'admin'},
+];
 var LEAVES=[]; // populated from Sheets via apiPull
+
 var ACTLOG=[]; // populated from Sheets via apiPull
 const attSel={};
 
@@ -3089,6 +3459,7 @@ function showPage(id){
   sp_currentPage=id;
   // Lazy render
   if(id==='home') sp_renderHome();
+  if(id==='settings') renderProfilePage();
   if(id==='schedule') renderMySchedule();
   if(id==='fullsch') renderFullSchedule();
   if(id==='requests') renderRequests();
@@ -3213,7 +3584,7 @@ function renderMySchedule(){
     var work=!['OFF','P-Leave','Leave','Sick'].includes(s);
     h+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.04);':'')+'">'
       +'<td style="padding:10px 12px;font-size:12px;">'+(isToday?'<span style="font-size:9px;font-weight:800;color:var(--navy);background:rgba(13,92,166,.1);border-radius:4px;padding:2px 5px;margin-right:4px;">TODAY</span>':'')+DL[i]+'</td>'
-      +'<td style="padding:10px 12px;">'+pill(isW?'Weekend':s==='OFF'?'Off':work?'Working':'Leave/Sick',isW||s==='OFF'?'p-gray':work?'p-green':'p-red')+'</td>'
+      +'<td style="padding:10px 12px;">'+pill(isW&&!work?'Weekend':s==='OFF'?'Off':work?'Working':'Leave/Sick',isW&&!work||s==='OFF'?'p-gray':work?'p-green':'p-red')+'</td>'
       +'<td style="padding:10px 12px;"><span class="sc '+scCls(s)+'">'+s+'</span></td></tr>';
   });
   h+='</tbody></table>';
@@ -3905,8 +4276,23 @@ function srfGoStep(n){
   document.getElementById('srf'+n).classList.add('on');
   srfStep=n;
   srfUpdateProgress();
-  // Scroll to top of the page
-  document.getElementById('pg-schedule').scrollIntoView({behavior:'smooth',block:'start'});
+  // Scroll step into view
+  var pg=document.getElementById('pg-schedule');
+  var uContent=document.getElementById('u-content');
+  if(pg){
+    if(uContent){
+      uContent.scrollTop=0;
+    } else {
+      window.scrollTo(0,0);
+    }
+  }
+  // For review step, also make sure submit btn is visible
+  if(n===3){
+    setTimeout(function(){
+      var btn=document.getElementById('srfSubmitBtn');
+      if(btn) btn.scrollIntoView({behavior:'smooth',block:'nearest'});
+    },200);
+  }
 }
 
 function srfUpdateProgress(){
@@ -4006,7 +4392,7 @@ document.addEventListener('click',function(e){
   if(p&&p.classList.contains('open')&&!p.contains(e.target)&&b&&!b.contains(e.target))p.classList.remove('open');
 });
 
-document.getElementById('pinInput').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+var _pin=document.getElementById('pinInput');if(_pin)_pin.addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 
 
 // SP init: bridge from shared me to SP me object format
@@ -4063,7 +4449,7 @@ function sp_init(){
 // ════════════════════════════════════════════════════════
 // patchBsTopbar called in launchBreakSystem
 
-document.getElementById('sp2-pwInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
+var _sp2pw=document.getElementById('sp2-pwInput');if(_sp2pw)_sp2pw.addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
 document.addEventListener('click',function(e){
   var p=document.getElementById('sp2-npanel');
   var bell=document.querySelector('.bellbtn');
@@ -4083,71 +4469,111 @@ var _uSection = 'home';  // current active section
 // ── Navigate to a section ────────────────────────────────────────
 function uNav(section, subPage){
   _uSection = section;
-
-  // Update nav buttons
-  ['home','breaks','schedule','requests','team','wfm'].forEach(function(s){
-    var btn=document.getElementById('unb-'+s);
-    if(btn) btn.classList.toggle('on', s===section);
-  });
-
-  // Hide all content areas
-  document.getElementById('u-home').classList.remove('on');
   var bsApp=document.getElementById('bs-app');
   var spApp=document.getElementById('sp-app');
-  if(bsApp) bsApp.style.display='none';
-  if(spApp) spApp.style.display='none';
+  var uHome=document.getElementById('u-home');
 
-  // Update unified topbar title
-  var titles={home:'WFM Portal',breaks:'Break System',schedule:'Schedule Portal',
-    requests:'My Requests',team:'Team Management',wfm:'WFM Dashboard'};
+  // Hide all
+  if(uHome) uHome.classList.remove('on');
+  if(bsApp){bsApp.style.display='none';bsApp.classList.remove('u-active');}
+  if(spApp){spApp.style.display='none';spApp.classList.remove('u-active');}
+
+  // Topbar title
+  var titles={home:'KIB WFM Portal',breaks:'Break System',schedule:'My Schedule',
+    requests:'Requests',team:'Team',wfm:'Dashboard',me:'My Profile'};
   var tEl=document.getElementById('u-title');
-  if(tEl) tEl.textContent=titles[section]||'Staff Portal';
+  if(tEl) tEl.textContent=titles[section]||'WFM Portal';
 
-  // Show selected section
+  // Back button
+  var backBtn=document.getElementById('u-back');
+  if(backBtn) backBtn.classList.toggle('show', section!=='home');
+
+  // Nav highlight
+  ['home','breaks','schedule','requests','team','wfm','me'].forEach(function(s){
+    var b=document.getElementById('unb-'+s);
+    if(b) b.classList.toggle('on', s===section);
+  });
+
   if(section==='home'){
-    document.getElementById('u-home').classList.add('on');
+    if(uHome) uHome.classList.add('on');
     renderUnifiedHome();
 
   }else if(section==='breaks'){
-    if(bsApp) bsApp.style.display='block';
-    // Make sure BS is initialised
-    if(document.getElementById('sApp').className!=='on'){
-      document.getElementById('sApp').className='on';
-      if(typeof renderStrip==='function') renderStrip();
-    }
+    if(bsApp){bsApp.style.display='block';bsApp.classList.add('u-active');}
+    var sApp=document.getElementById('sApp');
+    if(sApp&&sApp.className!=='on') sApp.className='on';
+    if(typeof renderStrip==='function') renderStrip();
     if(typeof renderAll==='function') renderAll();
+    _uInjectBsNav();
     if(typeof gp==='function') gp(subPage||'home');
+    _uBsTabOn(subPage||'home');
 
-  }else if(section==='schedule'){
-    if(spApp) spApp.style.display='block';
-    var spSApp=document.getElementById('sp-sApp');
-    if(spSApp) spSApp.style.display='block';
-    if(typeof showPage==='function') showPage(subPage||'schedule');
-
-  }else if(section==='requests'){
-    if(spApp) spApp.style.display='block';
-    var spSApp2=document.getElementById('sp-sApp');
-    if(spSApp2) spSApp2.style.display='block';
-    if(typeof showPage==='function') showPage('requests');
-
-  }else if(section==='team'){
-    if(spApp) spApp.style.display='block';
-    var spSApp3=document.getElementById('sp-sApp');
-    if(spSApp3) spSApp3.style.display='block';
-    if(typeof showPage==='function') showPage('team');
-
-  }else if(section==='wfm'){
-    if(spApp) spApp.style.display='block';
-    var spSApp4=document.getElementById('sp-sApp');
-    if(spSApp4) spSApp4.style.display='block';
-    if(typeof showPage==='function') showPage('dashboard');
+  }else if(section==='schedule'||section==='requests'||section==='team'||section==='wfm'||section==='me'){
+    if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+    var sp=document.getElementById('sp-sApp');
+    if(sp){sp.style.display='block';sp.classList.add('on');}
+    _uInjectSpNav();
+    var pageMap={schedule:'schedule',requests:'requests',team:'team',wfm:'dashboard',me:'settings'};
+    var pg = subPage || pageMap[section] || 'schedule';
+    if(typeof showPage==='function') showPage(pg);
+    _uSpTabOn(pg);
   }
 
-  // Update badges after nav
-  uUpdateBadges();
+  if(typeof uUpdateBadges==='function') uUpdateBadges();
 }
 
-// ── Render unified home page ─────────────────────────────────────
+function _uInjectBsNav(){
+  if(document.getElementById('u-bs-nav')) return;
+  var sApp=document.getElementById('sApp'); if(!sApp) return;
+  var nav=document.createElement('div');
+  nav.id='u-bs-nav'; nav.className='u-subnav';
+  [{id:'home',ic:'🏠',lb:'Home'},{id:'book',ic:'☕',lb:'Book Break'},
+   {id:'swap',ic:'🔄',lb:'Swaps'},{id:'hist',ic:'📋',lb:'History'}].forEach(function(t){
+    if(!( (t.id==='swap'||t.id==='hist') )){
+      var b=document.createElement('button');
+      b.className='u-stab'; b.id='ubst-'+t.id;
+      b.innerHTML='<span>'+t.ic+'</span><span>'+t.lb+'</span>';
+      b.onclick=(function(id){return function(){if(typeof gp==='function')gp(id);_uBsTabOn(id);};})(t.id);
+      nav.appendChild(b);
+    } else {
+      var b=document.createElement('button');
+      b.className='u-stab'; b.id='ubst-'+t.id;
+      b.innerHTML='<span>'+t.ic+'</span><span>'+t.lb+'</span>';
+      b.onclick=(function(id){return function(){if(typeof gp==='function')gp(id);_uBsTabOn(id);};})(t.id);
+      nav.appendChild(b);
+    }
+  });
+  var firstPg=sApp.querySelector('.pg');
+  if(firstPg) sApp.insertBefore(nav,firstPg); else sApp.prepend(nav);
+}
+function _uBsTabOn(id){
+  document.querySelectorAll('.u-stab[id^="ubst-"]').forEach(function(b){
+    b.classList.toggle('on',b.id==='ubst-'+id);});
+}
+function _uInjectSpNav(){
+  if(document.getElementById('u-sp-nav')) return;
+  var sApp=document.getElementById('sp-sApp'); if(!sApp) return;
+  var nav=document.createElement('div');
+  nav.id='u-sp-nav'; nav.className='u-subnav';
+  var tabs=[{id:'schedule',ic:'📅',lb:'Schedule'},{id:'requests',ic:'📝',lb:'Requests'}];
+  if(typeof canDash==='function'&&canDash()) tabs.push({id:'dashboard',ic:'📊',lb:'Dashboard'});
+  if(typeof canTeam==='function'&&canTeam()) tabs.push({id:'team',ic:'👥',lb:'Team'});
+  if(typeof canAdmin==='function'&&canAdmin()) tabs.push({id:'admin',ic:'⚙️',lb:'Admin'});
+  tabs.push({id:'settings',ic:'👤',lb:'Profile'});
+  tabs.forEach(function(t){
+    var b=document.createElement('button');
+    b.className='u-stab'; b.id='uspt-'+t.id;
+    b.innerHTML='<span>'+t.ic+'</span><span>'+t.lb+'</span>';
+    b.onclick=(function(id){return function(){if(typeof showPage==='function')showPage(id);_uSpTabOn(id);};})(t.id);
+    nav.appendChild(b);
+  });
+  var firstPg=sApp.querySelector('.pg');
+  if(firstPg) sApp.insertBefore(nav,firstPg); else sApp.prepend(nav);
+}
+function _uSpTabOn(id){
+  document.querySelectorAll('.u-stab[id^="uspt-"]').forEach(function(b){
+    b.classList.toggle('on',b.id==='uspt-'+id);});
+}
 function renderUnifiedHome(){
   if(!me) return;
   var d   = gd();
@@ -4162,28 +4588,30 @@ function renderUnifiedHome(){
   else greet='Good evening';
   var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  var grEl=document.getElementById('u-greet-text');
-  var dtEl=document.getElementById('u-greet-date');
-  if(grEl) grEl.textContent=greet+' '+me.name.split(' ')[0]+' 👋';
+  var grEl=document.getElementById('u-hero-greet');
+  var nmEl=document.getElementById('u-hero-name');
+  var dtEl=document.getElementById('u-hero-date');
+  if(grEl) grEl.textContent=greet+',';
+  if(nmEl) nmEl.textContent=me.name.split(' ')[0]+' 👋';
   if(dtEl) dtEl.textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
 
   // ── Today's shift ────────────────────────────────────────────────
   var agEnt = AGENTS.find(function(a){return a.n===me.name;});
   var ts    = agEnt ? gTodayS(agEnt) : '—';
   var isOff = ['OFF','P-Leave','Leave','Sick'].indexOf(ts)>=0;
-  var stEl  = document.getElementById('u-shift-time');
-  var sbEl  = document.getElementById('u-shift-sub');
-  var icEl  = document.getElementById('u-shift-icon');
-  var ssEl  = document.getElementById('u-shift-status');
-  var scEl  = document.getElementById('u-shift-card');
+  var stEl  = document.getElementById('u-hero-shift-time');
+  var sbEl  = document.getElementById('u-hero-shift-sub');
+  var icEl  = document.getElementById('u-hero-shift-icon');
+  var ssEl  = document.getElementById('u-hero-shift-status');
+  var scEl  = document.getElementById('u-hero-shift');
   if(stEl){
     stEl.textContent = ts;
     sbEl.textContent = isOff?'No shift today':'Your working hours today';
     icEl.textContent = ts==='Sick'?'🏥':ts==='Leave'||ts==='P-Leave'?'🌴':isOff?'😴':'💼';
     ssEl.textContent = ts==='Sick'?'Sick':ts==='Leave'||ts==='P-Leave'?'On Leave':isOff?'Day Off':'Working';
     scEl.style.background = isOff
-      ? 'linear-gradient(135deg,#555,#333)'
-      : 'linear-gradient(135deg,var(--navy2) 0%,var(--navy) 60%,#0A7FAE 100%)';
+      ? 'rgba(100,100,100,.15)'
+      : 'rgba(255,255,255,.1)';
   }
 
   // ── Break balance ────────────────────────────────────────────────
@@ -4192,47 +4620,51 @@ function renderUnifiedHome(){
   var rem   = Math.max(daily-used,0);
   var pct   = Math.min(used/daily*100,100);
   var el    = function(id){return document.getElementById(id);};
-  if(el('u-break-num'))  el('u-break-num').textContent  = rem+' min left';
-  if(el('u-break-used')) el('u-break-used').textContent = used+' min used';
-  if(el('u-break-total'))el('u-break-total').textContent= daily+' min total';
-  if(el('u-break-prog')) el('u-break-prog').style.width = pct+'%';
-  if(el('u-shift-label'))el('u-shift-label').textContent= 'Shift: '+fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
+  if(el('u-balance-num'))  el('u-balance-num').textContent  = rem+' min left';
+  if(el('u-balance-used')) el('u-balance-used').textContent = used+' min used';
+  if(el('u-balance-total'))el('u-balance-total').textContent= daily+' min total';
+  if(el('u-balance-fill')) el('u-balance-fill').style.width = pct+'%';
+  if(el('u-hero-shift-label'))el('u-hero-shift-label').textContent= fmt12(me.shift)+' – '+fmt12(me.shiftEnd);
 
   // Active / booked break
   var b = typeof myBreak==='function' ? myBreak(d) : null;
   if(b && b.status==='active'){
-    if(el('u-active-break')) el('u-active-break').style.display='block';
-    if(el('u-booked-break')) el('u-booked-break').style.display='none';
-    // Timer updated by tickTimer
+    if(el('u-active-break')) el('u-active-break').classList.add('on');
+    if(el('u-booked-break')) el('u-booked-break').classList.remove('on');
   } else if(b && b.status==='booked'){
-    if(el('u-active-break')) el('u-active-break').style.display='none';
+    if(el('u-active-break')) el('u-active-break').classList.remove('on');
     if(el('u-booked-break')){
-      el('u-booked-break').style.display='block';
+      el('u-booked-break').classList.add('on');
       el('u-booked-time').textContent='Booked for '+fmt12(b.breakStart)+' · '+b.duration+' min';
     }
   } else {
-    if(el('u-active-break')) el('u-active-break').style.display='none';
-    if(el('u-booked-break')) el('u-booked-break').style.display='none';
+    if(el('u-active-break')) el('u-active-break').classList.remove('on');
+    if(el('u-booked-break')) el('u-booked-break').classList.remove('on');
   }
 
   // ── Week mini grid ────────────────────────────────────────────────
-  var wkEl = el('u-week-grid');
+  var wkEl = el('u-wk-grid');
   if(wkEl && agEnt){
-    var wh='<div style="display:grid;grid-template-columns:repeat('+DATES.length+',1fr);gap:3px;">';
+    var wh='<div class="u-week-inner">';
     DATES.forEach(function(date,i){
       var sch  = agEnt.sch[i]||'OFF';
       var isT  = date===TODAY;
       var isWk = WKND.indexOf(i)>=0;
+      var isSick = sch==='Sick';
+      var isLeave= sch==='Leave'||sch==='P-Leave';
       var off  = ['OFF','P-Leave','Leave','Sick'].indexOf(sch)>=0;
-      var bg   = isT?'var(--navy)':isWk?'var(--bg)':off?'var(--rbg)':'var(--tealbg)';
-      var clr  = isT?'#fff':isWk?'var(--t3)':off?'var(--red)':'var(--teal)';
-      var bdr  = isT?'2px solid var(--navy)':'1px solid var(--border)';
       var dl   = DL[i]?DL[i].split(' '):['-','-'];
-      wh+='<div style="border-radius:8px;padding:5px 2px;text-align:center;background:'+bg+
-        ';border:'+bdr+';min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;">'+
-        '<div style="font-size:8px;font-weight:700;color:'+clr+';opacity:.7">'+dl[0]+'</div>'+
-        '<div style="font-size:11px;font-weight:900;color:'+clr+'">'+dl[1]+'</div>'+
-        '<div style="font-size:7px;color:'+clr+';opacity:.8;margin-top:1px;">'+(isWk?'Off':off?'—':sch.split('-')[0])+'</div>'+
+      var cls  = 'u-week-day';
+      if(isT)       cls+=' today';
+      else if(isSick) cls+=' sick';
+      else if(isLeave)cls+=' leave';
+      else if(isWk||off) cls+=' off';
+      else           cls+=' working';
+      var shiftShort = off?'—':sch.split('-')[0];
+      wh+='<div class="'+cls+'" title="'+dl[0]+' '+dl[1]+': '+sch+'">'+
+        '<div class="wd-dow">'+dl[0]+'</div>'+
+        '<div class="wd-d">'+dl[1]+'</div>'+
+        '<div class="wd-n">'+shiftShort+'</div>'+
         '</div>';
     });
     wkEl.innerHTML=wh+'</div>';
@@ -4240,14 +4672,14 @@ function renderUnifiedHome(){
 
   // ── Announcement ─────────────────────────────────────────────────
   var ann = s.announce||'';
-  var annEl=el('u-announce');
+  var annEl=el('u-ann-bar');
   if(annEl){
-    if(ann.trim()){annEl.style.display='block';el('u-announce-text').textContent=ann;}
-    else annEl.style.display='none';
+    if(ann.trim()){annEl.classList.add('on');if(el('u-ann-text'))el('u-ann-text').textContent=ann;}
+    else annEl.classList.remove('on');
   }
 
   // ── Team on break now ─────────────────────────────────────────────
-  var tnEl = el('u-team-now');
+  var tnEl = el('u-team-list');
   if(tnEl){
     var nm = typeof toMin==='function'?toMin(nowHH()):0;
     var sm = me.shift?toMin(me.shift):0;
@@ -4259,17 +4691,21 @@ function renderUnifiedHome(){
       return bsAdj<=adjNm&&bsAdj+brk.duration>adjNm;
     }):[];
     if(!onNow.length){
-      tnEl.innerHTML='<div class="empty" style="padding:12px"><div class="ep">No one on break right now ✓</div></div>';
+      tnEl.innerHTML='<div style="padding:18px 16px;text-align:center;"><div style="font-size:28px;margin-bottom:6px;">✅</div><div style="font-size:12px;font-weight:600;color:#8AAACF;">No one on break right now</div></div>';
     } else {
       var th='';
       onNow.forEach(function(brk){
         var isAct=brk.status==='active';
-        th+='<div class="histrow"><div style="width:34px;height:34px;border-radius:9px;background:'+avc(brk.agent)+
-          ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0">'+
+        var elapsed=isAct&&brk.startedAt?Math.floor((Date.now()-brk.startedAt)/60000)+' min':'—';
+        th+='<div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #EEF4FB;gap:11px;">'+
+          '<div style="width:36px;height:36px;border-radius:10px;background:'+avc(brk.agent)+
+          ';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">'+
           ini(brk.agent)+'</div>'+
-          '<div class="hinfo"><div class="htitle">'+brk.agent+'</div>'+
-          '<div class="hmeta">'+fmt12(brk.breakStart)+' · '+brk.duration+' min</div></div>'+
-          '<span class="pill '+(isAct?'p-amber':'p-navy')+'"><span class="pdot"></span>'+(isAct?'Active':'Booked')+'</span></div>';
+          '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:#0A2E5A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+brk.agent+'</div>'+
+          '<div style="font-size:11px;color:#8AAACF;margin-top:1px;">'+fmt12(brk.breakStart)+' · '+brk.duration+' min'+(isAct?' · '+elapsed+' elapsed':'')+'</div></div>'+
+          '<div style="font-size:10px;font-weight:700;padding:4px 9px;border-radius:6px;background:'+(isAct?'#FEF3CD':'#EEF4FB')+';color:'+(isAct?'#B86B00':'#4A6D99')+';">'+
+          (isAct?'Active':'Booked')+'</div>'+
+          '</div>';
       });
       tnEl.innerHTML=th;
     }
@@ -4295,10 +4731,10 @@ function renderUnifiedHome(){
     }
     var qh='';
     cards.forEach(function(card){
-      qh+='<div class="card" style="cursor:pointer;text-align:center;padding:15px 10px;border:1.5px solid var(--border);" onclick="'+card.fn+'">'+
-        '<div style="font-size:24px;margin-bottom:6px;">'+card.ic+'</div>'+
-        '<div style="font-size:12px;font-weight:700;color:var(--t1);">'+card.title+'</div>'+
-        '<div style="font-size:10px;color:var(--t3);margin-top:2px;">'+card.sub+'</div>'+
+      qh+='<div class="u-qcard" onclick="'+card.fn+'">'+
+        '<div class="u-qcard-ic">'+card.ic+'</div>'+
+        '<div class="u-qcard-title">'+card.title+'</div>'+
+        '<div class="u-qcard-sub">'+card.sub+'</div>'+
         '</div>';
     });
     qEl.innerHTML=qh;
@@ -4388,39 +4824,111 @@ function doUnifiedSignOut(){
   document.getElementById('hub-login').style.display='flex';
 }
 
-
-
-var _ttOrig = typeof tickTimer === "function" ? tickTimer : null;
-if(_ttOrig){
-  tickTimer = function(){
-    _ttOrig();
-    var d=gd(); var b=typeof myBreak==="function"?myBreak(d):null;
-    var uab=document.getElementById("u-active-break");
+// ── Patch tickTimer to update unified home ─────────────────────────
+(function(){
+  var orig=typeof tickTimer==='function'?tickTimer:null;
+  if(!orig) return;
+  tickTimer=function(){
+    orig();
+    var d=gd(); var b=typeof myBreak==='function'?myBreak(d):null;
+    var uab=document.getElementById('u-active-break');
     if(!uab) return;
-    if(b&&b.status==="active"&&b.startedAt){
-      uab.classList.add("on");
+    if(b&&b.status==='active'&&b.startedAt){
+      uab.classList.add('on');
       var elap=Math.floor((Date.now()-b.startedAt)/1000);
-      var mm=Math.floor(elap/60),ss=elap%60;
-      var te=document.getElementById("u-break-timer");
-      if(te) te.textContent=String(mm).padStart(2,"0")+":"+String(ss).padStart(2,"0");
-      var pct=Math.min(elap/(b.duration*60)*100,100);
-      var pb=document.getElementById("u-break-prog-bar");
-      if(pb) pb.style.width=pct+"%";
-    } else { uab.classList.remove("on"); }
+      var te=document.getElementById('u-tmr');
+      if(te) te.textContent=String(Math.floor(elap/60)).padStart(2,'0')+':'+String(elap%60).padStart(2,'0');
+      var pb=document.getElementById('u-tmr-bar');
+      if(pb) pb.style.width=Math.min(elap/(b.duration*60)*100,100)+'%';
+    } else { uab.classList.remove('on'); }
   };
-}
-var _setSyO = typeof setSy === "function" ? setSy : null;
-if(_setSyO){
-  setSy = function(ok){
-    _setSyO(ok);
-    var usd=document.getElementById("u-syncdot");
-    if(usd) usd.className="u-syncdot"+(ok?" ok":"");
-  };
-}
+})();
 
-document.getElementById('pwInput').addEventListener('keydown',function(e){if(e.key==='Enter')checkPw();});
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&me){apiPull();setTimeout(renderUnifiedHome,600);}});
-window.addEventListener('focus',function(){if(me){apiPull();setTimeout(renderUnifiedHome,600);}});
+// ── Patch setSy to update unified sync dot ─────────────────────────
+(function(){
+  var orig=typeof setSy==='function'?setSy:null;
+  if(!orig) return;
+  setSy=function(ok){
+    orig(ok);
+    var usd=document.getElementById('u-syncdot');
+    if(usd) usd.className='u-syncdot'+(ok?' ok':'');
+  };
+})();
+
+// ── Patch renderAll to refresh unified home if open ────────────────
+(function(){
+  var orig=typeof renderAll==='function'?renderAll:null;
+  if(!orig) return;
+  renderAll=function(){
+    orig();
+    if(typeof uUpdateBadges==='function') uUpdateBadges();
+    var h=document.getElementById('u-home');
+    if(h&&h.classList.contains('on')&&typeof renderUnifiedHome==='function') renderUnifiedHome();
+  };
+})();
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    var s1=document.getElementById('step1');
+    if(s1&&s1.classList.contains('on')) checkPw();
+  }
+});
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'&&me){apiPull();setTimeout(renderUnifiedHome,500);}
+});
+
+
+function renderProfilePage(){
+  if(!me) return;
+  var d=gd(); var s=d.settings||{}; var daily=s.dailyMin||45;
+  // -- Break usage today
+  var used=schedMins(me.n||me.name,d); var rem=Math.max(daily-used,0);
+  var pct=Math.min(used/daily*100,100);
+  var myBrks=tdb(d).filter(function(b){return b.agent===(me.n||me.name)&&b.status!=='cancelled';});
+  var bEl=document.getElementById('prof-break-body');
+  if(bEl){
+    var bh='<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;">'      +'<div><div style="font-size:22px;font-weight:900;color:var(--navy);">'+rem+' min</div><div style="font-size:11px;color:var(--t2);">remaining today</div></div>'      +'<div style="text-align:right;font-size:12px;color:var(--t2);">'+used+' used / '+daily+' total</div></div>'      +'<div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:10px;">'      +'<div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--teal),var(--navy));border-radius:4px;transition:width .5s;"></div></div>';
+    if(myBrks.length){
+      bh+='<div style="font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Today&#39;s Breaks</div>';
+      myBrks.forEach(function(b){
+        var sc=b.status==='done'?'p-green':b.status==='active'?'p-amber':b.status==='booked'?'p-navy':'p-red';
+        bh+='<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);">'          +'<div style="display:flex;align-items:center;gap:8px;">'          +'<span style="font-size:16px;">'+(b.status==='done'?'&#x2705;':b.status==='active'?'&#x2615;':'&#x1F4C5;')+'</span>'          +'<div><div style="font-size:12px;font-weight:700;">'+fmt12(b.breakStart)+'</div><div style="font-size:10px;color:var(--t2);">'+b.duration+' min</div></div></div>'          +'<span class="pill '+sc+'" style="font-size:9px;">'+b.status.charAt(0).toUpperCase()+b.status.slice(1)+'</span></div>';
+      });
+    } else { bh+='<div style="font-size:12px;color:var(--t3);text-align:center;padding:8px 0;">No breaks booked today</div>'; }
+    bEl.innerHTML=bh;
+  }
+  // -- Attendance (from schedule)
+  var attEl=document.getElementById('prof-att-body');
+  if(attEl&&me.sch){
+    var ah='<table style="width:100%;border-collapse:collapse;">';
+    ah+='<thead><tr style="background:var(--bg);">'      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Date</th>'      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Shift</th>'      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Status</th>'      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:right;">Breaks</th>'      +'</tr></thead><tbody>';
+    DATES.forEach(function(dt,i){
+      var sch=me.sch[i]||'OFF';
+      var work=!['OFF','P-Leave','Leave','Sick'].includes(sch);
+      var isWknd=WKND.includes(i);
+      var isToday=dt===TODAY;
+      var statusLabel=isWknd&&!work?'Weekend':sch==='OFF'?'Off':work?'Working':'Leave/Sick';
+      var statusCls=isWknd&&!work||sch==='OFF'?'p-gray':work?'p-green':'p-red';
+      // Count breaks that day
+      var dayBreaks=tdb(d).filter(function(b){
+        return b.agent===(me.n||me.name)&&b.breakDate===dt&&b.status!=='cancelled';
+      });
+      ah+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.04);':'')+'">'        +'<td style="padding:8px 10px;font-size:11px;">'+(isToday?'<span style="font-size:8px;background:rgba(13,92,166,.1);color:var(--navy);border-radius:3px;padding:1px 4px;margin-right:3px;">TODAY</span>':'')+DL[i]+'</td>'        +'<td style="padding:8px 10px;"><span class="sc '+scCls(sch)+'" style="font-size:11px;">'+sch+'</span></td>'        +'<td style="padding:8px 10px;">'+pill(statusLabel,statusCls)+'</td>'        +'<td style="padding:8px 10px;text-align:right;font-size:11px;color:var(--t2);">'+(dayBreaks.length?dayBreaks.map(function(b){return b.duration+'m';}).join(', '):'&mdash;')+'</td>'        +'</tr>';
+    });
+    ah+='</tbody></table>';
+    attEl.innerHTML=ah;
+  }
+  // -- Swap history
+  var swEl=document.getElementById('prof-swap-body');
+  if(swEl){
+    var mine=SWAPS.filter(function(s){return s.from===(me.n||me.name)||s.to===(me.n||me.name);});
+    if(!mine.length){swEl.innerHTML='<div style="padding:14px;text-align:center;font-size:12px;color:var(--t3);">No swap requests</div>';return;}
+    swEl.innerHTML=mine.map(function(sw){
+      var isFrom=sw.from===(me.n||me.name);
+      return '<div style="padding:11px 13px;border-bottom:1px solid var(--border);">'        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'        +'<span style="font-size:11px;font-weight:700;color:var(--t2);">'+sw.id+' &middot; '+sw.date+'</span>'        +pill(sw.status.toUpperCase(),sw.status==='approved'?'p-green':sw.status==='rejected'?'p-red':'p-amber')+'</div>'        +'<div style="font-size:12px;font-weight:600;color:var(--t1);">'+(isFrom?'Swap request to '+sw.to:'Swap request from '+sw.from)+'</div>'        +'<div style="font-size:11px;color:var(--t2);margin-top:3px;">&#x1F4DD; '+sw.reason+'</div>'        +'</div>';
+    }).join('');
+  }
+}
 </script>
 </body>
 </html>
