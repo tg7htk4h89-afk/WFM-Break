@@ -1336,6 +1336,39 @@ body{background:#0a3d7a;}
   .u-qcard-ic{font-size:24px;}
 }
 
+
+/* ── Attendance Feature ───────────────────────────────────── */
+.att-page-tabs{display:flex;gap:6px;margin-bottom:12px;}
+.att-ptab{flex:1;padding:9px 12px;border:1.5px solid var(--border);background:var(--white);border-radius:var(--r);font-size:12px;font-weight:700;color:var(--t2);cursor:pointer;transition:all .15s;}
+.att-ptab.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+.att-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:10px;}
+.att-date-lbl{font-size:15px;font-weight:800;color:var(--navy);}
+.att-save-all-btn{padding:8px 14px;background:var(--teal);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.att-dept-tabs{margin-bottom:10px;}
+.att-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:10px;overflow:hidden;}
+.att-card-head{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--border);}
+.att-av{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
+.att-name{font-size:13px;font-weight:800;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.att-shift-badge{font-size:10px;font-weight:700;color:var(--t2);background:var(--bg);padding:3px 7px;border-radius:6px;white-space:nowrap;}
+.att-saved-pill{font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;}
+.att-btns{display:flex;flex-wrap:wrap;gap:6px;padding:10px 13px;}
+.att-btn{padding:6px 11px;border:1.5px solid var(--border);background:var(--white);border-radius:20px;font-size:11px;font-weight:700;color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.att-btn.sel-ontime{background:var(--gbg);color:var(--green);border-color:var(--green);}
+.att-btn.sel-late{background:var(--abg);color:var(--amber);border-color:var(--amber);}
+.att-btn.sel-sick{background:var(--rbg);color:var(--red);border-color:var(--red);}
+.att-btn.sel-leave{background:rgba(13,92,166,.08);color:var(--navy);border-color:var(--navy);}
+.att-btn.sel-change{background:var(--tealbg);color:var(--teal);border-color:var(--teal);}
+.att-btn.sel-absent{background:#fdf0f0;color:#8B0000;border-color:#c0392b;}
+.att-extra{padding:0 13px 11px;display:none;}
+.att-extra.show{display:block;}
+.att-extra-label{font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.att-time-inp{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--t1);background:var(--bg);outline:none;}
+.att-note-inp{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--t1);background:var(--bg);resize:none;min-height:50px;outline:none;}
+.att-save-row{padding:8px 13px 11px;display:flex;gap:7px;}
+.att-save-row button{flex:1;padding:8px;border:none;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;}
+.att-save-btn{background:var(--navy);color:#fff;}
+.att-clear-btn{background:var(--bg);color:var(--t2);}
+.att-saved-badge{background:var(--gbg);border:1px solid var(--green);border-radius:var(--r);padding:8px 12px;font-size:11px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:6px;margin:0 13px 11px;}
 </style>
 </head>
 <body>
@@ -1602,22 +1635,45 @@ body{background:#0a3d7a;}
 
   <!-- TEAM -->
   <div class="pg" id="pg-team">
-    <div class="con-meter" id="conMeter">
-      <div style="flex:1">
-        <div class="con-title" id="conTitle">0 of 2 on break now</div>
-        <div class="con-sub" id="conSub">All agents available</div>
-        <div class="con-dots" id="conDots"></div>
+    <!-- Team page top tabs -->
+    <div class="att-page-tabs">
+      <button class="att-ptab on" id="atpt-team" onclick="attSwitchTab('team')">👥 Team</button>
+      <button class="att-ptab" id="atpt-att" onclick="attSwitchTab('att')">📋 Attendance</button>
+    </div>
+
+    <!-- ── TEAM VIEW panel ── -->
+    <div id="att-team-view">
+      <div class="con-meter" id="conMeter">
+        <div style="flex:1">
+          <div class="con-title" id="conTitle">0 of 2 on break now</div>
+          <div class="con-sub" id="conSub">All agents available</div>
+          <div class="con-dots" id="conDots"></div>
+        </div>
+        <div class="con-big" id="conBig" style="color:var(--green)">0</div>
       </div>
-      <div class="con-big" id="conBig" style="color:var(--green)">0</div>
+      <div class="team-summary">
+        <div class="tscard c-navy"><div class="tsnum" id="ts-total">0</div><div class="tslbl">Total Agents</div></div>
+        <div class="tscard c-amber"><div class="tsnum" id="ts-onbrk">0</div><div class="tslbl">On Break</div></div>
+        <div class="tscard c-green"><div class="tsnum" id="ts-online">0</div><div class="tslbl">Online Today</div></div>
+        <div class="tscard c-red"><div class="tsnum" id="ts-mins">0</div><div class="tslbl">Min Used Today</div></div>
+      </div>
+      <div class="ftabs" id="teamFilters"></div>
+      <div id="teamList"></div>
     </div>
-    <div class="team-summary">
-      <div class="tscard c-navy"><div class="tsnum" id="ts-total">0</div><div class="tslbl">Total Agents</div></div>
-      <div class="tscard c-amber"><div class="tsnum" id="ts-onbrk">0</div><div class="tslbl">On Break</div></div>
-      <div class="tscard c-green"><div class="tsnum" id="ts-online">0</div><div class="tslbl">Online Today</div></div>
-      <div class="tscard c-red"><div class="tsnum" id="ts-mins">0</div><div class="tslbl">Min Used Today</div></div>
+
+    <!-- ── ATTENDANCE panel ── -->
+    <div id="att-panel" style="display:none">
+      <div class="att-header">
+        <div>
+          <div class="att-date-lbl" id="att-date-lbl">Loading…</div>
+          <div style="font-size:11px;color:var(--t2);margin-top:2px;">Mark arrival status for your team</div>
+        </div>
+        <button class="att-save-all-btn" onclick="attSaveAll()">💾 Save All</button>
+      </div>
+      <div class="ftabs att-dept-tabs" id="att-dept-tabs"></div>
+      <div id="att-list"></div>
+      <div style="height:80px"></div>
     </div>
-    <div class="ftabs" id="teamFilters"></div>
-    <div id="teamList"></div>
   </div>
 
   <!-- SWAP -->
@@ -2366,8 +2422,9 @@ function _applyRemote(remote){
   if(Array.isArray(remote.swaps))  { SWAPS=remote.swaps; }
   if(Array.isArray(remote.leaves)) { LEAVES=remote.leaves; }
   if(Array.isArray(remote.actlog)) { ACTLOG=remote.actlog; }
+  if(Array.isArray(remote.attendance)) { ATT_LOG=remote.attendance; }
 
-  if((wasChanged||remote.swaps||remote.leaves)&&me&&me.n) renderAll();
+  if((wasChanged||remote.swaps||remote.leaves||remote.attendance)&&me&&me.n) renderAll();
 }
 
 // ── Sync indicator dot ──
@@ -3301,7 +3358,10 @@ var EMPS=[
 var LEAVES=[]; // populated from Sheets via apiPull
 
 var ACTLOG=[]; // populated from Sheets via apiPull
+var ATT_LOG=[]; // attendance records: {id,agent,date,status,note,newShift,markedBy,ts}
 const attSel={};
+var _attSelMap={}; // {agentId: {status, note, newShift}} - working selections before save
+var _attDeptFilter='';
 
 // Sheets config — all writes go through Apps Script API (no API key needed)
 // Direct Sheets API replaced by Apps Script proxy
@@ -3610,10 +3670,18 @@ function renderMySchedule(){
     var isToday=d===TODAY;
     var isW=WKND.includes(i);
     var work=!['OFF','P-Leave','Leave','Sick'].includes(s);
+    var attEntry=(isToday&&typeof attTodayStatus==='function')?attTodayStatus(me.n||me.name):null;
+    var attBadge='';
+    if(attEntry){var attSt=typeof ATT_STATUSES!=='undefined'?ATT_STATUSES.find(function(x){return x.k===attEntry.status;}):null;
+      attBadge=attSt?' <span class="pill '+attSt.pillCls+'" style="font-size:10px;">'+attSt.pillLbl+'</span>':'';
+    }
+    var dispShift=attEntry&&attEntry.newShift
+      ?('<span class="sc sc-teal">'+attEntry.newShift+'</span><span style="font-size:10px;color:var(--teal);"> ✎</span>')
+      :('<span class="sc '+scCls(s)+'">'+s+'</span>');
     h+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.04);':'')+'">'
-      +'<td style="padding:10px 12px;font-size:12px;">'+(isToday?'<span style="font-size:9px;font-weight:800;color:var(--navy);background:rgba(13,92,166,.1);border-radius:4px;padding:2px 5px;margin-right:4px;">TODAY</span>':'')+DL[i]+'</td>'
+      +'<td style="padding:10px 12px;font-size:12px;">'+(isToday?'<span style="font-size:9px;font-weight:800;color:var(--navy);background:rgba(13,92,166,.1);border-radius:4px;padding:2px 5px;margin-right:4px;">TODAY</span>':'')+DL[i]+attBadge+'</td>'
       +'<td style="padding:10px 12px;">'+pill(isW&&!work?'Weekend':s==='OFF'?'Off':work?'Working':'Leave/Sick',isW&&!work||s==='OFF'?'p-gray':work?'p-green':'p-red')+'</td>'
-      +'<td style="padding:10px 12px;"><span class="sc '+scCls(s)+'">'+s+'</span></td></tr>';
+      +'<td style="padding:10px 12px;">'+dispShift+'</td></tr>';
   });
   h+='</tbody></table>';
   document.getElementById('mySchTable').innerHTML=h;
@@ -3875,6 +3943,247 @@ function setAtt(id,status){
   var btns=c.querySelectorAll('.abt');
   if(btns[m[status]]) btns[m[status]].classList.add('s-'+status);
 }
+// ════════════════════════════════════════════════════════════════
+// ATTENDANCE SYSTEM
+// ════════════════════════════════════════════════════════════════
+
+// ── Tab switcher ─────────────────────────────────────────────
+function attSwitchTab(tab){
+  var teamView=document.getElementById('att-team-view');
+  var attPanel=document.getElementById('att-panel');
+  var tbTeam=document.getElementById('atpt-team');
+  var tbAtt=document.getElementById('atpt-att');
+  if(!teamView||!attPanel) return;
+  if(tab==='att'){
+    teamView.style.display='none';
+    attPanel.style.display='block';
+    if(tbTeam){tbTeam.classList.remove('on');}
+    if(tbAtt){tbAtt.classList.add('on');}
+    renderAttendance();
+  } else {
+    teamView.style.display='block';
+    attPanel.style.display='none';
+    if(tbTeam){tbTeam.classList.add('on');}
+    if(tbAtt){tbAtt.classList.remove('on');}
+    renderTeam();
+  }
+}
+
+// ── Attendance status config ──────────────────────────────────
+var ATT_STATUSES=[
+  {k:'on_time',lbl:'✅ On Time',  cls:'sel-ontime',pillCls:'p-green',pillLbl:'On Time'},
+  {k:'late',   lbl:'🕐 Late',    cls:'sel-late',  pillCls:'p-amber',pillLbl:'Late'},
+  {k:'sick',   lbl:'🤒 Sick',    cls:'sel-sick',  pillCls:'p-red',  pillLbl:'Sick'},
+  {k:'leave',  lbl:'🌴 Leave',   cls:'sel-leave', pillCls:'p-navy', pillLbl:'Leave'},
+  {k:'change', lbl:'🔄 New Shift',cls:'sel-change',pillCls:'p-teal',pillLbl:'Shift Change'},
+  {k:'absent', lbl:'❌ Absent',  cls:'sel-absent',pillCls:'p-red',  pillLbl:'Absent'},
+];
+
+// ── Get agent list visible to current user ───────────────────
+function attGetAgents(){
+  var list=AGENTS.filter(function(a){return a.r!=='admin';});
+  if(me&&(me.loginRole==='atl'||me.loginRole==='tl')){
+    var myDept=me.t||me.dept||'';
+    list=list.filter(function(a){return a.t===myDept;});
+  }
+  if(_attDeptFilter&&_attDeptFilter!==''){
+    list=list.filter(function(a){return a.t===_attDeptFilter;});
+  }
+  return list;
+}
+
+// ── Get today's ATT_LOG entry for an agent ───────────────────
+function attGetEntry(agentName){
+  var d=today();
+  for(var i=ATT_LOG.length-1;i>=0;i--){
+    if(ATT_LOG[i].agent===agentName&&ATT_LOG[i].date===d) return ATT_LOG[i];
+  }
+  return null;
+}
+
+// ── Render full attendance tab ───────────────────────────────
+function renderAttendance(){
+  if(!me||!canTeam()) return;
+  var now=new Date(Date.now()+3*60*60*1000);
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var dlEl=document.getElementById('att-date-lbl');
+  if(dlEl) dlEl.textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
+  var dtEl=document.getElementById('att-dept-tabs');
+  if(dtEl){
+    var allDepts=[];
+    AGENTS.forEach(function(a){if(a.r!=='admin'&&allDepts.indexOf(a.t)<0)allDepts.push(a.t);});
+    if(me.loginRole==='atl'||me.loginRole==='tl'){
+      allDepts=[me.t||me.dept||''];
+      _attDeptFilter=allDepts[0];
+    }
+    var dh='<button class="ftab'+((!_attDeptFilter||_attDeptFilter==='')?(' on'):'')
+      +'" onclick="_attDeptFilter=\'\';renderAttendance()">All</button>';
+    allDepts.forEach(function(d){
+      dh+='<button class="ftab'+(_attDeptFilter===d?' on':'')
+        +'" onclick="_attDeptFilter=\''+d+'\';renderAttendance()">'+d+'</button>';
+    });
+    dtEl.innerHTML=dh;
+  }
+  var agents=attGetAgents();
+  var listEl=document.getElementById('att-list');
+  if(!listEl) return;
+  if(!agents.length){
+    listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--t2);font-size:13px;">No agents in your team</div>';
+    return;
+  }
+  var deptMap={};
+  agents.forEach(function(a){
+    if(!deptMap[a.t]) deptMap[a.t]=[];
+    deptMap[a.t].push(a);
+  });
+  var html='';
+  Object.keys(deptMap).forEach(function(dept){
+    var da=deptMap[dept];
+    html+='<div class="dept-hdr"><div class="dept-title">'+dept+'</div><div class="dept-count">'+da.length+'</div></div>'
+      +'<div class="dept-body" style="padding:6px;display:flex;flex-direction:column;gap:6px;">';
+    da.forEach(function(agent){html+=attBuildCard(agent);});
+    html+='</div>';
+  });
+  listEl.innerHTML=html;
+}
+
+// ── Build one agent attendance card ─────────────────────────
+function attBuildCard(agent){
+  var saved=attGetEntry(agent.n);
+  var sel=_attSelMap[agent.id];
+  var shift=gTodayS(agent)||'—';
+  var isOff=['OFF','Leave','P-Leave','Sick'].indexOf(shift)>=0;
+  var statusHtml='';
+  if(saved&&!sel){
+    var sc=ATT_STATUSES.find(function(s){return s.k===saved.status;})||{pillCls:'p-gray',pillLbl:saved.status};
+    statusHtml='<span class="pill '+sc.pillCls+'" style="font-size:11px;">'+sc.pillLbl+'</span>';
+    if(saved.newShift) statusHtml+=' <span style="font-size:10px;color:var(--teal);font-weight:700;">→ '+saved.newShift+'</span>';
+    if(saved.note) statusHtml+='<div style="font-size:10px;color:var(--t2);margin-top:1px;">📝 '+saved.note+'</div>';
+  }
+  var btnHtml='';
+  ATT_STATUSES.forEach(function(st){
+    var isSel=sel&&sel.status===st.k;
+    btnHtml+='<button class="att-btn'+(isSel?' '+st.cls:'')+'" onclick="attSelectStatus(\''+agent.id+'\',\''+st.k+'\')">'
+      +st.lbl+'</button>';
+  });
+  var extraHtml='<div class="att-extra'+(sel&&(sel.status==='late'||sel.status==='change')?' show':'')+'" id="att-ex-'+agent.id+'">';
+  if(sel&&sel.status==='late'){
+    extraHtml+='<div class="att-extra-label">Arrival time</div>'
+      +'<input class="att-time-inp" type="time" id="att-time-'+agent.id+'" value="'+(sel.note||'')+'" '
+      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].note=this.value">'
+      +'<div class="att-extra-label" style="margin-top:8px;">Note (optional)</div>'
+      +'<textarea class="att-note-inp" placeholder="e.g. Traffic…" '
+      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].extraNote=this.value">'
+      +(sel.extraNote||'')+'</textarea>';
+  } else if(sel&&sel.status==='change'){
+    extraHtml+='<div class="att-extra-label">New shift start time</div>'
+      +'<input class="att-time-inp" type="time" id="att-time-'+agent.id+'" value="'+(sel.newShift||'')+'" '
+      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].newShift=this.value">'
+      +'<div class="att-extra-label" style="margin-top:8px;">Note (optional)</div>'
+      +'<textarea class="att-note-inp" placeholder="e.g. Manager approved…" '
+      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].note=this.value">'
+      +(sel.note||'')+'</textarea>';
+  }
+  extraHtml+='</div>';
+  var actionHtml='';
+  if(saved&&!sel){
+    actionHtml='<div class="att-saved-badge">✅ Saved by <strong>'+saved.markedBy+'</strong>'
+      +' at '+saved.ts.substring(11,16)
+      +' · <button style="background:none;border:none;color:var(--navy);font-size:11px;font-weight:700;cursor:pointer;padding:0;" '
+      +'onclick="attEdit(\''+agent.id+'\')">Edit</button></div>';
+  } else if(sel){
+    actionHtml='<div class="att-save-row">'
+      +'<button class="att-save-btn" onclick="attSaveOne(\''+agent.id+'\')">💾 Save</button>'
+      +'<button class="att-clear-btn" onclick="attClear(\''+agent.id+'\')">✕ Clear</button>'
+      +'</div>';
+  }
+  return '<div class="att-card" id="attc-'+agent.id+'">'
+    +'<div class="att-card-head">'
+    +'<div class="att-av" style="background:'+avc(agent.n)+'">'+ini(agent.n)+'</div>'
+    +'<div style="flex:1;min-width:0;"><div class="att-name">'+agent.n+'</div>'
+    +(statusHtml?'<div style="margin-top:2px;">'+statusHtml+'</div>':'')+'</div>'
+    +'<div class="att-shift-badge">'+(isOff?'<span style="color:var(--t3);">'+shift+'</span>':shift)+'</div>'
+    +'</div>'
+    +'<div class="att-btns">'+btnHtml+'</div>'
+    +extraHtml+actionHtml
+    +'</div>';
+}
+
+// ── Select status for agent ──────────────────────────────────
+function attSelectStatus(agentId,status){
+  if(!_attSelMap[agentId]) _attSelMap[agentId]={};
+  _attSelMap[agentId].status=status;
+  if(status!=='late') delete _attSelMap[agentId].note;
+  if(status!=='change') delete _attSelMap[agentId].newShift;
+  var agent=AGENTS.find(function(a){return a.id===agentId;});
+  if(!agent) return;
+  var card=document.getElementById('attc-'+agentId);
+  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
+}
+
+// ── Edit a saved entry ───────────────────────────────────────
+function attEdit(agentId){
+  var agent=AGENTS.find(function(a){return a.id===agentId;});
+  if(!agent) return;
+  var saved=attGetEntry(agent.n);
+  if(saved) _attSelMap[agentId]={status:saved.status,note:saved.note||'',newShift:saved.newShift||'',extraNote:saved.extraNote||''};
+  var card=document.getElementById('attc-'+agentId);
+  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
+}
+
+// ── Clear selection ───────────────────────────────────────────
+function attClear(agentId){
+  delete _attSelMap[agentId];
+  var agent=AGENTS.find(function(a){return a.id===agentId;});
+  if(!agent) return;
+  var card=document.getElementById('attc-'+agentId);
+  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
+}
+
+// ── Save one agent attendance ─────────────────────────────────
+function attSaveOne(agentId){
+  var agent=AGENTS.find(function(a){return a.id===agentId;});
+  if(!agent){sp_showToast('Agent not found','err');return;}
+  var sel=_attSelMap[agentId];
+  if(!sel||!sel.status){sp_showToast('Select a status first','err');return;}
+  var arrivalNote='';
+  if(sel.status==='late') arrivalNote=(sel.note?'Arrived '+sel.note:'')+(sel.extraNote?(' — '+sel.extraNote):'');
+  else if(sel.status==='change') arrivalNote=sel.note||'';
+  var entry={
+    id:'ATT'+(Date.now()%1000000),
+    agent:agent.n,
+    date:today(),
+    status:sel.status,
+    note:arrivalNote,
+    newShift:sel.status==='change'?(sel.newShift||''):'',
+    markedBy:me.n||me.name||'',
+    ts:new Date(Date.now()+3*60*60*1000).toISOString().replace('T',' ').substring(0,16)
+  };
+  // Update local ATT_LOG
+  ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===agent.n&&e.date===today());});
+  ATT_LOG.push(entry);
+  // Save to Sheets: Agent | Date | Status | Note | NewShift | MarkedBy | Timestamp
+  saveSheet('Attendance',[entry.agent,entry.date,entry.status,entry.note,entry.newShift,entry.markedBy,entry.ts]);
+  logA('ATTENDANCE',agent.n+' → '+entry.status.toUpperCase()+(entry.newShift?' (→'+entry.newShift+')':''),'inf');
+  delete _attSelMap[agentId];
+  sp_showToast(agent.n.split(' ')[0]+' → '+entry.status,'ok');
+  var card=document.getElementById('attc-'+agentId);
+  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
+  if(agent.n===(me.n||me.name)&&typeof renderMySchedule==='function') renderMySchedule();
+  if(agent.n===(me.n||me.name)&&typeof renderProfilePage==='function') renderProfilePage();
+}
+
+// ── Save all pending ──────────────────────────────────────────
+function attSaveAll(){
+  var keys=Object.keys(_attSelMap).filter(function(k){return _attSelMap[k]&&_attSelMap[k].status;});
+  if(!keys.length){sp_showToast('No changes to save','inf');return;}
+  keys.forEach(function(id){attSaveOne(id);});
+}
+
+// ── Get today's ATT_LOG entry (for schedule display) ─────────
+function attTodayStatus(agentName){return attGetEntry(agentName);}
+
 function saveAllAtt(){
   var e=Object.entries(attSel);if(!e.length){sp_showToast('Mark attendance first','err');return;}
   e.forEach(function(p){
@@ -4926,23 +5235,41 @@ function renderProfilePage(){
     } else { bh+='<div style="font-size:12px;color:var(--t3);text-align:center;padding:8px 0;">No breaks booked today</div>'; }
     bEl.innerHTML=bh;
   }
-  // -- Attendance (from schedule)
+  // Attendance from ATT_LOG
   var attEl=document.getElementById('prof-att-body');
   if(attEl&&me.sch){
     var ah='<table style="width:100%;border-collapse:collapse;">';
-    ah+='<thead><tr style="background:var(--bg);">'      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Date</th>'      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Shift</th>'      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Status</th>'      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:right;">Breaks</th>'      +'</tr></thead><tbody>';
+    ah+='<thead><tr style="background:var(--bg);">'
+      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Date</th>'
+      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Shift</th>'
+      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Attendance</th>'
+      +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:right;">Breaks</th>'
+      +'</tr></thead><tbody>';
     DATES.forEach(function(dt,i){
       var sch=me.sch[i]||'OFF';
-      var work=!['OFF','P-Leave','Leave','Sick'].includes(sch);
-      var isWknd=WKND.includes(i);
       var isToday=dt===TODAY;
-      var statusLabel=isWknd&&!work?'Weekend':sch==='OFF'?'Off':work?'Working':'Leave/Sick';
-      var statusCls=isWknd&&!work||sch==='OFF'?'p-gray':work?'p-green':'p-red';
-      // Count breaks that day
+      var attRec=null;
+      for(var ai=ATT_LOG.length-1;ai>=0;ai--){
+        if(ATT_LOG[ai].agent===(me.n||me.name)&&ATT_LOG[ai].date===dt){attRec=ATT_LOG[ai];break;}
+      }
+      var attSt=attRec&&typeof ATT_STATUSES!=='undefined'?ATT_STATUSES.find(function(x){return x.k===attRec.status;}):null;
+      var attCell=attRec?pill(attSt?attSt.pillLbl:attRec.status,attSt?attSt.pillCls:'p-gray')
+        :'<span style="color:var(--t3);font-size:11px;">—</span>';
+      var shiftDisp=attRec&&attRec.newShift
+        ?('<span class="sc sc-teal">'+attRec.newShift+'</span>')
+        :('<span class="sc '+scCls(sch)+'">'+sch+'</span>');
       var dayBreaks=tdb(d).filter(function(b){
         return b.agent===(me.n||me.name)&&b.breakDate===dt&&b.status!=='cancelled';
       });
-      ah+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.04);':'')+'">'        +'<td style="padding:8px 10px;font-size:11px;">'+(isToday?'<span style="font-size:8px;background:rgba(13,92,166,.1);color:var(--navy);border-radius:3px;padding:1px 4px;margin-right:3px;">TODAY</span>':'')+DL[i]+'</td>'        +'<td style="padding:8px 10px;"><span class="sc '+scCls(sch)+'" style="font-size:11px;">'+sch+'</span></td>'        +'<td style="padding:8px 10px;">'+pill(statusLabel,statusCls)+'</td>'        +'<td style="padding:8px 10px;text-align:right;font-size:11px;color:var(--t2);">'+(dayBreaks.length?dayBreaks.map(function(b){return b.duration+'m';}).join(', '):'&mdash;')+'</td>'        +'</tr>';
+      ah+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.04);':'')+'">'
+        +'<td style="padding:8px 10px;font-size:11px;">'
+          +(isToday?'<span style="font-size:8px;background:rgba(13,92,166,.1);color:var(--navy);border-radius:3px;padding:1px 4px;margin-right:3px;">TODAY</span>':'')
+          +DL[i]+'</td>'
+        +'<td style="padding:8px 10px;">'+shiftDisp+'</td>'
+        +'<td style="padding:8px 10px;">'+attCell+'</td>'
+        +'<td style="padding:8px 10px;text-align:right;font-size:11px;color:var(--t2);">'
+          +(dayBreaks.length?dayBreaks.map(function(b){return b.duration+'m';}).join(', '):'&mdash;')+'</td>'
+        +'</tr>';
     });
     ah+='</tbody></table>';
     attEl.innerHTML=ah;
