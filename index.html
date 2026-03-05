@@ -1371,9 +1371,7 @@ var EMPS=[
   {pw:'alf@4512',name:'Abdulrahman Alfassam',role:'Inbound Agent',dept:'Inbound',access:'agent'},
   {pw:'als@4513',name:'Abdulwahab Alsaber',role:'Inbound Agent',dept:'Inbound',access:'agent'},
   {pw:'slj@4514',name:'Saleh Aljabri',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'alw@4515',name:'Ali Alwayel',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'anq@4516',name:'Ahmad Alnajdi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
-  {pw:'sha@4517',name:'Ali ShahAli',role:'Inbound Agent',dept:'Inbound',access:'agent'},
+  {pw:'alw@4515',name:'Ali Alwayel',role:'Inbound Agent',dept:'Inbound',access:'agent'},  {pw:'sha@4517',name:'Ali ShahAli',role:'Inbound Agent',dept:'Inbound',access:'agent'},
   {pw:'aye@4518',name:'Ayedh Alotaibi',role:'Inbound Agent',dept:'Inbound',access:'agent'},
   {pw:'fah@4519',name:'Fahad Alabdullah',role:'Inbound Agent',dept:'Inbound',access:'agent'},
   {pw:'hsa@4520',name:'Hasan Ali',role:'Inbound Agent',dept:'Inbound',access:'agent'},
@@ -1395,7 +1393,7 @@ var EMPS=[
   {pw:'ahm@4538',name:'Ahmed Nidah',role:'Wage Agent',dept:'Wage',access:'agent'},
   {pw:'bil@4539',name:'Bilal Faisal',role:'Wage Agent',dept:'Wage',access:'agent'},
   {pw:'fat@4540',name:'Fatemeh Mayahi',role:'Wage Agent',dept:'Wage',access:'agent'},
-  {pw:'nah@4541',name:'Nahla Ibrahem',role:'Wage Agent',dept:'Wage',access:'agent'},
+  {pw:'nah@4541',name:'Nahla Ibrahim',role:'Wage Agent',dept:'Wage',access:'agent'},
   {pw:'nas@3001',name:'Naser Bandar',role:'Assist TL',dept:'Supervisors',access:'atl'},
   {pw:'haj@3002',name:'Hasan Alajmi',role:'Assist TL',dept:'Supervisors',access:'atl'},
   {pw:'ath@3003',name:'Athoub Alnoufal',role:'Assist TL',dept:'Supervisors',access:'atl'},
@@ -1411,6 +1409,10 @@ var EMPS=[
   {pw:'KIB@admin2026',name:'Admin',role:'System Admin',dept:'Management',access:'admin'},
   {pw:'demo@1234',name:'Demo User',role:'Inbound Agent',dept:'Inbound',access:'agent'},
   {pw:'demo@mgr',name:'Demo Manager',role:'Team Leader',dept:'Supervisors',access:'readonly'}
+  {pw:'ham@4501',name:'Hamad AlEidan',role:'ITM Agent',dept:'ITM',access:''},
+  {pw:'fou2@4501',name:'Fouzeyah Erzouqi I',role:'Inbound Agent',dept:'Inbound',access:''},
+  {pw:'wae@4501',name:'Wael Anwar',role:'OP Agent',dept:'OP',access:''},
+  {pw:'tah@4501',name:'Taher Al Baghli',role:'Manager',dept:'Management',access:'manager'},
 ];
 // Shifts: 8AM–9PM starts, each 7h until 18 Mar 2026, then 8h after
 var SHIFT_ICONS=['🌅','🌤','☀️','🌞','🌇','🌆','🌃','🌙','🌛','🌜','🌝','⭐','🌠','🌠'];
@@ -2305,60 +2307,74 @@ const TODAY=(function(){return new Date().toISOString().split('T')[0];})();
 const WKND=[4,5,11,12];
 
 const AGENTS=[
+  // ── INBOUND (Image 4 rows 34-60) ─────────────────────────────────
   {id:'I01',n:'Sarah Alqattan',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
+  {id:'I27',n:'Fouzeyah Erzouqi I',t:'Inbound',r:'agent',sch:['OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF']},
   {id:'I02',n:'Danah Alenezi',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','09:00-16:00','09:00-16:00']},
   {id:'I03',n:'Yasmine Maraafi',t:'Inbound',r:'agent',sch:['09:00-16:00','OFF','OFF','10:00-17:00','09:00-16:00','09:00-16:00','09:00-16:00','08:00-15:00','09:00-16:00','08:00-15:00','OFF','OFF','OFF']},
-  {id:'I04',n:'Saleh Aljabri',t:'Inbound',r:'agent',sch:['18:30-01:30','18:30-01:30','18:30-01:30','18:30-01:30','OFF','OFF','18:30-01:30','18:30-01:30','18:30-01:30','18:30-01:30','OFF','OFF','OFF']},
-  {id:'I05',n:'Ezz Alsalem',t:'Inbound',r:'agent',sch:['OFF','18:00-01:00','20:00-01:00','20:00-01:00','20:00-01:00','OFF','OFF','18:00-01:00','18:00-01:00','18:00-01:00','10:00-17:00','10:00-17:00','OFF']},
+  {id:'I04',n:'Saleh Aljabri',t:'Inbound',r:'agent',sch:['18:30-01:30','18:30-01:30','19:00-02:00','19:00-02:00','OFF','OFF','18:30-01:30','18:30-01:30','18:30-01:30','18:30-01:30','OFF','OFF','OFF']},
+  {id:'I05',n:'Ezz Alsalem',t:'Inbound',r:'agent',sch:['OFF','18:00-01:00','20:00-03:00','20:00-01:00','20:00-01:00','OFF','OFF','18:00-01:00','18:00-01:00','18:00-01:00','10:00-17:00','10:00-17:00','OFF']},
   {id:'I06',n:'Abdullah Bakhsh',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','19:30-02:30','19:30-02:30','OFF','OFF']},
   {id:'I07',n:'Abdulaziz Bozobar',t:'Inbound',r:'agent',sch:['20:00-03:00','20:00-03:00','15:00-02:00','15:00-02:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF']},
   {id:'I08',n:'Abdulrahman Abdullah',t:'Inbound',r:'agent',sch:['19:00-02:00','19:00-02:00','19:00-02:00','19:00-02:00','OFF','OFF','18:30-01:30','18:30-01:30','18:30-01:30','18:30-01:30','OFF','OFF','OFF']},
   {id:'I09',n:'Abdullah W Mohammad',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF']},
   {id:'I10',n:'Abdollah Shaverdi',t:'Inbound',r:'agent',sch:['20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','15:00-02:00','15:00-02:00','15:00-02:00','OFF','OFF','C 02:00-10:00','C 02:00-10:00']},
-  {id:'I11',n:'Abdulaziz Alzuabi',t:'Inbound',r:'checker',sch:['19:00-02:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','15:30-02:30','15:30-02:30','OFF','OFF','OFF','C 02:00-10:00','C 02:00-10:00']},
+  {id:'I11',n:'Abdulaziz Alzuabi',t:'Inbound',r:'checker',sch:['19:00-02:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','15:30-02:30','15:30-02:30','OFF','OFF','OFF','C 02:00-10:00','15:30-02:30']},
+  {id:'I26',n:'Abdulrahman Alfassam',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','OFF']},
   {id:'I12',n:'Abdulwahab Alsaber',t:'Inbound',r:'agent',sch:['19:00-02:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','OFF']},
-  {id:'I13',n:'Ali Alwayel',t:'Inbound',r:'agent',sch:['OFF','OFF','19:00-02:00','19:00-02:00','19:00-02:00','19:00-02:00','OFF','OFF','19:00-02:00','19:00-02:00','19:00-02:00','OFF','OFF']},
+  {id:'I13',n:'Ali Alwayel',t:'Inbound',r:'agent',sch:['OFF','OFF','19:00-02:00','19:00-02:00','19:00-02:00','19:00-02:00','OFF','OFF','19:00-02:00','19:00-02:00','15:00-02:00','19:00-02:00','OFF']},
   {id:'I14',n:'Ali ShahAli',t:'Inbound',r:'agent',sch:['17:00-00:00','17:00-00:00','17:00-00:00','17:00-00:00','OFF','OFF','19:00-00:00','19:00-00:00','19:00-00:00','19:00-00:00','OFF','OFF','OFF']},
-  {id:'I15',n:'Ayedh Alotaibi',t:'Inbound',r:'agent',sch:['OFF','OFF','17:00-00:00','17:00-00:00','17:00-00:00','OFF','OFF','17:00-00:00','17:00-00:00','17:00-00:00','OFF','OFF','OFF']},
+  {id:'I15',n:'Ayedh Alotaibi',t:'Inbound',r:'agent',sch:['OFF','OFF','17:00-00:00','17:00-00:00','17:00-00:00','17:00-00:00','OFF','OFF','17:00-00:00','17:00-00:00','17:00-00:00','OFF','OFF']},
   {id:'I16',n:'Fahad Alabdullah',t:'Inbound',r:'agent',sch:['17:00-00:00','16:00-23:00','OFF','OFF','16:00-23:00','16:00-23:00','15:30-02:30','15:30-02:30','15:30-02:30','OFF','OFF','16:00-23:00','OFF']},
   {id:'I17',n:'Hasan Ali',t:'Inbound',r:'agent',sch:['OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
+  {id:'I24',n:'Salman Albaqshi',t:'Inbound',r:'agent',sch:['19:30-02:30','19:30-02:30','13:30-02:30','13:30-02:30','OFF','OFF','19:00-02:00','19:00-02:00','19:00-02:00','OFF','OFF','OFF','OFF']},
   {id:'I18',n:'Hussain Alkhabbaz',t:'Inbound',r:'agent',sch:['OFF','OFF','10:00-17:00','Sick','OFF','OFF','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
   {id:'I19',n:'Mohammad Alshakhs',t:'Inbound',r:'agent',sch:['10:00-17:00','08:00-15:00','08:00-15:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF']},
   {id:'I20',n:'Omar Almutairi',t:'Inbound',r:'agent',sch:['OFF','18:30-01:30','18:30-01:30','18:30-01:30','OFF','OFF','19:00-00:00','19:00-00:00','19:00-00:00','19:00-00:00','OFF','OFF','OFF']},
   {id:'I21',n:'Omar Alsaeed',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','09:00-16:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF']},
   {id:'I22',n:'Omar Mohammad',t:'Inbound',r:'checker',sch:['19:00-02:00','19:00-02:00','OFF','OFF','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF']},
   {id:'I23',n:'Saad Alharbi',t:'Inbound',r:'maker',sch:['M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','OFF','OFF','OFF','OFF','OFF','09:00-16:00','10:00-17:00','OFF','OFF']},
-  {id:'I24',n:'Salman Albaqshi',t:'Inbound',r:'agent',sch:['19:30-02:30','19:30-02:30','13:30-02:30','13:30-02:30','OFF','OFF','19:00-02:00','19:00-02:00','19:00-02:00','OFF','OFF','OFF','OFF']},
   {id:'I25',n:'Sulaiman Alkhalaf',t:'Inbound',r:'maker',sch:['Leave','Leave','OFF','OFF','17:00-00:00','17:00-00:00','M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','OFF','OFF','OFF']},
-  {id:'I26',n:'Abdulrahman Alfassam',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','OFF']},
-  {id:'I27',n:'Fouzeyah Erzouqi I',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
-  {id:'O01',n:'Asrar Alattar',t:'Outbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF']},
+  // ── OUTBOUND (Image 3 rows 62-64) ────────────────────────────────
+  {id:'O01',n:'Asrar Alattar',t:'Outbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
   {id:'O02',n:'Abdulrahman Alfassam',t:'Outbound',r:'agent',sch:['19:30-02:30','19:30-02:30','15:30-02:30','15:30-02:30','OFF','OFF','15:30-02:30','15:30-02:30','19:30-02:30','19:30-02:30','OFF','OFF','OFF']},
-  {id:'O03',n:'Latefah Alhouti',t:'Outbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF']},
-  {id:'T01',n:'Hamad AlEidan',t:'ITM',r:'agent',sch:['09:00-16:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','12:00-19:00','12:00-19:00','12:00-19:00','OFF','OFF','OFF']},
-  {id:'T02',n:'Abdullah Rajab',t:'ITM',r:'agent',sch:['OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF']},
-  {id:'T03',n:'Ahmad Alenezi',t:'ITM',r:'agent',sch:['OFF','OFF','16:00-23:00','15:00-02:00','15:00-02:00','15:00-02:00','OFF','OFF','15:00-02:00','15:00-02:00','15:00-02:00','OFF','OFF']},
+  {id:'O03',n:'Latefah Alhouti',t:'Outbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
+  // ── ITM (Image 3 rows 66-73 + Image 2 rows 66-73) ────────────────
+  {id:'T01',n:'Hamad AlEidan',t:'ITM',r:'agent',sch:['09:00-16:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','12:00-19:00','12:00-19:00','OFF','OFF','OFF']},
+  {id:'T02',n:'Abdullah Rajab',t:'ITM',r:'agent',sch:['09:00-16:00','OFF','10:00-17:00','10:00-17:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','OFF']},
+  {id:'T03',n:'Ahmad Alenezi',t:'ITM',r:'agent',sch:['OFF','OFF','16:00-23:00','16:00-23:00','15:00-02:00','15:00-02:00','OFF','OFF','15:00-02:00','15:00-02:00','15:00-02:00','OFF','OFF']},
+  {id:'T08',n:'Salman Albaqshi',t:'ITM',r:'agent',sch:['OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF']},
   {id:'T04',n:'Dhari Alshammari',t:'ITM',r:'checker',sch:['19:00-02:00','09:00-16:00','OFF','OFF','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF','OFF']},
   {id:'T05',n:'Badreyah Alruwayeh',t:'ITM',r:'checker',sch:['OFF','OFF','09:00-16:00','09:00-16:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF','OFF','OFF']},
   {id:'T06',n:'Mariam Almutairi',t:'ITM',r:'agent',sch:['09:00-16:00','09:00-16:00','OFF','OFF','12:00-19:00','12:00-19:00','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','OFF']},
   {id:'T07',n:'Athoub Alnoufal',t:'ITM',r:'agent',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','OFF']},
+  // ── WAGE (Image 2+3 rows 75-78) ──────────────────────────────────
   {id:'W01',n:'Ahmed Nidah',t:'Wage',r:'agent',sch:['OFF','17:00-00:00','17:00-00:00','17:00-00:00','17:00-00:00','17:00-00:00','OFF','OFF','17:00-00:00','17:00-00:00','17:00-00:00','OFF','OFF']},
   {id:'W02',n:'Bilal Faisal',t:'Wage',r:'agent',sch:['17:00-00:00','OFF','09:00-16:00','09:00-16:00','OFF','OFF','17:00-00:00','11:00-18:00','11:00-18:00','11:00-18:00','OFF','OFF','OFF']},
   {id:'W03',n:'Fatemeh Mayahi',t:'Wage',r:'agent',sch:['Sick','OFF','OFF','09:00-16:00','09:00-16:00','OFF','OFF','OFF','09:00-16:00','09:00-16:00','OFF','OFF','OFF']},
   {id:'W04',n:'Nahla Ibrahim',t:'Wage',r:'agent',sch:['P-Leave','P-Leave','P-Leave','P-Leave','P-Leave','P-Leave','P-Leave','P-Leave','P-Leave','P-Leave','P-Leave','P-Leave','P-Leave']},
-  {id:'R01',n:'Fouzeyah Erzouqi',t:'Retention',r:'agent',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF']},
+  // ── RETENTION (Image 1+2 row 80) ─────────────────────────────────
+  {id:'R01',n:'Fouzeyah Erzouqi',t:'Retention',r:'agent',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-15:00','09:00-16:00','09:00-16:00','OFF','OFF']},
+  // ── ASSIST TL (Image 1+2 rows 82-83) ─────────────────────────────
   {id:'A01',n:'Naser Bandar',t:'Assist TL',r:'atl',sch:['OFF','20:00-03:00','20:00-03:00','20:00-03:00','18:30-01:30','18:30-01:30','OFF','OFF','17:00-00:00','17:00-00:00','17:00-00:00','18:30-01:30','18:30-01:30']},
   {id:'A02',n:'Hasan Alajmi',t:'Assist TL',r:'checker',sch:['C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF','20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','OFF']},
+  // ── TEAM LEADERS (Image 1+2 rows 85-87) ──────────────────────────
   {id:'L01',n:'Shouq Alkandari',t:'Leadership',r:'tl',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
   {id:'L02',n:'Alanoud Alotaibi',t:'Leadership',r:'tl',sch:['09:00-16:00','09:00-16:00','OFF','OFF','10:00-17:00','10:00-17:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','OFF','OFF']},
   {id:'L03',n:'Mohammad Alothman',t:'Leadership',r:'tl',sch:['19:00-02:00','19:00-02:00','15:00-02:00','15:00-02:00','OFF','OFF','15:00-02:00','15:00-02:00','19:00-02:00','15:00-02:00','15:00-02:00','OFF','OFF']},
+  // ── BACK OFFICE (Image 1+2 rows 89-90) ───────────────────────────
   {id:'B01',n:'Abdulrahman Alahmad',t:'Back Office',r:'agent',sch:['12:00-19:00','Leave','12:00-19:00','12:00-19:00','OFF','OFF','12:00-19:00','12:00-19:00','12:00-19:00','12:00-19:00','OFF','OFF','OFF']},
   {id:'B02',n:'Nourah Alhazzani',t:'Back Office',r:'agent',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','OFF']},
+  // ── OP (Image 1+2 row 92) ────────────────────────────────────────
   {id:'P01',n:'Wael Anwar',t:'OP',r:'agent',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF']},
-  {id:'S01',n:'Badreyah BoRubayea',t:'SQ',r:'agent',sch:['10:00-17:00','18:00-01:00','10:00-17:00','18:00-01:00','OFF','OFF','10:00-17:00','18:00-01:00','10:00-17:00','18:00-01:00','10:00-17:00','OFF','OFF']},
+  // ── SQ (Image 1+2 row 94) ────────────────────────────────────────
+  {id:'S01',n:'Badreyah BoRubayea',t:'SQ',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
+  // ── WFM (Image 1+2 row 96) ───────────────────────────────────────
   {id:'F01',n:'Fatmah Alhamar',t:'WFM',r:'wfm',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF']},
+  // ── QUALITY SUPERVISOR (Image 1 row 98) ──────────────────────────
   {id:'Q01',n:'Mohammad Abdulraheem',t:'Quality',r:'manager',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF']},
-  {id:'M01',n:'Taher Al Baghli',t:'Management',r:'manager',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF']},
+  // ── MANAGER / HEAD (Image 1 rows 100-101) ────────────────────────
+  {id:'M01',n:'Taher Al Baghli',t:'Management',r:'manager',sch:['09:00-15:00','09:00-15:00','09:00-15:00','09:00-15:00','OFF','OFF','09:00-15:00','09:00-15:00','09:00-15:00','09:00-15:00','09:00-15:00','OFF','OFF']},
   {id:'M02',n:'Talal Al Jarki',t:'Management',r:'head',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF']},
 ];
 
