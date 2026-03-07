@@ -793,6 +793,9 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
 #u-app #sp-app #sp-sApp{
   padding-top:0!important;min-height:100vh;
 }
+#u-app #sp-app #sp-sApp{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;}
+#u-app #sp-app .pg{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;}
+#pg-kpi .btn{margin-bottom:8px;}
 
 /* ══════════════════════════════════════════
    HOME PAGE
@@ -1328,6 +1331,9 @@ body{background:#0a3d7a;}
 #u-app #sp-app.u-active{display:block;}
 #u-app #bs-app #sApp,
 #u-app #sp-app #sp-sApp{padding-top:0!important;margin-top:0!important;}
+#u-app #sp-app #sp-sApp{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;}
+#u-app #sp-app .pg{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;}
+#pg-kpi .btn{margin-bottom:8px;}
 
 @media(max-width:380px){
   .u-hero-name{font-size:21px;}
@@ -1369,6 +1375,13 @@ body{background:#0a3d7a;}
 .att-save-btn{background:var(--navy);color:#fff;}
 .att-clear-btn{background:var(--bg);color:var(--t2);}
 .att-saved-badge{background:var(--gbg);border:1px solid var(--green);border-radius:var(--r);padding:8px 12px;font-size:11px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:6px;margin:0 13px 11px;}
+
+.kpi-pane{display:none;}
+.kpi-pane.on{display:block;}
+.kpi-grid{display:grid;gap:10px;}
+.kpi-grid-2{grid-template-columns:1fr;}
+@media (min-width:520px){.kpi-grid-2{grid-template-columns:repeat(2,1fr);}}
+
 </style>
 </head>
 <body>
@@ -2067,10 +2080,15 @@ body{background:#0a3d7a;}
 
   <!-- ═══ REQUESTS ═══ -->
   <div class="pg" id="pg-requests">
-    <div class="ftabs">
+    <div class="ftabs" id="reqMainTabs">
       <div class="ftab on" onclick="swTab('reqTabs','rt-swap',this)">🔄 Swap</div>
-      
+      <div class="ftab" onclick="swTab('reqTabs','rt-leave',this)">🌴 Leave</div>
       <div class="ftab" onclick="swTab('reqTabs','rt-att',this)">✅ Attendance</div>
+    </div>
+    <div class="card" style="margin-bottom:10px;">
+      <div class="cb" style="padding:12px;">
+        <button class="btn btn-navy" type="button" onclick="openAnnualLeave()" style="width:100%;">🌴 Apply for Annual Leave</button>
+      </div>
     </div>
     <div id="reqTabs">
       <!-- SWAP -->
@@ -2092,7 +2110,7 @@ body{background:#0a3d7a;}
         <div id="mySwapHist"></div>
       </div>
       <!-- LEAVE -->
-      <div id="rt-leave" style="display:none!important;">
+      <div id="rt-leave" style="display:none;">
         <div class="card">
           <div class="ch"><div class="ctitle">🌴 New Leave Request</div></div>
           <div class="cb">
@@ -2167,6 +2185,122 @@ body{background:#0a3d7a;}
     </div>
   </div>
 
+
+  <!-- ═══ DAILY KPI ═══ -->
+  <div class="pg" id="pg-kpi">
+    <div class="hero">
+      <div class="hero-l">
+        <div class="hero-sub">Daily Operations</div>
+        <div class="hero-title">DAILY KPI</div>
+        <div class="hero-hint">Extra break, meeting, permissions, and system issue forms</div>
+      </div>
+      <div class="pill p-teal">
+        <span class="pdot"></span>
+        <span id="kpiTodayLabel">Today</span>
+      </div>
+    </div>
+
+    <div class="team-summary">
+      <div class="tscard c-navy"><div class="tsnum" id="kpiStatExtra">0</div><div class="tslbl">Extra Break</div></div>
+      <div class="tscard c-teal"><div class="tsnum" id="kpiStatMeeting">0</div><div class="tslbl">Meetings</div></div>
+      <div class="tscard c-amber"><div class="tsnum" id="kpiStatPermission">0</div><div class="tslbl">Permissions</div></div>
+      <div class="tscard c-red"><div class="tsnum" id="kpiStatIssue">0</div><div class="tslbl">System Issues</div></div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <div class="ctitle">Daily KPI Forms</div>
+        <div class="pill p-navy"><span class="pdot"></span><span id="kpiFormName">Extra Break</span></div>
+      </div>
+      <div class="cb">
+        <div class="ftabs" id="kpiTabs">
+          <button class="ftab on" type="button" data-kpi-tab="extra">Extra Break</button>
+          <button class="ftab" type="button" data-kpi-tab="meeting">Meeting</button>
+          <button class="ftab" type="button" data-kpi-tab="permission">Permission</button>
+          <button class="ftab" type="button" data-kpi-tab="issue">System Issue</button>
+        </div>
+
+        <form class="kpi-pane on" id="kpiPaneExtra" onsubmit="return false;">
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Date</label><input class="fld" type="date" id="kpiExtraDate"></div>
+            <div class="fg"><label class="lbl">Time</label><input class="fld" type="time" id="kpiExtraTime"></div>
+          </div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Shift</label><select class="fld" id="kpiExtraShift"><option value="">Select shift</option><option>Morning</option><option>Evening</option><option>Night</option></select></div>
+            <div class="fg"><label class="lbl">Duration</label><input class="fld" type="text" id="kpiExtraDuration" placeholder="e.g. 10 min"></div>
+          </div>
+          <div class="fg"><label class="lbl">Reason</label><input class="fld" type="text" id="kpiExtraReason" placeholder="Reason for extra break"></div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Approved By</label><select class="fld" id="kpiExtraApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+            <div class="fg"><label class="lbl">Comment</label><input class="fld" type="text" id="kpiExtraComment" placeholder="Optional comment"></div>
+          </div>
+          <button class="btn btn-navy" type="button" onclick="submitDailyKPI('extra')">Submit Extra Break</button>
+        </form>
+
+        <form class="kpi-pane" id="kpiPaneMeeting" onsubmit="return false;">
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Date</label><input class="fld" type="date" id="kpiMeetingDate"></div>
+            <div class="fg"><label class="lbl">Time</label><input class="fld" type="time" id="kpiMeetingTime"></div>
+          </div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Shift</label><select class="fld" id="kpiMeetingShift"><option value="">Select shift</option><option>Morning</option><option>Evening</option><option>Night</option></select></div>
+            <div class="fg"><label class="lbl">Duration</label><input class="fld" type="text" id="kpiMeetingDuration" placeholder="e.g. 10 min"></div>
+          </div>
+          <div class="fg"><label class="lbl">Subject</label><input class="fld" type="text" id="kpiMeetingSubject" placeholder="Meeting subject"></div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Organizer</label><select class="fld" id="kpiMeetingOrganizer"><option value="">Select organizer</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+            <div class="fg"><label class="lbl">Comment</label><input class="fld" type="text" id="kpiMeetingComment" placeholder="Optional comment"></div>
+          </div>
+          <button class="btn btn-navy" type="button" onclick="submitDailyKPI('meeting')">Submit Meeting</button>
+        </form>
+
+        <form class="kpi-pane" id="kpiPanePermission" onsubmit="return false;">
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Date</label><input class="fld" type="date" id="kpiPermissionDate"></div>
+            <div class="fg"><label class="lbl">Time</label><input class="fld" type="time" id="kpiPermissionTime"></div>
+          </div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Shift</label><select class="fld" id="kpiPermissionShift"><option value="">Select shift</option><option>Morning</option><option>Evening</option><option>Night</option></select></div>
+            <div class="fg"><label class="lbl">Duration</label><input class="fld" type="text" id="kpiPermissionDuration" placeholder="e.g. 30 min"></div>
+          </div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">From</label><input class="fld" type="time" id="kpiPermissionFrom"></div>
+            <div class="fg"><label class="lbl">To</label><input class="fld" type="time" id="kpiPermissionTo"></div>
+          </div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Count of Monthly Permissions</label><input class="fld" type="number" min="0" id="kpiPermissionCount" placeholder="0"></div>
+            <div class="fg"><label class="lbl">Permissions Type</label><select class="fld" id="kpiPermissionType"><option value="">Select type</option><option>Personal permissions</option><option>Official permissions</option></select></div>
+          </div>
+          <div class="fg"><label class="lbl">Reason</label><input class="fld" type="text" id="kpiPermissionReason" placeholder="Permission reason"></div>
+          <div class="fg"><label class="lbl">Approved By</label><select class="fld" id="kpiPermissionApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+          <button class="btn btn-navy" type="button" onclick="submitDailyKPI('permission')">Submit Permission</button>
+        </form>
+
+        <form class="kpi-pane" id="kpiPaneIssue" onsubmit="return false;">
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Date</label><input class="fld" type="date" id="kpiIssueDate"></div>
+            <div class="fg"><label class="lbl">Time</label><input class="fld" type="time" id="kpiIssueTime"></div>
+          </div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Shift</label><select class="fld" id="kpiIssueShift"><option value="">Select shift</option><option>Morning</option><option>Evening</option><option>Night</option></select></div>
+            <div class="fg"><label class="lbl">Duration</label><input class="fld" type="text" id="kpiIssueDuration" placeholder="e.g. 20 min"></div>
+          </div>
+          <div class="fg"><label class="lbl">Application</label><input class="fld" type="text" id="kpiIssueApplication" placeholder="Application / system name"></div>
+          <div class="fg"><label class="lbl">Description</label><textarea class="ann-ta" id="kpiIssueDescription" placeholder="Describe the issue"></textarea></div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Approved By</label><select class="fld" id="kpiIssueApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+            <div class="fg"><label class="lbl">Issue Type</label><select class="fld" id="kpiIssueType"><option value="">Select issue type</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+          </div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="fg"><label class="lbl">Comment</label><input class="fld" type="text" id="kpiIssueComment" placeholder="Optional comment"></div>
+            <div class="fg"><label class="lbl">Helpdesk #</label><input class="fld" type="text" id="kpiIssueHelpdesk" placeholder="Ticket number"></div>
+          </div>
+          <button class="btn btn-navy" type="button" onclick="submitDailyKPI('issue')">Submit System Issue</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ SETTINGS ═══ -->
   <div class="pg" id="pg-settings">
     <div class="sh">My Profile</div>
@@ -2234,7 +2368,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbwEbtC_fa6VqDroUHZ4btustfulKzZtApv1sxT1MC2oFKJb-8CMaMwuVEx6qRAtzjvdSw/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbzhOqNuDxJFD9Xln2TwEtSrVlj7ww4p3D8UW0qto0KX2HbnkqWW-bYXKB5u5w5c_AiC1A/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='';
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2267,7 +2401,7 @@ var _retryTO = null;         // retry timer for failed writes
 
 // Default empty structure
 function defD(){
-  return {breaks:{},logins:{},settings:{dailyMin:45,maxCon:2,maxBreak:30,announce:''},ts:0};
+  return {breaks:{},logins:{},dailyKpi:{extra:[],meeting:[],permission:[],issue:[]},settings:{dailyMin:45,maxCon:2,maxBreak:30,announce:''},ts:0};
 }
 
 // ── READ: always from cache (cache is kept fresh by continuous pull) ──
@@ -2402,17 +2536,26 @@ function _applyRemote(remote){
     });
   });
 
+  // Daily KPI: prefer Sheets when present, otherwise keep local cache
+  var newDailyKpi=(remote.dailyKpi&&typeof remote.dailyKpi==='object')?remote.dailyKpi:(local.dailyKpi||{extra:[],meeting:[],permission:[],issue:[]});
+  if(!Array.isArray(newDailyKpi.extra)) newDailyKpi.extra=[];
+  if(!Array.isArray(newDailyKpi.meeting)) newDailyKpi.meeting=[];
+  if(!Array.isArray(newDailyKpi.permission)) newDailyKpi.permission=[];
+  if(!Array.isArray(newDailyKpi.issue)) newDailyKpi.issue=[];
+
   // Settings always from Sheets
   var newSettings=remote.settings||local.settings;
 
   var newD={
     breaks:newBreaks,
     logins:newLogins,
+    dailyKpi:newDailyKpi,
     settings:newSettings,
     ts:remote.ts||Date.now()
   };
 
   var wasChanged=JSON.stringify(newD.breaks)!==JSON.stringify(local.breaks)||
+                  JSON.stringify(newD.dailyKpi)!==JSON.stringify(local.dailyKpi)||
                   JSON.stringify(newD.settings)!==JSON.stringify(local.settings);
 
   _cache=newD;
@@ -3509,6 +3652,7 @@ function buildNav(){
     {id:'home',ic:'🏠',lb:'Home'},
     {id:'schedule',ic:'📅',lb:'Schedule'},
     {id:'requests',ic:'📝',lb:'Requests'},
+    {id:'kpi',ic:'📌',lb:'Daily KPI'},
   ];
   if(canDash()) items.push({id:'dashboard',ic:'📊',lb:'Dashboard'});
   if(canTeam()) items.push({id:'team',ic:'👥',lb:'Team'});
@@ -3540,7 +3684,7 @@ function showPage(id){
   var nb=document.getElementById('nb-'+topLv);
   if(nb) nb.classList.add('on');
   var titles={home:'Schedule Portal',schedule:'My Schedule',fullsch:'Full Schedule Grid',
-    requests:'Requests',dashboard:'Dashboard',team:'Team Management',
+    requests:'Requests',kpi:'Daily KPI',dashboard:'Dashboard',team:'Team Management',
     admin:'Admin Panel',settings:'Settings'};
   document.getElementById('topTitle').textContent=titles[id]||id;
   sp_currentPage=id;
@@ -3550,6 +3694,7 @@ function showPage(id){
   if(id==='schedule') renderMySchedule();
   if(id==='fullsch') renderFullSchedule();
   if(id==='requests') renderRequests();
+  if(id==='kpi') initDailyKPIPage();
   if(id==='dashboard') renderDashboard();
   if(id==='team') sp_renderTeam();
   if(id==='admin') sp_renderAdmin();
@@ -3790,11 +3935,39 @@ function renderMySwapHist(){
   }).join('');
   document.getElementById('mySwapHist').innerHTML=h||'<div class="empty"><div class="ep">No swap requests yet</div></div>';
 }
+function openAnnualLeave(){
+  var leavePane=document.getElementById('rt-leave');
+  if(leavePane){
+    var tabs=document.querySelectorAll('#reqMainTabs .ftab');
+    var leaveTab=tabs[1];
+    if(typeof swTab==='function' && leaveTab){
+      swTab('reqTabs','rt-leave',leaveTab);
+    }else{
+      ['rt-swap','rt-leave','rt-att'].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el) el.style.display=(id==='rt-leave'?'block':'none');
+      });
+    }
+  }
+  var type=document.getElementById('lvType');
+  if(type) type.value='Annual Leave';
+  var from=document.getElementById('lvFrom');
+  if(from) from.focus();
+}
+
 function submitLeave(){
   var type=document.getElementById('lvType').value;
   var from=document.getElementById('lvFrom').value;
   var to=document.getElementById('lvTo').value;
   var notes=document.getElementById('lvNotes').value;
+  if(!from||!to){
+    sp_showToast('Please select leave dates first','err');
+    return;
+  }
+  if(to<from){
+    sp_showToast('Leave end date cannot be before start date','err');
+    return;
+  }
   var entry={id:'L'+(Date.now()%10000),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:new Date().toISOString()};
   LEAVES.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveLeaveRequest',
@@ -4817,7 +4990,7 @@ function uNav(section, subPage){
 
   // Topbar title
   var titles={home:'KIB WFM Portal',breaks:'Break System',schedule:'My Schedule',
-    requests:'Requests',team:'Team',wfm:'Dashboard',me:'My Profile'};
+    requests:'Requests',kpi:'Daily KPI',team:'Team',wfm:'Dashboard',me:'My Profile'};
   var tEl=document.getElementById('u-title');
   if(tEl) tEl.textContent=titles[section]||'WFM Portal';
 
@@ -4826,7 +4999,7 @@ function uNav(section, subPage){
   if(backBtn) backBtn.classList.toggle('show', section!=='home');
 
   // Nav highlight
-  ['home','breaks','schedule','requests','team','wfm','me'].forEach(function(s){
+  ['home','breaks','schedule','requests','kpi','team','wfm','me'].forEach(function(s){
     var b=document.getElementById('unb-'+s);
     if(b) b.classList.toggle('on', s===section);
   });
@@ -4845,12 +5018,12 @@ function uNav(section, subPage){
     if(typeof gp==='function') gp(subPage||'home');
     _uBsTabOn(subPage||'home');
 
-  }else if(section==='schedule'||section==='requests'||section==='team'||section==='wfm'||section==='me'){
+  }else if(section==='schedule'||section==='requests'||section==='kpi'||section==='team'||section==='wfm'||section==='me'){
     if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
     var sp=document.getElementById('sp-sApp');
     if(sp){sp.style.display='block';sp.classList.add('on');}
     _uInjectSpNav();
-    var pageMap={schedule:'schedule',requests:'requests',team:'team',wfm:'dashboard',me:'settings'};
+    var pageMap={schedule:'schedule',requests:'requests',kpi:'kpi',team:'team',wfm:'dashboard',me:'settings'};
     var pg = subPage || pageMap[section] || 'schedule';
     if(typeof showPage==='function') showPage(pg);
     _uSpTabOn(pg);
@@ -4892,7 +5065,7 @@ function _uInjectSpNav(){
   var sApp=document.getElementById('sp-sApp'); if(!sApp) return;
   var nav=document.createElement('div');
   nav.id='u-sp-nav'; nav.className='u-subnav';
-  var tabs=[{id:'schedule',ic:'📅',lb:'Schedule'},{id:'requests',ic:'📝',lb:'Requests'}];
+  var tabs=[{id:'schedule',ic:'📅',lb:'Schedule'},{id:'requests',ic:'📝',lb:'Requests'},{id:'kpi',ic:'📌',lb:'Daily KPI'}];
   if(typeof canDash==='function'&&canDash()) tabs.push({id:'dashboard',ic:'📊',lb:'Dashboard'});
   if(typeof canTeam==='function'&&canTeam()) tabs.push({id:'team',ic:'👥',lb:'Team'});
   if(typeof canAdmin==='function'&&canAdmin()) tabs.push({id:'admin',ic:'⚙️',lb:'Admin'});
@@ -5286,6 +5459,147 @@ function renderProfilePage(){
   }
 }
 
+
+// ── Daily KPI ─────────────────────────────────────────────────────
+var _kpiInit=false;
+function kpiStore(){
+  var d=gd();
+  if(!d.dailyKpi||typeof d.dailyKpi!=='object') d.dailyKpi={extra:[],meeting:[],permission:[],issue:[]};
+  if(!Array.isArray(d.dailyKpi.extra)) d.dailyKpi.extra=[];
+  if(!Array.isArray(d.dailyKpi.meeting)) d.dailyKpi.meeting=[];
+  if(!Array.isArray(d.dailyKpi.permission)) d.dailyKpi.permission=[];
+  if(!Array.isArray(d.dailyKpi.issue)) d.dailyKpi.issue=[];
+  return d.dailyKpi;
+}
+function kpiVal(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
+function kpiSetVal(id,v){var e=document.getElementById(id);if(e)e.value=v;}
+function kpiTodayIso(){var n=new Date();return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());}
+function kpiNowHm(){var n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes());}
+function kpiShowMsg(msg,type){
+  if(typeof sp_showToast==='function') return sp_showToast(msg,type||'ok');
+  if(typeof showToast==='function') return showToast(msg,type||'ok');
+  alert(msg);
+}
+function kpiAutoFillShift(){
+  var shift=(typeof gTodayS==='function'&&me)?gTodayS(me):'';
+  ['kpiExtraShift','kpiMeetingShift','kpiPermissionShift','kpiIssueShift'].forEach(function(id){
+    var e=document.getElementById(id);
+    if(e&&!e.value&&shift&&shift!=='OFF') e.value=shift;
+  });
+}
+function kpiSetTodayDefaults(){
+  ['kpiExtraDate','kpiMeetingDate','kpiPermissionDate','kpiIssueDate'].forEach(function(id){
+    var e=document.getElementById(id); if(e&&!e.value) e.value=kpiTodayIso();
+  });
+  ['kpiExtraTime','kpiMeetingTime','kpiPermissionTime','kpiIssueTime'].forEach(function(id){
+    var e=document.getElementById(id); if(e&&!e.value) e.value=kpiNowHm();
+  });
+  var lbl=document.getElementById('kpiTodayLabel');
+  if(lbl) lbl.textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  kpiAutoFillShift();
+}
+function renderDailyKPIStats(){
+  var s=kpiStore();
+  var ids={kpiStatExtra:s.extra.length,kpiStatMeeting:s.meeting.length,kpiStatPermission:s.permission.length,kpiStatIssue:s.issue.length};
+  Object.keys(ids).forEach(function(id){var e=document.getElementById(id); if(e) e.textContent=ids[id];});
+}
+function setKpiTab(key){
+  var map={extra:'kpiPaneExtra',meeting:'kpiPaneMeeting',permission:'kpiPanePermission',issue:'kpiPaneIssue'};
+  var nameMap={extra:'Extra Break',meeting:'Meeting',permission:'Permission',issue:'System Issue'};
+  document.querySelectorAll('#kpiTabs .ftab').forEach(function(t){t.classList.toggle('on',t.getAttribute('data-kpi-tab')===key);});
+  document.querySelectorAll('#pg-kpi .kpi-pane').forEach(function(p){p.classList.remove('on');});
+  var pane=document.getElementById(map[key]); if(pane) pane.classList.add('on');
+  var n=document.getElementById('kpiFormName'); if(n) n.textContent=nameMap[key]||'Daily KPI';
+}
+function initDailyKPIPage(){
+  kpiSetTodayDefaults();
+  renderDailyKPIStats();
+  if(_kpiInit) return;
+  _kpiInit=true;
+  document.querySelectorAll('#kpiTabs .ftab').forEach(function(tab){
+    tab.addEventListener('click',function(){ setKpiTab(tab.getAttribute('data-kpi-tab')); });
+  });
+  setKpiTab('extra');
+}
+function kpiResetForm(type){
+  if(type==='extra'){
+    ['kpiExtraDuration','kpiExtraReason','kpiExtraApprovedBy','kpiExtraComment'].forEach(function(id){kpiSetVal(id,'');});
+  }else if(type==='meeting'){
+    ['kpiMeetingDuration','kpiMeetingSubject','kpiMeetingOrganizer','kpiMeetingComment'].forEach(function(id){kpiSetVal(id,'');});
+  }else if(type==='permission'){
+    ['kpiPermissionDuration','kpiPermissionFrom','kpiPermissionTo','kpiPermissionCount','kpiPermissionType','kpiPermissionReason','kpiPermissionApprovedBy'].forEach(function(id){kpiSetVal(id,'');});
+  }else if(type==='issue'){
+    ['kpiIssueDuration','kpiIssueApplication','kpiIssueDescription','kpiIssueApprovedBy','kpiIssueType','kpiIssueComment','kpiIssueHelpdesk'].forEach(function(id){kpiSetVal(id,'');});
+  }
+  kpiSetTodayDefaults();
+}
+function submitDailyKPI(type){
+  var payload={
+    id:'KPI-'+Date.now()+'-'+Math.random().toString(36).slice(2,7).toUpperCase(),
+    type:type,
+    createdAt:new Date().toISOString(),
+    agent:(me&&(me.n||me.name))||'',
+    dept:(me&&(me.t||me.dept))||'',
+    team:(me&&(me.t||me.dept))||'',
+    role:(me&&(me.loginRole||me.access))||''
+  };
+  var missing=[];
+  var action='';
+  if(type==='extra'){
+    action='saveDailyKPIExtra';
+    payload.date=kpiVal('kpiExtraDate'); payload.time=kpiVal('kpiExtraTime'); payload.shift=kpiVal('kpiExtraShift'); payload.duration=kpiVal('kpiExtraDuration'); payload.reason=kpiVal('kpiExtraReason'); payload.approvedBy=kpiVal('kpiExtraApprovedBy'); payload.comment=kpiVal('kpiExtraComment');
+    if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.duration) missing.push('Duration'); if(!payload.reason) missing.push('Reason'); if(!payload.approvedBy) missing.push('Approved By');
+  } else if(type==='meeting'){
+    action='saveDailyKPIMeeting';
+    payload.date=kpiVal('kpiMeetingDate'); payload.time=kpiVal('kpiMeetingTime'); payload.shift=kpiVal('kpiMeetingShift'); payload.duration=kpiVal('kpiMeetingDuration'); payload.subject=kpiVal('kpiMeetingSubject'); payload.organizer=kpiVal('kpiMeetingOrganizer'); payload.comment=kpiVal('kpiMeetingComment');
+    if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.duration) missing.push('Duration'); if(!payload.subject) missing.push('Subject'); if(!payload.organizer) missing.push('Organizer');
+  } else if(type==='permission'){
+    action='saveDailyKPIPermission';
+    payload.date=kpiVal('kpiPermissionDate'); payload.time=kpiVal('kpiPermissionTime'); payload.shift=kpiVal('kpiPermissionShift'); payload.duration=kpiVal('kpiPermissionDuration'); payload.from=kpiVal('kpiPermissionFrom'); payload.to=kpiVal('kpiPermissionTo'); payload.monthlyCount=kpiVal('kpiPermissionCount'); payload.permissionType=kpiVal('kpiPermissionType'); payload.reason=kpiVal('kpiPermissionReason'); payload.approvedBy=kpiVal('kpiPermissionApprovedBy');
+    if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.from) missing.push('From'); if(!payload.to) missing.push('To'); if(!payload.duration) missing.push('Duration'); if(!payload.permissionType) missing.push('Permissions Type'); if(!payload.reason) missing.push('Reason'); if(!payload.approvedBy) missing.push('Approved By');
+  } else if(type==='issue'){
+    action='saveDailyKPIIssue';
+    payload.date=kpiVal('kpiIssueDate'); payload.time=kpiVal('kpiIssueTime'); payload.shift=kpiVal('kpiIssueShift'); payload.duration=kpiVal('kpiIssueDuration'); payload.application=kpiVal('kpiIssueApplication'); payload.description=kpiVal('kpiIssueDescription'); payload.approvedBy=kpiVal('kpiIssueApprovedBy'); payload.issueType=kpiVal('kpiIssueType'); payload.comment=kpiVal('kpiIssueComment'); payload.helpdesk=kpiVal('kpiIssueHelpdesk'); payload.helpdeskNo=payload.helpdesk;
+    if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.application) missing.push('Application'); if(!payload.duration) missing.push('Duration'); if(!payload.description) missing.push('Description'); if(!payload.approvedBy) missing.push('Approved By'); if(!payload.issueType) missing.push('Issue Type');
+  } else return false;
+
+  if(missing.length){ kpiShowMsg('Please complete: '+missing.join(', '),'err'); return false; }
+  if(type==='permission' && payload.from && payload.to && payload.from>=payload.to){ kpiShowMsg('Permission “To” time must be later than “From” time','err'); return false; }
+
+  function commitLocal(){
+    var d=gd();
+    var store=kpiStore();
+    store[type].unshift(payload);
+    d.dailyKpi=store;
+    sv(d);
+    renderDailyKPIStats();
+    kpiResetForm(type);
+  }
+
+  if(typeof API!=='string' || !API){
+    commitLocal();
+    kpiShowMsg('Daily KPI '+type+' submitted locally','ok');
+    return false;
+  }
+
+  fetch(API,{method:'POST',body:JSON.stringify(Object.assign({action:action},payload)),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res&&res.ok){
+        if(res.id) payload.id=res.id;
+        commitLocal();
+        kpiShowMsg('Daily KPI '+type+' submitted successfully','ok');
+        setTimeout(function(){ try{ apiPull(); }catch(e){} },400);
+      }else{
+        kpiShowMsg((res&&res.error)?res.error:('Failed to submit '+type),'err');
+      }
+    })
+    .catch(function(){
+      kpiShowMsg('Network error while submitting '+type,'err');
+    });
+  return false;
+}
+
 // ── Missing function stubs (unified portal shims) ──────────────
 
 // Updates the topbar clock in the unified shell
@@ -5304,12 +5618,14 @@ function uRenderClock(){
 function uBuildNav(){
   var nav=document.getElementById('u-bnav');
   if(!nav||!me) return;
+  nav.innerHTML='';
   var isManager=me.access==='admin'||me.access==='manager'||me.access==='readonly';
   var tabs=[
     {id:'home',  ic:'🏠', lb:'Home'},
     {id:'breaks',ic:'☕', lb:'Breaks'},
     {id:'schedule',ic:'📅',lb:'Schedule'},
     {id:'requests',ic:'📝',lb:'Requests'},
+    {id:'kpi',   ic:'📌', lb:'Daily KPI'},
     {id:'me',    ic:'👤', lb:'Me'}
   ];
   if(isManager) tabs.splice(3,0,{id:'wfm',ic:'📊',lb:'Dashboard'});
