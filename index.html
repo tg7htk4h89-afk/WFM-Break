@@ -464,12 +464,13 @@ input,select,button,textarea{font-family:'DM Sans',sans-serif;}
 .sc-a{background:rgba(13,92,166,.08);color:var(--navy);}
 .sc-e{background:var(--abg);color:var(--amber);}
 .sc-n{background:var(--tealbg);color:var(--teal);}
+.sc-mk{background:rgba(123,97,255,.12);color:#6d4aff;}
+.sc-ck{background:rgba(0,119,182,.12);color:#0077b6;}
 .sc-off{background:var(--rbg);color:var(--red);}
-.sc-lv{background:var(--abg);color:var(--amber);}
-.sc-plv{background:var(--gbg);color:var(--green);}
-.sc-sick{background:var(--rbg);color:var(--red);}
-.sc-mk{background:var(--abg);color:var(--amber);}
-.sc-ck{background:rgba(13,92,166,.08);color:var(--navy);}
+.sc-lv{background:rgba(255,196,0,.18);color:#c88700;}
+.sc-sick{background:rgba(233,30,99,.12);color:#d81b60;}
+.sc-abs{background:rgba(198,40,40,.12);color:#c62828;}
+.sc-plv{background:rgba(76,175,80,.12);color:#2e9d45;}
 
 /* HIST ROW */
 .histrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
@@ -1414,6 +1415,18 @@ body{background:#0a3d7a;}
       <p>Choose your working hours for today</p>
       <label class="lbl">Shift</label>
       <div class="sgrid" id="shiftGrid"></div>
+
+      <div class="fg" style="margin-top:6px;">
+        <label class="lbl">Voicemail Task</label>
+        <label style="display:flex;align-items:flex-start;gap:10px;background:rgba(13,92,166,.05);border:1.5px solid rgba(13,92,166,.12);border-radius:12px;padding:12px 13px;cursor:pointer;">
+          <input id="vmTaskChk" type="checkbox" style="margin-top:2px;accent-color:#0D5CA6;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--t1);">I handle voicemail task today</div>
+            <div style="font-size:11px;color:var(--t2);margin-top:3px;line-height:1.4;">If selected, you can book one extra break slot when the time already has 2 booked agents.</div>
+          </div>
+        </label>
+      </div>
+
       <button id="shiftBtn" class="btn-main" onclick="confirmShift()" disabled>Confirm &amp; Enter &rarr;</button>
       <button class="btn-back" onclick="backToLogin()">&larr; Back</button>
     </div>
@@ -2369,7 +2382,7 @@ var DEPTS=[
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
 var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbzhOqNuDxJFD9Xln2TwEtSrVlj7ww4p3D8UW0qto0KX2HbnkqWW-bYXKB5u5w5c_AiC1A/exec';
-var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='';
+var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
 function today(){
@@ -2605,7 +2618,12 @@ function checkPw(){
   var key='kib_sh_'+emp.name;var saved=null;
   try{saved=JSON.parse(localStorage.getItem(key));}catch(e){}
   if(saved&&saved.date===today()&&(Date.now()-saved.ts<36000000)){
-    var sh=SHIFTS.find(function(s){return s.start===saved.start;});if(sh){finishLogin(emp,sh);return;}
+    var sh=SHIFTS.find(function(s){return s.start===saved.start;});
+    if(sh){
+      selVoicemail=!!saved.voicemail;
+      finishLogin(emp,sh,{voicemail:!!saved.voicemail});
+      return;
+    }
   }
   showStep2(emp);
 }
@@ -2616,6 +2634,9 @@ function showStep2(emp){
   selShift=null;var h='';
   SHIFTS.forEach(function(s,i){h+='<div class="stile" id="so'+i+'" onclick="pickShift('+i+')">'+'<div class="sticon">'+s.icon+'</div><div class="sttime">'+s.label+'</div></div>';});
   document.getElementById('shiftGrid').innerHTML=h;document.getElementById('shiftBtn').disabled=true;
+  selVoicemail=false;
+  var vm=document.getElementById('vmTaskChk');
+  if(vm) vm.checked=false;
 }
 function pickShift(i){
   selShift=SHIFTS[i];
@@ -2624,13 +2645,17 @@ function pickShift(i){
 }
 function confirmShift(){
   if(!selShift||!pendEmp)return;
-  localStorage.setItem('kib_sh_'+pendEmp.name,JSON.stringify({start:selShift.start,date:today(),ts:Date.now()}));
-  finishLogin(pendEmp,selShift);
+  var vm=document.getElementById('vmTaskChk');
+  selVoicemail=!!(vm&&vm.checked);
+  localStorage.setItem('kib_sh_'+pendEmp.name,JSON.stringify({start:selShift.start,voicemail:selVoicemail,date:today(),ts:Date.now()}));
+  finishLogin(pendEmp,selShift,{voicemail:selVoicemail});
 }
 function backToLogin(){document.getElementById('step2').className='lstep';document.getElementById('step1').className='lstep on';document.getElementById('pwInput').value='';}
-function finishLogin(emp,shift){
+function finishLogin(emp,shift,opts){
   me=JSON.parse(JSON.stringify(emp));
+  opts=opts||{};
   me.shift=shift.start;me.shiftEnd=shift.end;me.shiftLabel=shift.label;me.shiftEndMin=shift.endMinRaw;
+  me.handleVoicemail=!!opts.voicemail;
 
   // Show loading while we pull latest data from Sheets
   var btn=document.getElementById('shiftBtn');
@@ -2664,12 +2689,12 @@ function _startSession(){
   // Record login in local cache
   var d=gd();
   if(!d.logins[today()])d.logins[today()]={};
-  d.logins[today()][me.name]={time:nowHH(),shift:me.shiftLabel};
+  d.logins[today()][me.name]={time:nowHH(),shift:me.shiftLabel,voicemail:!!me.handleVoicemail};
   sv(d);
   // Send login record to Sheets
-  saveLoginAPI(me,{label:me.shiftLabel});
+  saveLoginAPI(me,{label:me.shiftLabel,voicemail:!!me.handleVoicemail});
   // Save shift selection for this device
-  try{localStorage.setItem('kib_sh_'+me.name,JSON.stringify({start:me.shift,date:today(),ts:Date.now()}));}catch(e){}
+  try{localStorage.setItem('kib_sh_'+me.name,JSON.stringify({start:me.shift,voicemail:!!me.handleVoicemail,date:today(),ts:Date.now()}));}catch(e){}
   startApp();
 }
 
@@ -2702,7 +2727,7 @@ function renderStrip(){
   var _uav=document.getElementById('uav');if(_uav)_uav.textContent=ini(me.name);
   var _asn=document.getElementById('asname');if(_asn)_asn.textContent=me.name;
   var eL=me.shiftEndMin>=1440?fmt12(pad(me.shiftEndMin%1440/60|0)+':00')+' +1d':fmt12(me.shiftEnd);
-  document.getElementById('asinfo').textContent=me.role+' · '+fmt12(me.shift)+' – '+eL;
+  document.getElementById('asinfo').textContent=me.role+' · '+fmt12(me.shift)+' – '+eL+(me.handleVoicemail?' · Voicemail':'');
   var d=gd();var daily=(d.settings&&d.settings.dailyMin)||45;
   var used=schedMins(me.name,d);document.getElementById('balchip').textContent=Math.max(daily-used,0)+' min left';
 }
@@ -2882,6 +2907,8 @@ function cancelBreak(){var d=gd();var b=myBreak(d);if(!b)return;b.status='cancel
 function buildSlotGrid(){
   if(!me)return;
   var d=gd();var s=d.settings||{};var mc=s.maxCon||2;
+  var vmExtra=(me&&me.handleVoicemail)?1:0;
+  var maxAllowed=mc+vmExtra;
   var sm=toMin(me.shift);var em=me.shiftEndMin;var nm=toMin(nowHH());
   // For overnight shifts (crosses midnight): if it's early morning, add 1440 to current time
   var adjNm=(sm>=720&&nm<sm&&nm<480)?nm+1440:nm;
@@ -2899,7 +2926,9 @@ function buildSlotGrid(){
       var bsAdj=(bs<480&&sm>=720)?bs+1440:bs;
       if(bsAdj<=m&&bsAdj+b.duration>m){at.push(b);if(b.agent===me.name)myHere=b;}
     });
-    var full=at.length>=mc;var isSel=selSlot&&selSlot.min===m;
+    var full=at.length>=maxAllowed;var isSel=selSlot&&selSlot.min===m;
+    var baseFull=at.length>=mc;
+    var vmOpen=!!(me&&me.handleVoicemail&&baseFull&&at.length<maxAllowed&&!myHere&&!isPast&&valid);
     var cls='bslot',who='',onclick='';
     if(myHere){
       cls+=' mine';who='Yours';
@@ -2911,6 +2940,10 @@ function buildSlotGrid(){
       cls+=' full';
       who=at.map(function(x){return x.agent.split(' ')[0];}).join(', ');
       onclick='showOccupants('+m+')'; // Clickable! Show who + offer swap
+    } else if(vmOpen){
+      cls+=' partial';
+      who='Voicemail access';
+      onclick='pickSlot('+m+')';
     } else if(at.length>0){
       cls+=' partial';who=at[0].agent.split(' ')[0];onclick='pickSlot('+m+')';
     } else {
@@ -2925,7 +2958,8 @@ function buildSlotGrid(){
     var oc=[];var sm2=toMin(me.shift);
     tdb(d).forEach(function(b){if(b.status==='cancelled')return;var bs=toMin(b.breakStart);var bsAdj=(bs<480&&sm2>=720)?bs+1440:bs;if(bsAdj<=selSlot.min&&bsAdj+b.duration>selSlot.min)oc.push(b.agent);});
     var occTxt=oc.length?' · Also booked: '+oc.join(', '):'';
-    si.style.display='block';si.textContent='Selected: '+fmt12(fromMin(selSlot.min%1440))+occTxt+' — choose duration below';
+    var vmTxt=(me&&me.handleVoicemail&&oc.length>=mc)?' · Voicemail exception active':''; 
+    si.style.display='block';si.textContent='Selected: '+fmt12(fromMin(selSlot.min%1440))+occTxt+vmTxt+' — choose duration below';
     buildDurBtns();
   } else {
     si.style.display='none';document.getElementById('durcard').style.display='none';document.getElementById('bookbtnwrap').style.display='none';
@@ -2979,14 +3013,15 @@ function buildDurBtns(){
 function setDur(v){selDur=v;buildDurBtns();}
 function confirmBook(){
   if(!selSlot)return;var d=gd();var s=d.settings||{};var daily=s.dailyMin||45;var mc=s.maxCon||2;
+  var vmExtra=(me&&me.handleVoicemail)?1:0;var maxAllowed=mc+vmExtra;
   var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);
   if(selDur>rem){showToast('Not enough time remaining','err');return;}
   var m=selSlot.min;var smCB=toMin(me.shift);var conf=tdb(d).filter(function(b){if(b.status==='cancelled')return false;var bs=toMin(b.breakStart);var bsA=(bs<480&&smCB>=720)?bs+1440:bs;return bsA<=m&&bsA+b.duration>m;});
-  if(conf.length>=mc){showToast('Slot is now full!','err');buildSlotGrid();return;}
+  if(conf.length>=maxAllowed){showToast((me&&me.handleVoicemail)?'Voicemail extra slot already used here':'Slot is now full!','err');buildSlotGrid();return;}
   if(myBreak(d)){showToast('You already have a break booked','err');return;}
-  var nb={id:uid(),agent:me.name,breakStart:selSlot.hhmm,duration:selDur,status:'booked',bookedAt:Date.now()};
+  var nb={id:uid(),agent:me.name,breakStart:selSlot.hhmm,duration:selDur,status:'booked',bookedAt:Date.now(),voicemailOverride:!!(me&&me.handleVoicemail&&conf.length>=mc)};
   tdb(d).push(nb);sv(d);var bt=fmt12(selSlot.hhmm);selSlot=null;selDur=15;
-  showToast('Break booked for '+bt,'ok');addNotif('📅 Break booked for '+bt);
+  showToast('Break booked for '+bt+((nb.voicemailOverride)?' · voicemail exception':''),'ok');addNotif('📅 Break booked for '+bt+((nb.voicemailOverride)?' (voicemail exception)':''));
   document.getElementById('durcard').style.display='none';document.getElementById('bookbtnwrap').style.display='none';buildSlotGrid();
 }
 
@@ -3524,6 +3559,29 @@ var sp_teamFilter='All';
 const COLORS=['#0A4A8A','#00A89A','#3DB549','#E08C00','#6B3FA0','#C0392B','#0A7FAE','#2E86C1'];
 // avc shared from BS
 function gTodayS(a){return a.sch[DATES.indexOf(TODAY)]||'OFF';}
+function getAttScheduleOverride(agentName, baseShift, dateStr){
+  if(typeof attGetEntry!=='function' || dateStr!==TODAY) return null;
+  var att=attGetEntry(agentName);
+  if(!att||!att.status) return null;
+  if(att.status==='change' && att.newShift){
+    return {shift:att.newShift, cls:'sc-teal', short:att.newShift, badge:'Shift Change'};
+  }
+  if(att.status==='sick'){
+    return {shift:'Sick', cls:'sc-sick', short:'Sick', badge:'Sick'};
+  }
+  if(att.status==='leave'){
+    return {shift:'Leave', cls:'sc-lv', short:'Leave', badge:'Leave'};
+  }
+  if(att.status==='absent'){
+    return {shift:'Absent', cls:'sc-abs', short:'Absent', badge:'Absent'};
+  }
+  return null;
+}
+function getDisplayShift(agentObj, dateStr, idx){
+  var base=((agentObj&&agentObj.sch&&agentObj.sch[idx])||'OFF');
+  var o=getAttScheduleOverride(agentObj&&agentObj.n?agentObj.n:'', base, dateStr);
+  return o||{shift:base, cls:scCls(base), short:scShort(base), badge:''};
+}
 function scCls(s){
   if(!s||s==='—')return'';
   if(s==='OFF')return'sc-off';if(s==='P-Leave')return'sc-plv';
@@ -3814,15 +3872,16 @@ function renderMySchedule(){
     var s=me.sch[i];
     var isToday=d===TODAY;
     var isW=WKND.includes(i);
-    var work=!['OFF','P-Leave','Leave','Sick'].includes(s);
+    var dispInfo=getDisplayShift(me,d,i);
+    var work=!['OFF','P-Leave','Leave','Sick','Absent'].includes(dispInfo.shift);
     var attEntry=(isToday&&typeof attTodayStatus==='function')?attTodayStatus(me.n||me.name):null;
     var attBadge='';
     if(attEntry){var attSt=typeof ATT_STATUSES!=='undefined'?ATT_STATUSES.find(function(x){return x.k===attEntry.status;}):null;
       attBadge=attSt?' <span class="pill '+attSt.pillCls+'" style="font-size:10px;">'+attSt.pillLbl+'</span>':'';
     }
-    var dispShift=attEntry&&attEntry.newShift
-      ?('<span class="sc sc-teal">'+attEntry.newShift+'</span><span style="font-size:10px;color:var(--teal);"> ✎</span>')
-      :('<span class="sc '+scCls(s)+'">'+s+'</span>');
+    var dispShift=(isToday&&dispInfo&&dispInfo.shift!==s)
+      ?('<span class="sc '+dispInfo.cls+'">'+dispInfo.shift+'</span><span style="font-size:10px;color:var(--teal);"> ✎</span>')
+      :('<span class="sc '+dispInfo.cls+'">'+dispInfo.shift+'</span>');
     h+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.04);':'')+'">'
       +'<td style="padding:10px 12px;font-size:12px;">'+(isToday?'<span style="font-size:9px;font-weight:800;color:var(--navy);background:rgba(13,92,166,.1);border-radius:4px;padding:2px 5px;margin-right:4px;">TODAY</span>':'')+DL[i]+attBadge+'</td>'
       +'<td style="padding:10px 12px;">'+pill(isW&&!work?'Weekend':s==='OFF'?'Off':work?'Working':'Leave/Sick',isW&&!work||s==='OFF'?'p-gray':work?'p-green':'p-red')+'</td>'
@@ -3841,7 +3900,7 @@ function renderFullSchedule(){
   // Legend
   var leg='';
   [['sc-m','Morning'],['sc-a','Afternoon'],['sc-e','Evening'],['sc-n','Night'],
-   ['sc-mk','Maker'],['sc-ck','Checker'],['sc-off','OFF'],['sc-lv','Leave'],['sc-sick','Sick'],['sc-plv','P-Leave']
+   ['sc-mk','Maker'],['sc-ck','Checker'],['sc-off','OFF'],['sc-lv','Leave'],['sc-sick','Sick'],['sc-abs','Absent'],['sc-plv','P-Leave']
   ].forEach(function(x){leg+='<span class="sc '+x[0]+'">'+x[1]+'</span> ';});
   document.getElementById('schLegend').innerHTML=leg;
 
@@ -3878,7 +3937,9 @@ function buildSchGrid(){
       var mc=a.r==='maker'?' <span style="font-size:8px;background:var(--abg);color:var(--amber);padding:1px 4px;border-radius:3px;">M</span>':a.r==='checker'?' <span style="font-size:8px;background:rgba(13,92,166,.1);color:var(--navy);padding:1px 4px;border-radius:3px;">C</span>':'';
       var cells='<td class="name-c">'+a.n+mc+'</td>';
       a.sch.forEach(function(s,i){
-        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'" style="'+(WKND.includes(i)?'opacity:.5;':'')+'"><span class="sc '+scCls(s)+'">'+scShort(s)+'</span></td>';
+        var disp=getDisplayShift(a,DATES[i],i);
+        var note=(DATES[i]===TODAY&&disp&&disp.shift!==s)?' title="Attendance updated by TL: '+disp.shift+'"':'';
+        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'" style="'+(WKND.includes(i)?'opacity:.5;':'')+'"'+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span></td>';
       });
       rows+='<tr>'+cells+'</tr>';
     });
