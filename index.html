@@ -1383,6 +1383,14 @@ body{background:#0a3d7a;}
 .kpi-grid-2{grid-template-columns:1fr;}
 @media (min-width:520px){.kpi-grid-2{grid-template-columns:repeat(2,1fr);}}
 
+
+/* --- mobile + role UX patch --- */
+html,body{min-height:100%;height:auto!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;}
+#u-app{min-height:100dvh!important;overflow-x:hidden!important;overflow-y:auto!important;}
+#u-app #u-content{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px));}
+#u-app #u-home,.pg{width:100%;max-width:100%;}
+@media(max-width:420px){.pg{padding:10px!important}.u-hero{padding:18px 14px 24px!important}.u-card{margin-bottom:10px!important}.u-hero-cards{grid-template-columns:1fr!important}.u-quick-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}.u-week-inner{min-width:0!important;grid-template-columns:repeat(7,minmax(0,1fr))!important}.u-hc-val{font-size:24px!important}.hub-body{max-width:100%!important;padding:14px 10px!important}}
+
 </style>
 </head>
 <body>
@@ -1474,7 +1482,7 @@ body{background:#0a3d7a;}
         <div style="margin-top:8px;display:inline-block;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;font-size:9px;font-weight:800;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.5px;" id="u-hero-shift-status">Working</div>
       </div>
       <!-- Break balance card -->
-      <div class="u-hero-card">
+      <div class="u-hero-card" id="u-hero-break">
         <div class="u-hc-label">Break Balance
           <span class="u-hc-icon">☕</span>
         </div>
@@ -2380,7 +2388,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxwiZLoY4AtAjDoABbW4SqNo0EVan519iuWHYuADrP2WA8Xe5C041rfjy_gz6Q5aDFnug/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycby1WcBk5QNtd8P15JqK6lmB8ZxDI3NJiwuVBKfwYPx2s6XKBykVewYDMSRpTn7XTXxogQ/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2607,6 +2615,29 @@ function forceSync(){
   showToast('Syncing from server…','inf');
 }
 
+function isAgentUser(user){
+  if(!user) return false;
+  return String(user.access||'').toLowerCase()==='agent';
+}
+function isManagementUser(user){
+  return !!user && !isAgentUser(user);
+}
+function getTodaySchedLabelFor(emp){
+  try{
+    var ag=AGENTS.find(function(a){return a.n===emp.name;});
+    if(!ag) return '';
+    return gTodayS(ag)||'';
+  }catch(e){return '';}
+}
+function buildAutoShiftFor(emp){
+  var sched=(getTodaySchedLabelFor(emp)||'').trim();
+  var m=sched.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+  if(m){
+    return {start:m[1],end:m[2],label:sched,icon:'💼',endMinRaw:toMin(m[2])+(toMin(m[2])<=toMin(m[1])?1440:0)};
+  }
+  return {start:'09:00',end:'16:00',label:sched||'Management',icon:'💼',endMinRaw:960};
+}
+
 
 function checkPw(){
   var pw=document.getElementById('pwInput').value.trim();
@@ -2617,16 +2648,22 @@ function checkPw(){
   var key='kib_sh_'+emp.name;var saved=null;
   try{saved=JSON.parse(localStorage.getItem(key));}catch(e){}
   if(saved&&saved.date===today()&&(Date.now()-saved.ts<36000000)){
-    var sh=SHIFTS.find(function(s){return s.start===saved.start;});
-    if(sh){
-      selVoicemail=!!saved.voicemail;
-      finishLogin(emp,sh,{voicemail:!!saved.voicemail});
-      return;
-    }
+    var sh=SHIFTS.find(function(s){return s.start===saved.start;}) || buildAutoShiftFor(emp);
+    selVoicemail=!!saved.voicemail;
+    finishLogin(emp,sh,{voicemail:!!saved.voicemail});
+    return;
+  }
+  if(isManagementUser(emp)){
+    finishLogin(emp,buildAutoShiftFor(emp),{voicemail:false});
+    return;
   }
   showStep2(emp);
 }
 function showStep2(emp){
+  if(isManagementUser(emp)){
+    finishLogin(emp,buildAutoShiftFor(emp),{voicemail:false});
+    return;
+  }
   document.getElementById('step1').className='lstep';document.getElementById('step2').className='lstep on';
   var av=document.getElementById('idav');av.textContent=ini(emp.name);av.style.background=avc(emp.name);
   document.getElementById('idname').textContent=emp.name;document.getElementById('idrole').textContent=emp.role;
@@ -3335,7 +3372,7 @@ function startApp(){
   var hav=document.getElementById('hub-av');
   if(hav){hav.textContent=ini(me.name);hav.style.background=avc(me.name);hav.style.color='#fff';}
   var hn=document.getElementById('hub-name');     if(hn) hn.textContent=me.name;
-  var hr=document.getElementById('hub-role');     if(hr) hr.textContent=me.role+' · '+me.dept;
+  var hr=document.getElementById('hub-role');     if(hr) hr.textContent=(isAgentUser(me)?'Agent':'Management')+' · '+me.dept;
   var hg=document.getElementById('hub-greeting'); if(hg) hg.textContent='';
   var hs=document.getElementById('hub-sub');      if(hs) hs.textContent='';
 
@@ -5042,6 +5079,9 @@ function uNav(section, subPage){
   var bsApp=document.getElementById('bs-app');
   var spApp=document.getElementById('sp-app');
   var uHome=document.getElementById('u-home');
+  var isMgr=isManagementUser(me);
+
+  if(isMgr && section==='breaks') section='home';
 
   // Hide all
   if(uHome) uHome.classList.remove('on');
@@ -5049,7 +5089,7 @@ function uNav(section, subPage){
   if(spApp){spApp.style.display='none';spApp.classList.remove('u-active');}
 
   // Topbar title
-  var titles={home:'KIB WFM Portal',breaks:'Break System',schedule:'My Schedule',
+  var titles={home:'KIB WFM Portal',breaks:'Break System',schedule:'Schedule',attendance:'Attendance',
     requests:'Requests',kpi:'Daily KPI',team:'Team',wfm:'Dashboard',me:'My Profile'};
   var tEl=document.getElementById('u-title');
   if(tEl) tEl.textContent=titles[section]||'WFM Portal';
@@ -5059,7 +5099,7 @@ function uNav(section, subPage){
   if(backBtn) backBtn.classList.toggle('show', section!=='home');
 
   // Nav highlight
-  ['home','breaks','schedule','requests','kpi','team','wfm','me'].forEach(function(s){
+  ['home','breaks','schedule','attendance','requests','kpi','team','wfm','me'].forEach(function(s){
     var b=document.getElementById('unb-'+s);
     if(b) b.classList.toggle('on', s===section);
   });
@@ -5078,12 +5118,12 @@ function uNav(section, subPage){
     if(typeof gp==='function') gp(subPage||'home');
     _uBsTabOn(subPage||'home');
 
-  }else if(section==='schedule'||section==='requests'||section==='kpi'||section==='team'||section==='wfm'||section==='me'){
+  }else if(section==='schedule'||section==='attendance'||section==='requests'||section==='kpi'||section==='team'||section==='wfm'||section==='me'){
     if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
     var sp=document.getElementById('sp-sApp');
     if(sp){sp.style.display='block';sp.classList.add('on');}
     _uInjectSpNav();
-    var pageMap={schedule:'schedule',requests:'requests',kpi:'kpi',team:'team',wfm:'dashboard',me:'settings'};
+    var pageMap={schedule:'schedule',attendance:'attendance',requests:'requests',kpi:'kpi',team:'team',wfm:'dashboard',me:'settings'};
     var pg = subPage || pageMap[section] || 'schedule';
     if(typeof showPage==='function') showPage(pg);
     _uSpTabOn(pg);
@@ -5125,7 +5165,7 @@ function _uInjectSpNav(){
   var sApp=document.getElementById('sp-sApp'); if(!sApp) return;
   var nav=document.createElement('div');
   nav.id='u-sp-nav'; nav.className='u-subnav';
-  var tabs=[{id:'schedule',ic:'📅',lb:'Schedule'},{id:'requests',ic:'📝',lb:'Requests'},{id:'kpi',ic:'📌',lb:'Daily KPI'}];
+  var tabs=[{id:'schedule',ic:'📅',lb:'Schedule'},{id:'attendance',ic:'✅',lb:'Attendance'},{id:'requests',ic:'📝',lb:'Requests'},{id:'kpi',ic:'📌',lb:'Daily KPI'}];
   if(typeof canDash==='function'&&canDash()) tabs.push({id:'dashboard',ic:'📊',lb:'Dashboard'});
   if(typeof canTeam==='function'&&canTeam()) tabs.push({id:'team',ic:'👥',lb:'Team'});
   if(typeof canAdmin==='function'&&canAdmin()) tabs.push({id:'admin',ic:'⚙️',lb:'Admin'});
@@ -5185,6 +5225,9 @@ function renderUnifiedHome(){
   }
 
   // ── Break balance ────────────────────────────────────────────────
+  var isMgr=isManagementUser(me);
+  var balCard=document.getElementById('u-hero-break');
+  if(balCard) balCard.style.display=isMgr?'none':'';
   var daily = s.dailyMin||45;
   var used  = typeof schedMins==='function' ? schedMins(me.name,d) : 0;
   var rem   = Math.max(daily-used,0);
@@ -5284,7 +5327,7 @@ function renderUnifiedHome(){
   // ── Quick nav grid (role-based) ───────────────────────────────────
   var qEl = el('u-quick-grid');
   if(qEl){
-    var isManager=me.access==='admin'||me.access==='manager'||me.access==='readonly';
+    var isManager=isManagementUser(me);
     var cards=[
       {ic:'☕',title:'Book Break',sub:'Start or schedule',fn:"uNav('breaks','book')"},
       {ic:'📋',title:'My Schedule',sub:'View all shifts',fn:"uNav('schedule')"},
@@ -5293,10 +5336,10 @@ function renderUnifiedHome(){
     ];
     if(isManager){
       cards=[
-        {ic:'📊',title:'Dashboard',sub:'Team overview',fn:"uNav('wfm')"},
         {ic:'📅',title:'Full Schedule',sub:'All agents',fn:"uNav('schedule');showPage('fullsch')"},
-        {ic:'👥',title:'Team Mgmt',sub:'View requests',fn:"uNav('team')"},
-        {ic:'⚙️',title:'Admin',sub:'Settings & data',fn:"uNav('wfm');showPage('admin')"},
+        {ic:'✅',title:'Attendance',sub:'Update team status',fn:"uNav('attendance')"},
+        {ic:'👥',title:'Monitor Breaks',sub:'View team breaks',fn:"uNav('home')"},
+        {ic:'⚙️',title:'Profile',sub:'User settings',fn:"uNav('me')"},
       ];
     }
     var qh='';
@@ -5679,16 +5722,24 @@ function uBuildNav(){
   var nav=document.getElementById('u-bnav');
   if(!nav||!me) return;
   nav.innerHTML='';
-  var isManager=me.access==='admin'||me.access==='manager'||me.access==='readonly';
-  var tabs=[
-    {id:'home',  ic:'🏠', lb:'Home'},
-    {id:'breaks',ic:'☕', lb:'Breaks'},
-    {id:'schedule',ic:'📅',lb:'Schedule'},
-    {id:'requests',ic:'📝',lb:'Requests'},
-    {id:'kpi',   ic:'📌', lb:'Daily KPI'},
-    {id:'me',    ic:'👤', lb:'Me'}
-  ];
-  if(isManager) tabs.splice(3,0,{id:'wfm',ic:'📊',lb:'Dashboard'});
+  var isMgr=isManagementUser(me);
+  var tabs=isMgr
+    ? [
+        {id:'home',ic:'🏠',lb:'Home'},
+        {id:'schedule',ic:'📅',lb:'Schedule'},
+        {id:'attendance',ic:'✅',lb:'Attendance'},
+        {id:'requests',ic:'📝',lb:'Requests'},
+        {id:'kpi',ic:'📌',lb:'Daily KPI'},
+        {id:'me',ic:'👤',lb:'Me'}
+      ]
+    : [
+        {id:'home',ic:'🏠',lb:'Home'},
+        {id:'breaks',ic:'☕',lb:'Breaks'},
+        {id:'schedule',ic:'📅',lb:'Schedule'},
+        {id:'requests',ic:'📝',lb:'Requests'},
+        {id:'kpi',ic:'📌',lb:'Daily KPI'},
+        {id:'me',ic:'👤',lb:'Me'}
+      ];
   tabs.forEach(function(t){
     var btn=document.createElement('button');
     btn.className='unb'; btn.id='unb-'+t.id;
@@ -5718,7 +5769,7 @@ function initSpProfile(){
   if(!me||!me.n) return;
   var n=me.n||me.name||'';
   var t=me.t||me.dept||'';
-  var role=(me.loginRole||me.access||'agent').toUpperCase();
+  var role=(isAgentUser(me)?'AGENT':'MANAGEMENT');
   var setEl=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
   var setBg=function(id,v){var e=document.getElementById(id);if(e)e.style.background=v;};
   setEl('setName',n);
