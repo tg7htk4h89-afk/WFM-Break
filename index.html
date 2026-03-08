@@ -1391,6 +1391,77 @@ html,body{min-height:100%;height:auto!important;overflow-x:hidden!important;over
 #u-app #u-home,.pg{width:100%;max-width:100%;}
 @media(max-width:420px){.pg{padding:10px!important}.u-hero{padding:18px 14px 24px!important}.u-card{margin-bottom:10px!important}.u-hero-cards{grid-template-columns:1fr!important}.u-quick-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}.u-week-inner{min-width:0!important;grid-template-columns:repeat(7,minmax(0,1fr))!important}.u-hc-val{font-size:24px!important}.hub-body{max-width:100%!important;padding:14px 10px!important}}
 
+
+/* ── iPhone shift-step fit fixes ───────────────────────── */
+#hub-login{
+  overflow-y:auto!important;
+  align-items:flex-start!important;
+  padding-top:max(12px, env(safe-area-inset-top))!important;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom))!important;
+  -webkit-overflow-scrolling:touch;
+}
+.lbox{
+  width:min(100%, 380px)!important;
+  max-width:calc(100vw - 22px)!important;
+  margin:0 auto;
+}
+#step2{
+  max-height:calc(100svh - 170px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:0!important;
+}
+#step2 .idcard{margin-bottom:14px!important;}
+#step2 h3{font-size:16px!important; margin-bottom:2px!important;}
+#step2 p{margin-bottom:12px!important;}
+#step2 .lbl{margin-bottom:7px!important;}
+#step2 .sgrid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  max-height:none!important;
+  overflow:visible!important;
+  margin-bottom:14px!important;
+}
+#step2 .stile{
+  min-height:88px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:12px 8px!important;
+}
+#step2 .fg{margin-top:0!important;margin-bottom:0!important;}
+#step2 .shift-actions{
+  position:sticky;
+  bottom:0;
+  left:0;
+  right:0;
+  background:linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 18%, #fff 100%);
+  padding-top:12px;
+  padding-bottom:calc(8px + env(safe-area-inset-bottom));
+  margin-top:14px;
+}
+#step2 #shiftBtn{margin-top:0!important;}
+#step2 .btn-back{margin-top:8px!important;}
+@media (max-width:430px){
+  #hub-login{padding-left:10px!important;padding-right:10px!important;}
+  .lbox{max-width:calc(100vw - 20px)!important;border-radius:16px!important;}
+  .lhdr{padding:18px 18px 14px!important;}
+  .lkib{font-size:18px!important;letter-spacing:3px!important;}
+  .lfull{font-size:9px!important;line-height:1.35!important;}
+  .lemb{width:48px!important;height:48px!important;border-radius:12px!important;margin-bottom:8px!important;}
+  .lemb img{max-width:82%!important;max-height:82%!important;object-fit:contain!important;}
+  .lstep{padding:18px 16px 16px!important;}
+  #step2{max-height:calc(100svh - 150px)!important;}
+  #step2 .idcard{padding:12px!important;gap:10px!important;}
+  #step2 .idav{width:42px!important;height:42px!important;font-size:15px!important;}
+  #step2 .idname{font-size:13px!important;}
+  #step2 .idrole{font-size:10px!important;}
+  #step2 .sticon{font-size:19px!important;margin-bottom:4px!important;}
+  #step2 .sttime{font-size:10px!important;line-height:1.25!important;}
+}
+
 </style>
 
 <style id="iphone-fit-patch">
@@ -1464,8 +1535,10 @@ input,select,textarea,button{font-size:16px;}
         </label>
       </div>
 
-      <button id="shiftBtn" class="btn-main" onclick="confirmShift()" disabled>Confirm &amp; Enter &rarr;</button>
-      <button class="btn-back" onclick="backToLogin()">&larr; Back</button>
+      <div class="shift-actions">
+        <button id="shiftBtn" class="btn-main" onclick="confirmShift()" disabled>Confirm &amp; Enter &rarr;</button>
+        <button class="btn-back" onclick="backToLogin()">&larr; Back</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2795,7 +2868,7 @@ function bs_originalStartApp(){
   document.getElementById('sApp').className='on'; // inside #bs-app
   if(me.access==='admin'||me.access==='readonly')document.getElementById('nav-admin').style.display='';
   renderStrip();renderAll();gp('home');
-  clkInt=clkInt||setInterval(renderClock,1000);syncInt=syncInt||setInterval(function(){apiPull();},3000);tmrInt=tmrInt||setInterval(tickTimer,1000);
+  clkInt=setInterval(renderClock,1000);syncInt=setInterval(function(){apiPull();},3000);tmrInt=setInterval(tickTimer,1000);
   apiPull();renderClock();
 }
 function renderClock(){
@@ -3376,15 +3449,11 @@ function hubRefreshBadge(){
   if(!me)return;
   var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;});
   var badge=document.getElementById('break-badge');
-  if(badge){
-    if(pend.length){badge.style.display='';badge.textContent=pend.length;}else{badge.style.display='none';}
-  }
-  var ann=(d.settings&&d.settings.announce)||'';
+  if(pend.length){badge.style.display='';badge.textContent=pend.length;}else{badge.style.display='none';}
+  var ann=(d.settings&&d.settings.announce)||''
   var hann=document.getElementById('hub-announce');
   var htxt=document.getElementById('hub-ann-text');
-  if(hann&&htxt){
-    if(ann){hann.style.display='';htxt.textContent=ann;}else{hann.style.display='none';}
-  }
+  if(ann){hann.style.display='';htxt.textContent=ann;}else{hann.style.display='none';}
 }
 
 // Override startApp to go to hub instead of directly to BS
@@ -3449,6 +3518,7 @@ function startApp(){
   if(typeof buildNav==='function') buildNav();
   if(typeof buildSwapWith==='function') buildSwapWith();
   if(typeof sp_renderNotifs==='function') sp_renderNotifs();
+  if(typeof buildSwapWith==='function') buildSwapWith();
 
   // Populate SP profile fields
   initSpProfile();
@@ -3644,7 +3714,7 @@ var sp_teamFilter='All';
 // ini shared from BS
 const COLORS=['#0A4A8A','#00A89A','#3DB549','#E08C00','#6B3FA0','#C0392B','#0A7FAE','#2E86C1'];
 // avc shared from BS
-function gTodayS(a){var idx=DATES.indexOf(TODAY);return idx>=0&&a&&a.sch?(a.sch[idx]||'OFF'):'OFF';}
+function gTodayS(a){return a.sch[DATES.indexOf(TODAY)]||'OFF';}
 function getAttScheduleOverride(agentName, baseShift, dateStr){
   if(typeof attGetEntry!=='function' || dateStr!==TODAY) return null;
   var att=attGetEntry(agentName);
@@ -4071,7 +4141,7 @@ function submitSwap(){
   var d=document.getElementById('swDate').value;
   if(!w){sp_showToast('Select a colleague','err');return;}
   var ag=AGENTS.find(function(a){return a.id===w;});
-  var entry={id:(typeof uid==='function'?uid('SW'):('SW-'+Date.now()+'-'+Math.floor(Math.random()*1000))),from:me.n,to:ag.n,date:d,sA:gTodayS(me),sB:gTodayS(ag),reason:r,status:'pending',ts:new Date().toISOString()};
+  var entry={id:'SW'+(Date.now()%10000),from:me.n,to:ag.n,date:d,sA:gTodayS(me),sB:gTodayS(ag),reason:r,status:'pending',ts:new Date().toISOString()};
   SWAPS.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',
     id:entry.id,from:entry.from,to:entry.to,date:entry.date,
@@ -4131,14 +4201,7 @@ function submitLeave(){
     sp_showToast('Leave end date cannot be before start date','err');
     return;
   }
-  var dup=(LEAVES||[]).some(function(l){
-    return String(l.agent||'')===String(me.n||'')&&String(l.status||'').toLowerCase()==='pending'&&String(l.from||'')===from&&String(l.to||'')===to;
-  });
-  if(dup){
-    sp_showToast('A pending leave already exists for this period','err');
-    return;
-  }
-  var entry={id:(typeof uid==='function'?uid('LV'):('LV-'+Date.now()+'-'+Math.floor(Math.random()*1000))),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:new Date().toISOString()};
+  var entry={id:'L'+(Date.now()%10000),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:new Date().toISOString()};
   LEAVES.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveLeaveRequest',
     id:entry.id,agent:entry.agent,type:entry.type,from:entry.from,
@@ -4197,42 +4260,44 @@ function renderMyAttTab(){
 // ════════════════════════════════════════════════
 function renderDashboard(){
   if(!canDash()){document.getElementById('dashContent').innerHTML='<div style="background:var(--rbg);border:1px solid rgba(192,57,43,.2);border-radius:var(--r);padding:14px;font-size:13px;font-weight:600;color:var(--red);">⛔ Dashboard is for TL, ATL, WFM and Management only.</div>';return;}
-  var agentShift=function(a){return getEffectiveTodayShift(a);};
-  var working=AGENTS.filter(function(a){return isWorkingShiftLabel(agentShift(a))&&!['manager','head'].includes(a.r);}).length;
-  var sick=AGENTS.filter(function(a){return agentShift(a)==='Sick';}).length;
-  var onLv=AGENTS.filter(function(a){return ['P-Leave','Leave','Permission'].includes(agentShift(a));}).length;
+  var working=AGENTS.filter(function(a){return!['OFF','P-Leave','Leave','Sick'].includes(gTodayS(a))&&!['manager','head'].includes(a.r);}).length;
+  var sick=AGENTS.filter(function(a){return gTodayS(a)==='Sick';}).length;
+  var onLv=AGENTS.filter(function(a){return['P-Leave','Leave'].includes(gTodayS(a));}).length;
   var pendA=SWAPS.filter(function(s){return s.status==='pending';}).length+LEAVES.filter(function(l){return l.status==='pending';}).length;
 
-  var h='<div class="sh">Today — '+TODAY+'</div>'
+  var h='<div class="sh">Today — Wed 04 March 2026</div>'
     +'<div class="team-summary"><div class="tscard c-navy"><div class="tsnum">'+working+'</div><div class="tslbl">Working</div></div>'
     +'<div class="tscard c-red"><div class="tsnum">'+(sick+onLv)+'</div><div class="tslbl">Leave/Sick</div></div>'
     +'<div class="tscard c-amber"><div class="tsnum">'+pendA+'</div><div class="tslbl">Pending</div></div>'
     +'<div class="tscard c-teal"><div class="tsnum">54</div><div class="tslbl">Peak Calls</div></div></div>';
 
+  // Team breakdown
   h+='<div class="sh">Team Breakdown</div>';
   ['Inbound','Outbound','ITM','Wage','Leadership','Back Office'].forEach(function(team){
     var m=AGENTS.filter(function(a){return a.t===team;});
-    var w=m.filter(function(a){return isWorkingShiftLabel(agentShift(a));});
+    var w=m.filter(function(a){return!['OFF','P-Leave','Leave','Sick'].includes(gTodayS(a));});
     var pct=m.length?Math.round(w.length/m.length*100):0;
     h+='<div class="cov-row"><div class="cov-top"><span style="font-weight:700;">'+team+' ('+m.length+')</span>'
       +'<span style="color:'+(pct>=80?'var(--green)':'var(--amber)')+'">'+w.length+' working · '+pct+'%</span></div>'
       +'<div class="cov-bg"><div class="cov-fill '+(pct>=80?'fill-ok':pct>=50?'fill-warn':'fill-low')+'" style="width:'+pct+'%"></div></div></div>';
   });
 
+  // Shift coverage
   h+='<div class="sh">Shift Coverage Today</div>';
-  [{lb:'Morning (09–12)',n:3,a:AGENTS.filter(function(x){var s=agentShift(x),h2=parseInt(s);return isWorkingShiftLabel(s)&&h2>=8&&h2<12;}).length},
-   {lb:'Mid (10–17)',n:5,a:AGENTS.filter(function(x){var s=agentShift(x);return isWorkingShiftLabel(s)&&String(s).startsWith('10');}).length},
-   {lb:'Evening (17–00)',n:4,a:AGENTS.filter(function(x){var s=agentShift(x),h2=parseInt(s);return isWorkingShiftLabel(s)&&h2>=17&&h2<20;}).length},
-   {lb:'Night (20+)',n:2,a:AGENTS.filter(function(x){var s=String(agentShift(x));return isWorkingShiftLabel(s)&&(parseInt(s)>=19||s.startsWith('C')||s.startsWith('M'));}).length},
+  [{lb:'Morning (09–12)',n:3,a:AGENTS.filter(function(x){var h2=parseInt(gTodayS(x));return h2>=8&&h2<12;}).length},
+   {lb:'Mid (10–17)',n:5,a:AGENTS.filter(function(x){return gTodayS(x).startsWith('10');}).length},
+   {lb:'Evening (17–00)',n:4,a:AGENTS.filter(function(x){var h2=parseInt(gTodayS(x));return h2>=17&&h2<20;}).length},
+   {lb:'Night (20+)',n:2,a:AGENTS.filter(function(x){var s=gTodayS(x);return parseInt(s)>=19||s.startsWith('C')||s.startsWith('M');}).length},
   ].forEach(function(c){
     h+='<div class="cov-row"><div class="cov-top"><span>'+c.lb+'</span><span style="color:'+(c.a>=c.n?'var(--green)':'var(--red)')+';">'+c.a+'/'+c.n+' needed '+(c.a>=c.n?'✅':'⚠️')+'</span></div>'
       +'<div class="cov-bg"><div class="cov-fill '+(c.a>=c.n?'fill-ok':'fill-low')+'" style="width:'+Math.min(100,Math.round(c.a/c.n*100))+'%"></div></div></div>';
   });
 
+  // M/C status
   h+='<div class="sh">Maker / Checker Status</div><div class="card"><div class="cb">';
   AGENTS.filter(function(a){return['maker','checker'].includes(a.r);}).forEach(function(a){
-    var s=agentShift(a);
-    var active=isWorkingShiftLabel(s);
+    var s=gTodayS(a);
+    var active=!['OFF','P-Leave','Leave'].includes(s);
     h+='<div class="histrow"><div class="tm-av" style="background:'+avc(a.n)+';">'+ini(a.n)+'</div>'
       +'<div class="hinfo"><div class="htitle">'+a.n+' '+pill(a.r.toUpperCase(),a.r==='maker'?'p-amber':'p-navy')+'</div>'
       +'<div class="hmeta"><span class="sc '+scCls(s)+'">'+s+'</span> · '+a.t+'</div></div>'
@@ -4492,18 +4557,11 @@ function attSaveOne(agentId){
   if(!agent){sp_showToast('Agent not found','err');return;}
   var sel=_attSelMap[agentId];
   if(!sel||!sel.status){sp_showToast('Select a status first','err');return;}
-  if(sel.status==='change'){
-    sel.newShift=((sel.fromTime||'')&&(sel.toTime||''))?((sel.fromTime||'')+' - '+(sel.toTime||'')):((sel.fromTime||'')||(sel.toTime||''));
-    if(!(sel.fromTime||'')||!(sel.toTime||'')){
-      sp_showToast('Please enter From and To time','err');
-      return;
-    }
-  }
   var arrivalNote='';
   if(sel.status==='late') arrivalNote=(sel.note?'Arrived '+sel.note:'')+(sel.extraNote?(' — '+sel.extraNote):'');
   else if(sel.status==='change') arrivalNote=sel.note||'';
   var entry={
-    id:(typeof uid==='function'?uid('ATT'):('ATT-'+Date.now()+'-'+Math.floor(Math.random()*1000))),
+    id:'ATT'+(Date.now()%1000000),
     agent:agent.n,
     date:today(),
     status:sel.status,
@@ -4536,25 +4594,12 @@ function attSaveAll(){
 // ── Get today's ATT_LOG entry (for schedule display) ─────────
 function attTodayStatus(agentName){return attGetEntry(agentName);}
 
-function getEffectiveTodayShift(agent){
-  var base=gTodayS(agent);
-  var att=attGetEntry(agent&&agent.n?agent.n:'');
-  if(!att||!att.status) return base;
-  if(att.status==='sick') return 'Sick';
-  if(att.status==='permission') return 'Permission';
-  if(att.status==='noshow') return 'No Show';
-  if(att.status==='change'&&att.newShift) return att.newShift;
-  return base;
-}
-function isWorkingShiftLabel(s){return ['OFF','P-Leave','Leave','Sick','Permission','No Show'].indexOf(s)<0;}
-
-
 function saveAllAtt(){
   var e=Object.entries(attSel);if(!e.length){sp_showToast('Mark attendance first','err');return;}
   e.forEach(function(p){
     var a=AGENTS.find(function(x){return x.id===p[0];});
     logA('ATTENDANCE',a.n+' → '+p[1].toUpperCase(),'inf');
-    saveSheet('Attendance',[a.n,today(),p[1],me.n,new Date().toISOString()]);
+    saveSheet('Attendance',[a.n,'2026-03-04',p[1],me.n,new Date().toISOString()]);
   });
   sp_showToast('Attendance saved for '+e.length+' agents ✓','ok');
 }
