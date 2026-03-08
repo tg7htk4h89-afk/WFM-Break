@@ -2535,7 +2535,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbw-aP1XpDJTRx0Vk2jFGPsOT_jj1s5uEhnhymyZf5ChZuJ5WB7Rm_TKN4WUwE6vuXehgQ/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbwrHt5--VbnPYqPfxo2hQhroc_QilxXHNcJ0jzS6c4XnWN47aOhMn9EwX3AV1HrvctFVA/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -3102,9 +3102,9 @@ function buildSlotGrid(){
   var adjNm=(sm>=720&&nm<sm&&nm<480)?nm+1440:nm;
   var started=adjNm>=sm;
   var h='';
-  for(var m=sm;m<em;m+=30){
+  for(var m=sm;m<em;m+=15){
     var displayM=m%1440;
-    var valid=(m>=sm+15)&&(m+30<=em-15);
+    var valid=(m>=sm+15)&&(m+15<=em-15);
     var isPast=m<adjNm;
     var at=[];var myHere=null;
     tdb(d).forEach(function(b){
@@ -3746,7 +3746,7 @@ var sp_teamFilter='All';
 // ini shared from BS
 const COLORS=['#0A4A8A','#00A89A','#3DB549','#E08C00','#6B3FA0','#C0392B','#0A7FAE','#2E86C1'];
 // avc shared from BS
-function gTodayS(a){return a.sch[DATES.indexOf(TODAY)]||'OFF';}
+function gTodayS(a){var idx=DATES.indexOf(TODAY);return idx>=0?(a.sch[idx]||'OFF'):'OFF';}
 function getAttScheduleOverride(agentName, baseShift, dateStr){
   if(typeof attGetEntry!=='function' || dateStr!==TODAY) return null;
   var att=attGetEntry(agentName);
@@ -4065,10 +4065,29 @@ function sp_renderHome(){
 // ════════════════════════════════════════════════
 // MY SCHEDULE
 // ════════════════════════════════════════════════
+function attEntryFor(agentName,dateStr){
+  return (ATT_LOG||[]).find(function(x){return String(x.agent||'')===String(agentName||'') && String(x.date||'')===String(dateStr||'');})||null;
+}
 function renderMySchedule(){
   if(!me||!me.n||!me.sch) return;
   document.getElementById('schAgentName').textContent=(me.n||me.name||'')+' · '+(me.t||me.dept||'');
-  var h='<table style="width:100%;border-collapse:collapse;">'
+  var counts={};
+  (ATT_LOG||[]).forEach(function(x){
+    if(String(x.agent||'')!==String(me.n||me.name||'')) return;
+    var key=String(x.status||'').trim();
+    if(!key) return;
+    counts[key]=(counts[key]||0)+1;
+  });
+  var sumHtml='';
+  var keys=Object.keys(counts).sort();
+  if(keys.length){
+    sumHtml='<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px 0;">'+keys.map(function(k){
+      var low=k.toLowerCase();
+      var cls=low==='on time'?'p-green':(low==='late'?'p-amber':(low==='permission'?'p-teal':'p-red'));
+      return '<span class="pill '+cls+'">'+k+': '+counts[k]+'</span>';
+    }).join('')+'</div>';
+  }
+  var h=sumHtml+'<table style="width:100%;border-collapse:collapse;">'
     +'<thead><tr style="background:var(--bg);"><th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Date</th>'
     +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Status</th>'
     +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Shift</th></tr></thead><tbody>';
@@ -4078,12 +4097,14 @@ function renderMySchedule(){
     var isW=WKND.includes(i);
     var dispInfo=getDisplayShift(me,d,i);
     var work=!['OFF','P-Leave','Leave','Sick','Absent'].includes(dispInfo.shift);
-    var attEntry=(isToday&&typeof attTodayStatus==='function')?attTodayStatus(me.n||me.name):null;
+    var attEntry=attEntryFor(me.n||me.name,d);
     var attBadge='';
-    if(attEntry){var attSt=typeof ATT_STATUSES!=='undefined'?ATT_STATUSES.find(function(x){return x.k===attEntry.status;}):null;
-      attBadge=attSt?' <span class="pill '+attSt.pillCls+'" style="font-size:10px;">'+attSt.pillLbl+'</span>':'';
+    if(attEntry){
+      var label=String(attEntry.status||'');
+      var cls=(label.toLowerCase()==='on time')?'p-green':(label.toLowerCase()==='late'?'p-amber':(label.toLowerCase()==='permission'?'p-teal':'p-red'));
+      attBadge=' <span class="pill '+cls+'" style="font-size:10px;">'+label+(attEntry.newShift?(' · '+attEntry.newShift):'')+'</span>';
     }
-    var dispShift=(isToday&&dispInfo&&dispInfo.shift!==s)
+    var dispShift=(dispInfo&&dispInfo.shift!==s)
       ?('<span class="sc '+dispInfo.cls+'">'+dispInfo.shift+'</span><span style="font-size:10px;color:var(--teal);"> ✎</span>')
       :('<span class="sc '+dispInfo.cls+'">'+dispInfo.shift+'</span>');
     h+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.04);':'')+'">'
@@ -4094,7 +4115,6 @@ function renderMySchedule(){
   h+='</tbody></table>';
   document.getElementById('mySchTable').innerHTML=h;
 }
-
 // ════════════════════════════════════════════════
 // FULL SCHEDULE GRID
 // ════════════════════════════════════════════════
@@ -4126,7 +4146,7 @@ function setTeamFilter(t){
 }
 
 function buildSchGrid(){
-  var display=sp_teamFilter==='All'?AGENTS:AGENTS.filter(function(a){return a.t===teamFilter;});
+  var display=sp_teamFilter==='All'?AGENTS:AGENTS.filter(function(a){return a.t===sp_teamFilter;});
   var teams=[...new Set(display.map(function(a){return a.t;}))];
   var th='<th class="name-h">Name</th>';
   DL.forEach(function(lb,i){
@@ -4143,13 +4163,29 @@ function buildSchGrid(){
       a.sch.forEach(function(s,i){
         var disp=getDisplayShift(a,DATES[i],i);
         var note=(DATES[i]===TODAY&&disp&&disp.shift!==s)?' title="Attendance updated by TL: '+disp.shift+'"':'';
-        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'" style="'+(WKND.includes(i)?'opacity:.5;':'')+'"'+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span></td>';
+        var canSwapClick=isAgentUser(me)&&a.id!==me.id&&!['OFF','P-Leave','Leave','Sick','Absent'].includes(String(disp.shift||''))&&DATES[i]>=TODAY;
+        var click=canSwapClick?' onclick="quickSwapFromGrid(\''+a.id+'\',\''+DATES[i]+'\')" style="cursor:pointer;'+(WKND.includes(i)?'opacity:.5;':'')+'"':' style="'+(WKND.includes(i)?'opacity:.5;':'')+'"';
+        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'"'+click+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span></td>';
       });
       rows+='<tr>'+cells+'</tr>';
     });
   });
   document.getElementById('schGridWrap').innerHTML=
     '<table class="sch-tbl"><thead><tr>'+th+'</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function quickSwapFromGrid(agentId,dateStr){
+  if(!isAgentUser(me)){ sp_showToast('Only agents can create swap requests','inf'); return false; }
+  var ag=AGENTS.find(function(x){ return x.id===agentId; });
+  if(!ag){ sp_showToast('Agent not found','err'); return false; }
+  uNav('requests');
+  var swapTab=document.querySelector('#reqMainTabs .ftab');
+  if(typeof swTab==='function' && swapTab){ swTab('reqTabs','rt-swap',swapTab); }
+  var sw=document.getElementById('swWith'); if(sw) sw.value=agentId;
+  var sd=document.getElementById('swDate'); if(sd) sd.value=dateStr||today();
+  var rs=document.getElementById('swReason'); if(rs && !rs.value) rs.value='Swap requested from full schedule';
+  sp_showToast('Swap form prepared for '+ag.n,'ok');
+  return false;
 }
 
 // ════════════════════════════════════════════════
@@ -4166,6 +4202,10 @@ function renderRequests(){
   renderLeaveBalPanel();
   renderMyLeaveHist();
   renderMyAttTab();
+  if(isManagementUser(me)){
+    try{ renderSwapApproval(); }catch(e){}
+    try{ renderLeaveApproval(); }catch(e){}
+  }
 }
 function submitSwap(){
   var w=document.getElementById('swWith').value;
@@ -4173,7 +4213,7 @@ function submitSwap(){
   var d=document.getElementById('swDate').value;
   if(!w){sp_showToast('Select a colleague','err');return;}
   var ag=AGENTS.find(function(a){return a.id===w;});
-  var entry={id:'SW'+(Date.now()%10000),from:me.n,to:ag.n,date:d,sA:gTodayS(me),sB:gTodayS(ag),reason:r,status:'pending',ts:new Date().toISOString()};
+  var entry={id:(typeof uid==='function'?uid():'SW-'+Date.now()),from:me.n,to:ag.n,date:d,sA:gTodayS(me),sB:gTodayS(ag),reason:r,status:'pending',ts:new Date().toISOString()};
   SWAPS.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',
     id:entry.id,from:entry.from,to:entry.to,date:entry.date,
@@ -4184,19 +4224,22 @@ function submitSwap(){
   .catch(function(){setSy(false);});
   logA('SWAP_REQUEST',me.n+' ↔ '+ag.n+' on '+d,'inf');
   sp_showToast('Swap request submitted! TL notified.','ok');
+  setTimeout(function(){try{apiPull();}catch(e){}},300);
   renderMySwapHist();
 }
 function renderMySwapHist(){
-  var mine=SWAPS.filter(function(s){return s.from===me.n;});
+  var mine=SWAPS.filter(function(s){return s.from===me.n||s.to===me.n;})
+    .sort(function(a,b){return String(b.ts||'').localeCompare(String(a.ts||''));});
   var h=mine.map(function(s){
+    var mineIsFrom=s.from===me.n;
     return '<div class="swcard">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
       +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+s.date+'</span>'
-      +pill(s.status.toUpperCase(),s.status==='approved'?'p-green':s.status==='rejected'?'p-red':'p-amber')+'</div>'
-      +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">ME</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
+      +pill(String(s.status||'pending').toUpperCase(),s.status==='approved'?'p-green':s.status==='rejected'?'p-red':'p-amber')+'</div>'
+      +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">'+(mineIsFrom?'ME':'FROM')+'</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
       +'<div class="sw-arrow">⇄</div>'
-      +'<div class="sw-side to"><div class="sw-lbl">WITH</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div></div>'
-      +'<div style="font-size:11px;color:var(--t2);margin-top:6px;">📝 '+s.reason+'</div></div>';
+      +'<div class="sw-side to"><div class="sw-lbl">'+(mineIsFrom?'WITH':'ME')+'</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div></div>'
+      +'<div style="font-size:11px;color:var(--t2);margin-top:6px;">📝 '+(s.reason||'')+'</div></div>';
   }).join('');
   document.getElementById('mySwapHist').innerHTML=h||'<div class="empty"><div class="ep">No swap requests yet</div></div>';
 }
@@ -4233,7 +4276,9 @@ function submitLeave(){
     sp_showToast('Leave end date cannot be before start date','err');
     return;
   }
-  var entry={id:'L'+(Date.now()%10000),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:new Date().toISOString()};
+  var dup=(LEAVES||[]).some(function(x){return x.agent===me.n && x.status==='pending' && x.from===from && x.to===to;});
+  if(dup){ sp_showToast('A pending leave already exists for this period','err'); return; }
+  var entry={id:(typeof uid==='function'?uid():'L-'+Date.now()),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:new Date().toISOString()};
   LEAVES.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveLeaveRequest',
     id:entry.id,agent:entry.agent,type:entry.type,from:entry.from,
@@ -5253,7 +5298,6 @@ function uNav(section, subPage){
   var uHome=document.getElementById('u-home');
   var isMgr=isManagementUser(me);
 
-  if(isMgr && section==='breaks') section='home';
 
   // Hide all
   if(uHome) uHome.classList.remove('on');
@@ -5310,21 +5354,16 @@ function _uInjectBsNav(){
   var sApp=document.getElementById('sApp'); if(!sApp) return;
   var nav=document.createElement('div');
   nav.id='u-bs-nav'; nav.className='u-subnav';
-  [{id:'home',ic:'🏠',lb:'Home'},{id:'book',ic:'☕',lb:'Book Break'},
-   {id:'swap',ic:'🔄',lb:'Swaps'},{id:'hist',ic:'📋',lb:'History'}].forEach(function(t){
-    if(!( (t.id==='swap'||t.id==='hist') )){
-      var b=document.createElement('button');
-      b.className='u-stab'; b.id='ubst-'+t.id;
-      b.innerHTML='<span>'+t.ic+'</span><span>'+t.lb+'</span>';
-      b.onclick=(function(id){return function(){if(typeof gp==='function')gp(id);_uBsTabOn(id);};})(t.id);
-      nav.appendChild(b);
-    } else {
-      var b=document.createElement('button');
-      b.className='u-stab'; b.id='ubst-'+t.id;
-      b.innerHTML='<span>'+t.ic+'</span><span>'+t.lb+'</span>';
-      b.onclick=(function(id){return function(){if(typeof gp==='function')gp(id);_uBsTabOn(id);};})(t.id);
-      nav.appendChild(b);
-    }
+  var isMgr=isManagementUser(me);
+  var tabs=isMgr
+    ? [{id:'home',ic:'🏠',lb:'Overview'},{id:'hist',ic:'📋',lb:'Monitor'}]
+    : [{id:'home',ic:'🏠',lb:'Home'},{id:'book',ic:'☕',lb:'Book Break'},{id:'swap',ic:'🔄',lb:'Swaps'},{id:'hist',ic:'📋',lb:'History'}];
+  tabs.forEach(function(t){
+    var b=document.createElement('button');
+    b.className='u-stab'; b.id='ubst-'+t.id;
+    b.innerHTML='<span>'+t.ic+'</span><span>'+t.lb+'</span>';
+    b.onclick=(function(id){return function(){if(typeof gp==='function')gp(id);_uBsTabOn(id); if(typeof renderAll==='function') renderAll();};})(t.id);
+    nav.appendChild(b);
   });
   var firstPg=sApp.querySelector('.pg');
   if(firstPg) sApp.insertBefore(nav,firstPg); else sApp.prepend(nav);
@@ -5495,7 +5534,7 @@ function renderUnifiedHome(){
       cards=[
         {ic:'📅',title:'Full Schedule',sub:'All agents',fn:"uNav('schedule');showPage('fullsch')"},
         {ic:'✅',title:'Attendance',sub:'Update team status',fn:"uNav('attendance')"},
-        {ic:'👥',title:'Monitor Breaks',sub:'View team breaks',fn:"uNav('home')"},
+        {ic:'👥',title:'Monitor Breaks',sub:'View team breaks',fn:"uNav('breaks','hist')"},
         {ic:'⚙️',title:'Profile',sub:'User settings',fn:"uNav('me')"},
       ];
     }
