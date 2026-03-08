@@ -2243,7 +2243,6 @@ input,select,textarea,button{font-size:16px;}
       <div class="ftab on" onclick="swTab('reqTabs','rt-swap',this)">🔄 Swap</div>
       <div class="ftab" onclick="swTab('reqTabs','rt-leave',this)">🌴 Leave</div>
       <div class="ftab" onclick="swTab('reqTabs','rt-sreq',this)">📝 Schedule Request</div>
-      <div class="ftab" id="reqApprovalsTabBtn" onclick="swTab('reqTabs','rt-approvals',this);renderUnifiedApprovals();" style="display:none;">✅ Approvals <span class="nbadge on" style="position:static;display:inline-block;vertical-align:middle;" id="reqApprovalBadge">0</span></div>
     </div>
     <div class="card" style="margin-bottom:10px;">
       <div class="cb" style="padding:12px;">
@@ -2302,12 +2301,6 @@ input,select,textarea,button{font-size:16px;}
             <div style="font-size:13px;color:var(--t2);margin-bottom:10px;">Open the schedule request form from here.</div>
             <button class="btn btn-navy" type="button" onclick="openScheduleRequestFromRequests()" style="width:100%;">Open Schedule Request Form</button>
           </div>
-        </div>
-      </div>
-      <div id="rt-approvals" style="display:none;">
-        <div class="card">
-          <div class="ch"><div class="ctitle">✅ My Approvals</div><div class="pill p-amber"><span class="pdot"></span><span id="reqApprovalCount">0</span></div></div>
-          <div class="cb" id="reqApprovalsWrap"></div>
         </div>
       </div>
 </div>
@@ -2544,7 +2537,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxhluLIcvaoGR-Kj1Tpc1ooFQncBeZtgESITlymt6balARoTVgmcnY5Ws8Anav_lfhmAw/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbwrHt5--VbnPYqPfxo2hQhroc_QilxXHNcJ0jzS6c4XnWN47aOhMn9EwX3AV1HrvctFVA/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -4248,56 +4241,15 @@ function openScheduleRequestFromRequests(){
   },80);
   return false;
 }
-function canApprovePortal(){
-  if(!me) return false;
-  var acc=String(me.access||'').toLowerCase();
-  var role=String(me.role||me.r||'').toLowerCase();
-  var loginRole=String(me.loginRole||'').toLowerCase();
-  var userType=String(me.userType||'').toLowerCase();
-  return acc==='readonly'||acc==='manager'||acc==='admin'||acc==='atl'||role==='management'||role==='team leader'||loginRole==='tl'||loginRole==='atl'||userType==='management';
-}
-function updateRequestApprovalTab(){
-  var btn=document.getElementById('reqApprovalsTabBtn');
-  if(btn) btn.style.display=canApprovePortal()?'':'none';
-  var count=0;
-  try{ count+=SWAPS.filter(function(s){return String(s.status||'')==='pending';}).length; }catch(e){}
-  try{ count+=LEAVES.filter(function(l){return String(l.status||'')==='pending';}).length; }catch(e){}
-  try{ var ks=kpiStore(); ['extra','meeting','permission','issue'].forEach(function(k){ count += ks[k].filter(function(x){return String(x.approver||x.approvedBy||x.organizer||'')===String(me.n||me.name||'') && String(x.status||'pending')==='pending';}).length; }); }catch(e){}
-  var b=document.getElementById('reqApprovalBadge'); if(b) b.textContent=count;
-  var c=document.getElementById('reqApprovalCount'); if(c) c.textContent=count;
-}
 function renderRequests(){
   renderMySwapHist();
   renderLeaveBalPanel();
   renderMyLeaveHist();
-  updateRequestApprovalTab();
-  if(canApprovePortal()) renderUnifiedApprovals();
+  if(isManagementUser(me)){
+    try{ renderSwapApproval(); }catch(e){}
+    try{ renderLeaveApproval(); }catch(e){}
+  }
 }
-function renderUnifiedApprovals(){
-  var wrap=document.getElementById('reqApprovalsWrap'); if(!wrap) return;
-  if(!canApprovePortal()){ wrap.innerHTML='<div class="empty"><div class="ep">No approvals assigned</div></div>'; return; }
-  var meName=String(me.n||me.name||'');
-  var html='';
-  var ps=(SWAPS||[]).filter(function(s){return String(s.status||'')==='pending';});
-  html+='<div class="sh">🔄 Swap Approvals</div>'+(ps.length?ps.map(function(s){return '<div class="histrow"><div class="hinfo"><div class="htitle">'+s.from+' ↔ '+s.to+'</div><div class="hmeta">'+(s.date||'')+' • '+(s.sA||'')+' → '+(s.sB||'')+'</div><div class="hmeta">'+(s.reason||'')+'</div></div><div class="hactions"><button class="btn btn-green btn-sm" onclick="approveSwap(\''+s.id+'\')">Approve</button><button class="btn btn-red btn-sm" onclick="rejectSwap(\''+s.id+'\')">Reject</button></div></div>';}).join(''):'<div class="empty" style="padding:10px 0"><div class="ep">No pending swap approvals</div></div>');
-  var pl=(LEAVES||[]).filter(function(l){return String(l.status||'')==='pending';});
-  html+='<div class="sh">🌴 Leave Approvals</div>'+(pl.length?pl.map(function(l){return '<div class="histrow"><div class="hinfo"><div class="htitle">'+l.agent+' • '+(l.type||'Leave')+'</div><div class="hmeta">'+(l.from||'')+' → '+(l.to||'')+'</div><div class="hmeta">'+(l.notes||'')+'</div></div><div class="hactions"><button class="btn btn-green btn-sm" onclick="approveLeave(\''+l.id+'\')">Approve</button><button class="btn btn-red btn-sm" onclick="rejectLeave(\''+l.id+'\')">Reject</button></div></div>';}).join(''):'<div class="empty" style="padding:10px 0"><div class="ep">No pending leave approvals</div></div>');
-  var ks=kpiStore(), items=[]; ['extra','meeting','permission','issue'].forEach(function(k){(ks[k]||[]).forEach(function(x){ var ap=String(x.approver||x.approvedBy||x.organizer||''); if(ap===meName && String(x.status||'pending')==='pending'){ x._type=k; items.push(x); } });});
-  html+='<div class="sh">📌 KPI Approvals</div>'+(items.length?items.map(function(x){var title=x._type==='extra'?'Extra Break':x._type==='meeting'?'Meeting':x._type==='permission'?'Permission':'System Issue'; var meta=(x.date||'')+' '+(x.time||''); var by=(x.agent||x.requestedBy||''); return '<div class="histrow"><div class="hinfo"><div class="htitle">'+title+' • '+by+'</div><div class="hmeta">'+meta+'</div><div class="hmeta">'+(x.reason||x.subject||x.application||x.description||'')+'</div></div><div class="hactions"><button class="btn btn-green btn-sm" onclick="approveDailyKPIReq(\''+x._type+'\',\''+x.id+'\')">Approve</button><button class="btn btn-red btn-sm" onclick="rejectDailyKPIReq(\''+x._type+'\',\''+x.id+'\')">Reject</button></div></div>';}).join(''):'<div class="empty" style="padding:10px 0"><div class="ep">No pending KPI approvals</div></div>');
-  wrap.innerHTML=html;
-}
-function approveDailyKPIReq(type,id){ updateDailyKPIApproval(type,id,'approved'); }
-function rejectDailyKPIReq(type,id){ updateDailyKPIApproval(type,id,'rejected'); }
-function updateDailyKPIApproval(type,id,status){
-  var ks=kpiStore(); var arr=ks[type]||[]; var item=arr.find(function(x){return String(x.id)===String(id);}); if(!item) return;
-  item.status=status; item.approvedAt=new Date().toISOString(); item.approvedBy=String(me.n||me.name||'');
-  sv(gd());
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveDailyKPI',type:type,id:id,status:status,actionedBy:item.approvedBy,approvedAt:item.approvedAt}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
-  logA('KPI_'+status.toUpperCase(),type+' '+id+' '+status+' by '+item.approvedBy,'inf');
-  renderKpiRequestLists(); renderUnifiedApprovals(); updateRequestApprovalTab(); if(typeof initDailyKPIPage==='function'&&gp&&document.getElementById('pg-kpi').classList.contains('on')) initDailyKPIPage();
-  sp_showToast('KPI request '+status+' ✓',status==='approved'?'ok':'err');
-}
-
 function submitSwap(){
   var w=document.getElementById('swWith').value;
   var r=document.getElementById('swReason').value;
@@ -5956,37 +5908,4 @@ function populateKpiApprovers(){
     if(keep) sel.value=keep;
   });
 }
-
-function renderKpiRequestLists(){
-  var ks=kpiStore(), meName=String(me&& (me.n||me.name)||'');
-  var mine=[]; ['extra','meeting','permission','issue'].forEach(function(k){(ks[k]||[]).forEach(function(x){ if(String(x.agent||x.requestedBy||meName)===meName){ x._type=k; mine.push(x);} });});
-  mine.sort(function(a,b){return String(b.createdAt||b.ts||'').localeCompare(String(a.createdAt||a.ts||''));});
-  var req=document.getElementById('kpiReqList'); if(req) req.innerHTML = mine.length?mine.map(function(x){
-    var title=x._type==='extra'?'Extra Break':x._type==='meeting'?'Meeting':x._type==='permission'?'Permission':'System Issue';
-    var approver=x.approver||x.approvedBy||x.organizer||'';
-    var stamp=((x.date||'')+' '+(x.time||'')).trim();
-    return '<div class="histrow"><div class="hinfo"><div class="htitle">'+title+'</div><div class="hmeta">'+stamp+'</div><div class="hmeta">Approver: '+approver+'</div></div><div>'+pill(String(x.status||'pending').toUpperCase(),String(x.status||'pending')==='approved'?'p-green':String(x.status||'pending')==='rejected'?'p-red':'p-amber')+'</div></div>';
-  }).join(''):'<div class="empty"><div class="ep">No KPI requests yet</div></div>';
-  var approvals=document.getElementById('kpiApprovalList'); if(approvals){
-    var items=[]; ['extra','meeting','permission','issue'].forEach(function(k){(ks[k]||[]).forEach(function(x){ var ap=String(x.approver||x.approvedBy||x.organizer||''); if(ap===meName && String(x.status||'pending')==='pending'){ x._type=k; items.push(x);} });});
-    approvals.innerHTML=items.length?items.map(function(x){var title=x._type==='extra'?'Extra Break':x._type==='meeting'?'Meeting':x._type==='permission'?'Permission':'System Issue'; return '<div class="histrow"><div class="hinfo"><div class="htitle">'+title+'</div><div class="hmeta">'+((x.date||'')+' '+(x.time||''))+'</div></div><div class="hactions"><button class="btn btn-green btn-sm" onclick="approveDailyKPIReq(''+x._type+'',''+x.id+'')">Approve</button><button class="btn btn-red btn-sm" onclick="rejectDailyKPIReq(''+x._type+'',''+x.id+'')">Reject</button></div></div>';}).join(''):'<div class="empty"><div class="ep">No KPI approvals</div></div>';
-  }
-  var c=document.getElementById('kpiReqCount'); if(c) c.textContent=mine.length;
-  var a=document.getElementById('kpiApprovalCount'); if(a) a.textContent=((document.querySelectorAll('#kpiApprovalList .histrow')||[]).length||0);
-  updateRequestApprovalTab();
-}
-function submitDailyKPI(type){
-  var id=(typeof uid==='function'?uid():'KPI-'+Date.now());
-  var entry={id:id,agent:String(me&& (me.n||me.name)||''),requestedBy:String(me&& (me.n||me.name)||''),createdAt:new Date().toISOString(),status:'pending'};
-  if(type==='extra'){entry.date=kpiVal('kpiExtraDate');entry.time=kpiVal('kpiExtraTime');entry.shift=kpiVal('kpiExtraShift');entry.duration=kpiVal('kpiExtraDuration');entry.reason=kpiVal('kpiExtraReason');entry.approver=kpiVal('kpiExtraApprovedBy');entry.comment=kpiVal('kpiExtraComment');}
-  else if(type==='meeting'){entry.date=kpiVal('kpiMeetingDate');entry.time=kpiVal('kpiMeetingTime');entry.shift=kpiVal('kpiMeetingShift');entry.duration=kpiVal('kpiMeetingDuration');entry.subject=kpiVal('kpiMeetingSubject');entry.approver=kpiVal('kpiMeetingOrganizer');entry.comment=kpiVal('kpiMeetingComment');}
-  else if(type==='permission'){entry.date=kpiVal('kpiPermissionDate');entry.time=kpiVal('kpiPermissionTime');entry.shift=kpiVal('kpiPermissionShift');entry.duration=kpiVal('kpiPermissionDuration');entry.from=kpiVal('kpiPermissionFrom');entry.to=kpiVal('kpiPermissionTo');entry.monthlyCount=kpiVal('kpiPermissionCount');entry.permissionType=kpiVal('kpiPermissionType');entry.reason=kpiVal('kpiPermissionReason');entry.approver=kpiVal('kpiPermissionApprovedBy');}
-  else if(type==='issue'){entry.date=kpiVal('kpiIssueDate');entry.time=kpiVal('kpiIssueTime');entry.shift=kpiVal('kpiIssueShift');entry.duration=kpiVal('kpiIssueDuration');entry.application=kpiVal('kpiIssueApplication');entry.description=kpiVal('kpiIssueDescription');entry.approver=kpiVal('kpiIssueApprovedBy');entry.issueType=kpiVal('kpiIssueType');entry.comment=kpiVal('kpiIssueComment');entry.helpdesk=kpiVal('kpiIssueHelpdesk');}
-  if(!entry.approver){kpiShowMsg('Select approver','err');return;}
-  var ks=kpiStore(); ks[type].push(entry); sv(gd());
-  var action=type==='extra'?'saveDailyKPIExtra':type==='meeting'?'saveDailyKPIMeeting':type==='permission'?'saveDailyKPIPermission':'saveDailyKPIIssue';
-  var payload=Object.assign({action:action,id:id,agent:entry.agent,dept:String(me&& (me.t||me.dept)||''),approvedBy:entry.approver,organizer:entry.approver,ts:entry.createdAt,status:'pending'},entry);
-  fetch(API,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}}).catch(function(){});
-  logA('KPI_REQUEST',type+' requested by '+entry.agent+' to '+entry.approver,'inf');
-  kpiResetForm(type); renderDailyKPIStats(); renderKpiRequestLists(); updateRequestApprovalTab(); kpiShowMsg('KPI request submitted ✓','ok');
-}
+>
