@@ -1462,6 +1462,23 @@ html,body{min-height:100%;height:auto!important;overflow-x:hidden!important;over
   #step2 .sttime{font-size:10px!important;line-height:1.25!important;}
 }
 
+
+.kpi-list{display:grid;gap:10px;}
+.kpi-item{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;}
+.kpi-item-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:8px;}
+.kpi-item-title{font-size:13px;font-weight:800;color:var(--navy);}
+.kpi-item-meta{font-size:11px;color:var(--muted);line-height:1.5;}
+.kpi-status{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;}
+.kpi-status.pending{background:rgba(243,156,18,.13);color:var(--amber);}
+.kpi-status.approved{background:rgba(39,174,96,.13);color:var(--green);}
+.kpi-status.rejected{background:rgba(231,76,60,.13);color:var(--red);}
+.kpi-item-body{font-size:12px;color:var(--ink);line-height:1.55;}
+.kpi-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.kpi-mini-btn{border:0;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;}
+.kpi-mini-btn.ok{background:rgba(39,174,96,.14);color:var(--green);}
+.kpi-mini-btn.no{background:rgba(231,76,60,.14);color:var(--red);}
+.kpi-empty{padding:10px 0;color:var(--muted);font-size:12px;}
+
 </style>
 
 <style id="iphone-fit-patch">
@@ -2371,7 +2388,7 @@ input,select,textarea,button{font-size:16px;}
           </div>
           <div class="fg"><label class="lbl">Reason</label><input class="fld" type="text" id="kpiExtraReason" placeholder="Reason for extra break"></div>
           <div class="kpi-grid kpi-grid-2">
-            <div class="fg"><label class="lbl">Approved By</label><select class="fld" id="kpiExtraApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+            <div class="fg"><label class="lbl">Approver</label><select class="fld" id="kpiExtraApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
             <div class="fg"><label class="lbl">Comment</label><input class="fld" type="text" id="kpiExtraComment" placeholder="Optional comment"></div>
           </div>
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('extra')">Submit Extra Break</button>
@@ -2388,7 +2405,7 @@ input,select,textarea,button{font-size:16px;}
           </div>
           <div class="fg"><label class="lbl">Subject</label><input class="fld" type="text" id="kpiMeetingSubject" placeholder="Meeting subject"></div>
           <div class="kpi-grid kpi-grid-2">
-            <div class="fg"><label class="lbl">Organizer</label><select class="fld" id="kpiMeetingOrganizer"><option value="">Select organizer</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+            <div class="fg"><label class="lbl">Approver</label><select class="fld" id="kpiMeetingOrganizer"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
             <div class="fg"><label class="lbl">Comment</label><input class="fld" type="text" id="kpiMeetingComment" placeholder="Optional comment"></div>
           </div>
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('meeting')">Submit Meeting</button>
@@ -2412,7 +2429,7 @@ input,select,textarea,button{font-size:16px;}
             <div class="fg"><label class="lbl">Permissions Type</label><select class="fld" id="kpiPermissionType"><option value="">Select type</option><option>Personal permissions</option><option>Official permissions</option></select></div>
           </div>
           <div class="fg"><label class="lbl">Reason</label><input class="fld" type="text" id="kpiPermissionReason" placeholder="Permission reason"></div>
-          <div class="fg"><label class="lbl">Approved By</label><select class="fld" id="kpiPermissionApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+          <div class="fg"><label class="lbl">Approver</label><select class="fld" id="kpiPermissionApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('permission')">Submit Permission</button>
         </form>
 
@@ -2428,7 +2445,7 @@ input,select,textarea,button{font-size:16px;}
           <div class="fg"><label class="lbl">Application</label><input class="fld" type="text" id="kpiIssueApplication" placeholder="Application / system name"></div>
           <div class="fg"><label class="lbl">Description</label><textarea class="ann-ta" id="kpiIssueDescription" placeholder="Describe the issue"></textarea></div>
           <div class="kpi-grid kpi-grid-2">
-            <div class="fg"><label class="lbl">Approved By</label><select class="fld" id="kpiIssueApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+            <div class="fg"><label class="lbl">Approver</label><select class="fld" id="kpiIssueApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
             <div class="fg"><label class="lbl">Issue Type</label><select class="fld" id="kpiIssueType"><option value="">Select issue type</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div>
           </div>
           <div class="kpi-grid kpi-grid-2">
@@ -2438,6 +2455,16 @@ input,select,textarea,button{font-size:16px;}
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('issue')">Submit System Issue</button>
         </form>
       </div>
+    </div>
+
+    <div class="card" id="kpiRequestsCard">
+      <div class="ch"><div class="ctitle">My KPI Requests</div><div class="pill p-teal"><span class="pdot"></span><span id="kpiReqCount">0</span></div></div>
+      <div class="cb"><div id="kpiMyRequestsList" class="kpi-list"></div></div>
+    </div>
+
+    <div class="card" id="kpiApprovalCard" style="display:none;">
+      <div class="ch"><div class="ctitle">KPI Approvals</div><div class="pill p-amber"><span class="pdot"></span><span id="kpiApprovalCount">0</span></div></div>
+      <div class="cb"><div id="kpiApprovalList" class="kpi-list"></div></div>
     </div>
   </div>
 
@@ -5746,7 +5773,9 @@ function setKpiTab(key){
 }
 function initDailyKPIPage(){
   kpiSetTodayDefaults();
+  populateKpiApprovers();
   renderDailyKPIStats();
+  renderKpiRequestLists();
   if(_kpiInit) return;
   _kpiInit=true;
   document.querySelectorAll('#kpiTabs .ftab').forEach(function(tab){
@@ -5766,6 +5795,133 @@ function kpiResetForm(type){
   }
   kpiSetTodayDefaults();
 }
+function kpiApproverUsers(){
+  var out=[];
+  var seen={};
+  (Array.isArray(EMPS)?EMPS:[]).forEach(function(u){
+    var acc=String((u&&u.access)||'').toLowerCase();
+    var name=String((u&&u.name)||'').trim();
+    if(!name||acc==='agent') return;
+    if(seen[name]) return;
+    seen[name]=1;
+    out.push({name:name,role:String(u.role||''),dept:String(u.dept||'')});
+  });
+  (Array.isArray(AGENTS)?AGENTS:[]).forEach(function(u){
+    var name=String((u&&u.n)||'').trim();
+    var role=String((u&&u.r)||'').toLowerCase();
+    var team=String((u&&u.t)||'');
+    if(!name||role==='agent') return;
+    if(seen[name]) return;
+    seen[name]=1;
+    out.push({name:name,role:String(u.r||''),dept:team});
+  });
+  return out.sort(function(a,b){return a.name.localeCompare(b.name);});
+}
+function populateKpiApprovers(){
+  var list=kpiApproverUsers();
+  ['kpiExtraApprovedBy','kpiMeetingOrganizer','kpiPermissionApprovedBy','kpiIssueApprovedBy'].forEach(function(id){
+    var sel=document.getElementById(id); if(!sel) return;
+    var keep=sel.value||'';
+    sel.innerHTML='<option value="">Select approver</option>'+list.map(function(x){return '<option value="'+x.name.replace(/"/g,'&quot;')+'">'+x.name+' — '+(x.role||x.dept||'Management')+'</option>';}).join('');
+    if(keep && list.some(function(x){return x.name===keep;})) sel.value=keep;
+  });
+}
+function kpiCurrentUserName(){ return String((me&&(me.n||me.name))||'').trim(); }
+function kpiCurrentUserIsApprover(){ return kpiApproverUsers().some(function(x){ return x.name===kpiCurrentUserName(); }); }
+function kpiAllEntries(){
+  var s=kpiStore();
+  var out=[];
+  ['extra','meeting','permission','issue'].forEach(function(t){
+    (Array.isArray(s[t])?s[t]:[]).forEach(function(item){
+      out.push(Object.assign({kpiType:t}, item||{}));
+    });
+  });
+  return out.sort(function(a,b){ return String(b.approvedAt||b.createdAt||b.ts||'').localeCompare(String(a.approvedAt||a.createdAt||a.ts||'')); });
+}
+function kpiStatusClass(st){ st=String(st||'pending').toLowerCase(); return st==='approved'?'approved':(st==='rejected'?'rejected':'pending'); }
+function kpiPrettyType(t){ return ({extra:'Extra Break',meeting:'Meeting',permission:'Permission',issue:'System Issue'})[t]||t; }
+function kpiFmtMeta(x){
+  var bits=[];
+  if(x.date) bits.push(x.date);
+  if(x.time) bits.push(x.time);
+  if(x.shift) bits.push(x.shift);
+  if(x.approver) bits.push('Approver: '+x.approver);
+  return bits.join(' · ');
+}
+function kpiSummary(x){
+  if(x.kpiType==='extra') return 'Reason: '+(x.reason||'—')+' · Duration: '+(x.duration||'—');
+  if(x.kpiType==='meeting') return 'Subject: '+(x.subject||'—')+' · Duration: '+(x.duration||'—');
+  if(x.kpiType==='permission') return 'Reason: '+(x.reason||'—')+' · '+(x.from||'')+(x.to?(' - '+x.to):'');
+  if(x.kpiType==='issue') return 'App: '+(x.application||'—')+' · '+(x.issueType||'—');
+  return '';
+}
+function renderKpiRequestLists(){
+  var mine=kpiAllEntries().filter(function(x){ return String(x.agent||'')===kpiCurrentUserName(); });
+  var myWrap=document.getElementById('kpiMyRequestsList');
+  var myCount=document.getElementById('kpiReqCount');
+  if(myCount) myCount.textContent=String(mine.length);
+  if(myWrap){
+    if(!mine.length){ myWrap.innerHTML='<div class="kpi-empty">No KPI requests yet.</div>'; }
+    else myWrap.innerHTML=mine.slice(0,12).map(function(x){
+      var approvedMeta='';
+      if(x.approvalStatus==='approved' || x.approvalStatus==='rejected'){ approvedMeta='<div class="kpi-item-meta">Action by '+(x.approvalActionBy||x.approver||'—')+' · '+(x.approvalDate||'')+(x.approvalTime?(' '+x.approvalTime):'')+'</div>'; }
+      return '<div class="kpi-item">'+
+        '<div class="kpi-item-head"><div><div class="kpi-item-title">'+kpiPrettyType(x.kpiType)+'</div><div class="kpi-item-meta">'+kpiFmtMeta(x)+'</div></div><span class="kpi-status '+kpiStatusClass(x.approvalStatus)+'">'+String(x.approvalStatus||'pending').toUpperCase()+'</span></div>'+
+        '<div class="kpi-item-body">'+kpiSummary(x)+'</div>'+approvedMeta+
+      '</div>';
+    }).join('');
+  }
+  var apprCard=document.getElementById('kpiApprovalCard');
+  var apprWrap=document.getElementById('kpiApprovalList');
+  var apprCount=document.getElementById('kpiApprovalCount');
+  var canApprove=kpiCurrentUserIsApprover();
+  if(apprCard) apprCard.style.display=canApprove?'':'none';
+  if(!canApprove) return;
+  var mineToApprove=kpiAllEntries().filter(function(x){ return String(x.approver||'')===kpiCurrentUserName() && String(x.approvalStatus||'pending').toLowerCase()==='pending'; });
+  if(apprCount) apprCount.textContent=String(mineToApprove.length);
+  if(apprWrap){
+    if(!mineToApprove.length){ apprWrap.innerHTML='<div class="kpi-empty">No pending KPI approvals assigned to you.</div>'; }
+    else {
+      apprWrap.innerHTML=mineToApprove.slice(0,20).map(function(x){
+        return '<div class="kpi-item">'+
+          '<div class="kpi-item-head"><div><div class="kpi-item-title">'+kpiPrettyType(x.kpiType)+' · '+(x.agent||'')+'</div><div class="kpi-item-meta">'+kpiFmtMeta(x)+'</div></div><span class="kpi-status pending">PENDING</span></div>'+
+          '<div class="kpi-item-body">'+kpiSummary(x)+'</div>'+
+          '<div class="kpi-actions">'+
+            '<button class="kpi-mini-btn ok js-kpi-approve" type="button" data-kpi-type="'+x.kpiType+'" data-kpi-id="'+String(x.id||'').replace(/"/g,'&quot;')+'" data-kpi-status="approved">Approve</button>'+
+            '<button class="kpi-mini-btn no js-kpi-approve" type="button" data-kpi-type="'+x.kpiType+'" data-kpi-id="'+String(x.id||'').replace(/"/g,'&quot;')+'" data-kpi-status="rejected">Reject</button>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+      apprWrap.querySelectorAll('.js-kpi-approve').forEach(function(btn){
+        btn.onclick=function(){ return kpiApproveItem(btn.getAttribute('data-kpi-type'), btn.getAttribute('data-kpi-id'), btn.getAttribute('data-kpi-status')); };
+      });
+    }
+  }
+}
+function kpiUpdateLocal(type,id,patch){
+  var d=gd(), store=kpiStore();
+  var arr=Array.isArray(store[type])?store[type]:[];
+  var idx=arr.findIndex(function(x){ return String((x&&x.id)||'')===String(id||''); });
+  if(idx>=0) arr[idx]=Object.assign({},arr[idx],patch||{});
+  d.dailyKpi=store;
+  sv(d);
+}
+function kpiApproveItem(type,id,status){
+  if(!API){ kpiShowMsg('API not configured','err'); return false; }
+  var payload={action:'approveDailyKPI',type:type,id:id,status:status,approvalActionBy:kpiCurrentUserName(),approvalDate:kpiTodayIso(),approvalTime:kpiNowHm(),approvedAt:new Date().toISOString()};
+  fetch(API,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res&&res.ok){
+        kpiUpdateLocal(type,id,payload);
+        renderKpiRequestLists();
+        kpiShowMsg('KPI request '+status,'ok');
+        setTimeout(function(){ try{ apiPull(); }catch(e){} },300);
+      } else kpiShowMsg((res&&res.error)||'Failed to update KPI approval','err');
+    })
+    .catch(function(){ kpiShowMsg('Network error while updating KPI approval','err'); });
+  return false;
+}
 function submitDailyKPI(type){
   var payload={
     id:'KPI-'+Date.now()+'-'+Math.random().toString(36).slice(2,7).toUpperCase(),
@@ -5780,24 +5936,31 @@ function submitDailyKPI(type){
   var action='';
   if(type==='extra'){
     action='saveDailyKPIExtra';
-    payload.date=kpiVal('kpiExtraDate'); payload.time=kpiVal('kpiExtraTime'); payload.shift=kpiVal('kpiExtraShift'); payload.duration=kpiVal('kpiExtraDuration'); payload.reason=kpiVal('kpiExtraReason'); payload.approvedBy=kpiVal('kpiExtraApprovedBy'); payload.comment=kpiVal('kpiExtraComment');
+    payload.date=kpiVal('kpiExtraDate'); payload.time=kpiVal('kpiExtraTime'); payload.shift=kpiVal('kpiExtraShift'); payload.duration=kpiVal('kpiExtraDuration'); payload.reason=kpiVal('kpiExtraReason'); payload.approvedBy=kpiVal('kpiExtraApprovedBy'); payload.approver=payload.approvedBy; payload.comment=kpiVal('kpiExtraComment');
     if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.duration) missing.push('Duration'); if(!payload.reason) missing.push('Reason'); if(!payload.approvedBy) missing.push('Approved By');
   } else if(type==='meeting'){
     action='saveDailyKPIMeeting';
-    payload.date=kpiVal('kpiMeetingDate'); payload.time=kpiVal('kpiMeetingTime'); payload.shift=kpiVal('kpiMeetingShift'); payload.duration=kpiVal('kpiMeetingDuration'); payload.subject=kpiVal('kpiMeetingSubject'); payload.organizer=kpiVal('kpiMeetingOrganizer'); payload.comment=kpiVal('kpiMeetingComment');
+    payload.date=kpiVal('kpiMeetingDate'); payload.time=kpiVal('kpiMeetingTime'); payload.shift=kpiVal('kpiMeetingShift'); payload.duration=kpiVal('kpiMeetingDuration'); payload.subject=kpiVal('kpiMeetingSubject'); payload.organizer=kpiVal('kpiMeetingOrganizer'); payload.approver=payload.organizer; payload.comment=kpiVal('kpiMeetingComment');
     if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.duration) missing.push('Duration'); if(!payload.subject) missing.push('Subject'); if(!payload.organizer) missing.push('Organizer');
   } else if(type==='permission'){
     action='saveDailyKPIPermission';
-    payload.date=kpiVal('kpiPermissionDate'); payload.time=kpiVal('kpiPermissionTime'); payload.shift=kpiVal('kpiPermissionShift'); payload.duration=kpiVal('kpiPermissionDuration'); payload.from=kpiVal('kpiPermissionFrom'); payload.to=kpiVal('kpiPermissionTo'); payload.monthlyCount=kpiVal('kpiPermissionCount'); payload.permissionType=kpiVal('kpiPermissionType'); payload.reason=kpiVal('kpiPermissionReason'); payload.approvedBy=kpiVal('kpiPermissionApprovedBy');
+    payload.date=kpiVal('kpiPermissionDate'); payload.time=kpiVal('kpiPermissionTime'); payload.shift=kpiVal('kpiPermissionShift'); payload.duration=kpiVal('kpiPermissionDuration'); payload.from=kpiVal('kpiPermissionFrom'); payload.to=kpiVal('kpiPermissionTo'); payload.monthlyCount=kpiVal('kpiPermissionCount'); payload.permissionType=kpiVal('kpiPermissionType'); payload.reason=kpiVal('kpiPermissionReason'); payload.approvedBy=kpiVal('kpiPermissionApprovedBy'); payload.approver=payload.approvedBy;
     if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.from) missing.push('From'); if(!payload.to) missing.push('To'); if(!payload.duration) missing.push('Duration'); if(!payload.permissionType) missing.push('Permissions Type'); if(!payload.reason) missing.push('Reason'); if(!payload.approvedBy) missing.push('Approved By');
   } else if(type==='issue'){
     action='saveDailyKPIIssue';
-    payload.date=kpiVal('kpiIssueDate'); payload.time=kpiVal('kpiIssueTime'); payload.shift=kpiVal('kpiIssueShift'); payload.duration=kpiVal('kpiIssueDuration'); payload.application=kpiVal('kpiIssueApplication'); payload.description=kpiVal('kpiIssueDescription'); payload.approvedBy=kpiVal('kpiIssueApprovedBy'); payload.issueType=kpiVal('kpiIssueType'); payload.comment=kpiVal('kpiIssueComment'); payload.helpdesk=kpiVal('kpiIssueHelpdesk'); payload.helpdeskNo=payload.helpdesk;
+    payload.date=kpiVal('kpiIssueDate'); payload.time=kpiVal('kpiIssueTime'); payload.shift=kpiVal('kpiIssueShift'); payload.duration=kpiVal('kpiIssueDuration'); payload.application=kpiVal('kpiIssueApplication'); payload.description=kpiVal('kpiIssueDescription'); payload.approvedBy=kpiVal('kpiIssueApprovedBy'); payload.approver=payload.approvedBy; payload.issueType=kpiVal('kpiIssueType'); payload.comment=kpiVal('kpiIssueComment'); payload.helpdesk=kpiVal('kpiIssueHelpdesk'); payload.helpdeskNo=payload.helpdesk;
     if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.application) missing.push('Application'); if(!payload.duration) missing.push('Duration'); if(!payload.description) missing.push('Description'); if(!payload.approvedBy) missing.push('Approved By'); if(!payload.issueType) missing.push('Issue Type');
   } else return false;
 
   if(missing.length){ kpiShowMsg('Please complete: '+missing.join(', '),'err'); return false; }
   if(type==='permission' && payload.from && payload.to && payload.from>=payload.to){ kpiShowMsg('Permission “To” time must be later than “From” time','err'); return false; }
+  payload.approvalStatus='pending';
+  payload.approvalRequestedAt=new Date().toISOString();
+  payload.approvalDate='';
+  payload.approvalTime='';
+  payload.approvalActionBy='';
+  payload.approvedAt='';
+  payload.submittedAt=payload.createdAt;
 
   function commitLocal(){
     var d=gd();
@@ -5806,6 +5969,7 @@ function submitDailyKPI(type){
     d.dailyKpi=store;
     sv(d);
     renderDailyKPIStats();
+    renderKpiRequestLists();
     kpiResetForm(type);
   }
 
