@@ -2544,7 +2544,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxhluLIcvaoGR-Kj1Tpc1ooFQncBeZtgESITlymt6balARoTVgmcnY5Ws8Anav_lfhmAw/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbyf18UrRkYIcT-pPC9RuLfsB_rGVFPLgRXV-HD7NKbG4JXPbwYFx5L2xKTWnBqmNGptjA/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -3072,7 +3072,7 @@ function renderHome(){
     th+='<div style="font-size:10px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;padding:10px 13px 5px;background:var(--bg);border-bottom:1px solid var(--border);">'+dept.label+'</div>';
     list.sort(function(a,b){
       var sa=smap2[a.name]||{st:'off'};var sb=smap2[b.name]||{st:'off'};
-      function rk(x){return x.st==='on'?0:x.st==='brk'?1:2;}
+      function rk(x){return x.st==='brk'?0:x.st==='on'?1:2;}
       var ra=rk(sa),rb=rk(sb);if(ra!==rb)return ra-rb;return String(a.name||'').localeCompare(String(b.name||''));
     });
     list.forEach(function(e){
@@ -3496,8 +3496,10 @@ function hubRefreshBadge(){
   var ann=(d.settings&&d.settings.announce)||'';
   var hann=document.getElementById('hub-announce');
   var htxt=document.getElementById('hub-ann-text');
-  if(hann&&htxt){
-    if(ann){hann.style.display='';htxt.textContent=ann;}else{hann.style.display='none';}
+  if(hann){
+    if(ann){hann.style.display='';if(htxt)htxt.textContent=ann;}else{hann.style.display='none';}
+  } else if(htxt && ann){
+    htxt.textContent=ann;
   }
 }
 
@@ -3522,35 +3524,6 @@ function _spUiInit(){
   se('sp2-asinfo',t+' · '+role);
   se('sp2-uav',ini(n));
   se('rolchip',role);
-}
-
-
-function uBuildNav(){
-  var nav=document.getElementById('u-bnav');
-  if(!nav) return;
-  var isMgr=isManagementUser(me);
-  var items=isMgr
-    ? [{id:'home',ic:'🏠',lb:'HOME'},{id:'breaks',ic:'☕',lb:'BREAKS'},{id:'schedule',ic:'📅',lb:'SCHEDULE'},{id:'attendance',ic:'✅',lb:'ATTENDANCE'},{id:'requests',ic:'📝',lb:'REQUESTS'},{id:'kpi',ic:'📌',lb:'DAILY KPI'},{id:'me',ic:'👤',lb:'ME'}]
-    : [{id:'home',ic:'🏠',lb:'HOME'},{id:'breaks',ic:'☕',lb:'BREAKS'},{id:'schedule',ic:'📅',lb:'SCHEDULE'},{id:'requests',ic:'📝',lb:'REQUESTS'},{id:'kpi',ic:'📌',lb:'DAILY KPI'},{id:'me',ic:'👤',lb:'ME'}];
-  nav.innerHTML='';
-  items.forEach(function(it){
-    var b=document.createElement('button');
-    b.className='unb'+(_uSection===it.id?' on':'');
-    b.id='unb-'+it.id;
-    b.innerHTML='<div class="ni">'+it.ic+'</div><div class="nl">'+it.lb+'</div>';
-    b.onclick=function(){uNav(it.id);};
-    nav.appendChild(b);
-  });
-}
-function initSpProfile(){
-  if(!me) return;
-  var name=me.n||me.name||'';
-  var role=(me.t||me.dept||'')+(me.access?(' · '+String(me.access).toUpperCase()):'');
-  var av=ini(name), bg=avc(name);
-  [['prof-av',av],['prof-name',name],['prof-role',role],['prof-team',me.t||me.dept||''],['prof-shift',gTodayS(me)||'—']].forEach(function(x){
-    var e=document.getElementById(x[0]); if(e) e.textContent=x[1];
-  });
-  ['prof-av','prof2-av'].forEach(function(id){var e=document.getElementById(id); if(e){e.textContent=av;e.style.background=bg;e.style.color='#fff';}});
 }
 
 function startApp(){
@@ -3630,7 +3603,7 @@ function patchBsTopbar(){
 // ════════════════════════════════════════════════
 // DATA
 // ════════════════════════════════════════════════
-const DATES=['2026-03-02','2026-03-03',today(),'2026-03-05','2026-03-06','2026-03-07','2026-03-08','2026-03-09','2026-03-10','2026-03-11','2026-03-12','2026-03-13','2026-03-14'];
+const DATES=['2026-03-02','2026-03-03','2026-03-04','2026-03-05','2026-03-06','2026-03-07','2026-03-08','2026-03-09','2026-03-10','2026-03-11','2026-03-12','2026-03-13','2026-03-14'];
 const DL=['Mon 02','Tue 03','Wed 04','Thu 05','Fri 06','Sat 07','Sun 08','Mon 09','Tue 10','Wed 11','Thu 12','Fri 13','Sat 14'];
 const TODAY=(function(){var d=new Date(Date.now()+3*60*60*1000);return d.toISOString().split('T')[0];})();
 const WKND=[4,5,11,12];
@@ -3788,6 +3761,18 @@ var sp_teamFilter='All';
 const COLORS=['#0A4A8A','#00A89A','#3DB549','#E08C00','#6B3FA0','#C0392B','#0A7FAE','#2E86C1'];
 // avc shared from BS
 function gTodayS(a){var idx=DATES.indexOf(TODAY);return idx>=0?(a.sch[idx]||'OFF'):'OFF';}
+function dashboardEffectiveStatus(a){
+  var base=gTodayS(a);
+  var att=(typeof attGetEntry==='function')?attGetEntry(a.n||a.name||''):null;
+  if(att&&att.status){
+    var st=String(att.status||'').toLowerCase();
+    if(st==='sick') return 'Sick';
+    if(st==='permission') return 'Permission';
+    if(st==='noshow'||st==='no show'||st==='absent') return 'No Show';
+    if(st==='change'||st==='update time') return att.newShift||base;
+  }
+  return base;
+}
 function getAttScheduleOverride(agentName, baseShift, dateStr){
   if(typeof attGetEntry!=='function' || dateStr!==TODAY) return null;
   var att=attGetEntry(agentName);
@@ -4455,35 +4440,14 @@ function renderMyAttTab(){
   document.getElementById('myAttTable').innerHTML=h;
 }
 
-
-function getTodayAttOverride(name){
-  var rec=null;
-  for(var i=ATT_LOG.length-1;i>=0;i--){
-    var x=ATT_LOG[i];
-    if(String(x.agent||'')===String(name||'')&&String(x.date||'')===String(TODAY||'')){rec=x;break;}
-  }
-  return rec;
-}
-function effectiveTodayStatus(a){
-  var att=getTodayAttOverride(a.n||a.name);
-  if(att){
-    var st=String(att.status||'').toLowerCase();
-    if(st==='sick') return 'Sick';
-    if(st==='permission') return 'Permission';
-    if(st==='no show'||st==='noshow'||st==='absent') return 'No Show';
-    if(st==='update time'||st==='new shift'||st==='shift change') return att.newShift||gTodayS(a);
-  }
-  return gTodayS(a);
-}
-
 // ════════════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════════════
 function renderDashboard(){
   if(!canDash()){document.getElementById('dashContent').innerHTML='<div style="background:var(--rbg);border:1px solid rgba(192,57,43,.2);border-radius:var(--r);padding:14px;font-size:13px;font-weight:600;color:var(--red);">⛔ Dashboard is for TL, ATL, WFM and Management only.</div>';return;}
-  var working=AGENTS.filter(function(a){return!['OFF','P-Leave','Leave','Sick','No Show','Permission'].includes(effectiveTodayStatus(a))&&!['manager','head'].includes(a.r);}).length;
-  var sick=AGENTS.filter(function(a){return effectiveTodayStatus(a)==='Sick';}).length;
-  var onLv=AGENTS.filter(function(a){return['P-Leave','Leave','Permission'].includes(effectiveTodayStatus(a));}).length;
+  var working=AGENTS.filter(function(a){var s=dashboardEffectiveStatus(a);return!['OFF','P-Leave','Leave','Sick','Permission','No Show'].includes(s)&&!['manager','head'].includes(a.r);}).length;
+  var sick=AGENTS.filter(function(a){return dashboardEffectiveStatus(a)==='Sick';}).length;
+  var onLv=AGENTS.filter(function(a){var s=dashboardEffectiveStatus(a);return['P-Leave','Leave','Permission'].includes(s);}).length;
   var pendA=SWAPS.filter(function(s){return s.status==='pending';}).length+LEAVES.filter(function(l){return l.status==='pending';}).length;
 
   var h='<div class="sh">Today — Wed 04 March 2026</div>'
@@ -4496,7 +4460,7 @@ function renderDashboard(){
   h+='<div class="sh">Team Breakdown</div>';
   ['Inbound','Outbound','ITM','Wage','Leadership','Back Office'].forEach(function(team){
     var m=AGENTS.filter(function(a){return a.t===team;});
-    var w=m.filter(function(a){return!['OFF','P-Leave','Leave','Sick','No Show','Permission'].includes(effectiveTodayStatus(a));});
+    var w=m.filter(function(a){return!['OFF','P-Leave','Leave','Sick'].includes(gTodayS(a));});
     var pct=m.length?Math.round(w.length/m.length*100):0;
     h+='<div class="cov-row"><div class="cov-top"><span style="font-weight:700;">'+team+' ('+m.length+')</span>'
       +'<span style="color:'+(pct>=80?'var(--green)':'var(--amber)')+'">'+w.length+' working · '+pct+'%</span></div>'
@@ -4505,10 +4469,10 @@ function renderDashboard(){
 
   // Shift coverage
   h+='<div class="sh">Shift Coverage Today</div>';
-  [{lb:'Morning (09–12)',n:3,a:AGENTS.filter(function(x){var h2=parseInt(effectiveTodayStatus(x));return h2>=8&&h2<12;}).length},
-   {lb:'Mid (10–17)',n:5,a:AGENTS.filter(function(x){return effectiveTodayStatus(x).startsWith('10');}).length},
-   {lb:'Evening (17–00)',n:4,a:AGENTS.filter(function(x){var h2=parseInt(effectiveTodayStatus(x));return h2>=17&&h2<20;}).length},
-   {lb:'Night (20+)',n:2,a:AGENTS.filter(function(x){var s=effectiveTodayStatus(x);return parseInt(s)>=19||s.startsWith('C')||s.startsWith('M');}).length},
+  [{lb:'Morning (09–12)',n:3,a:AGENTS.filter(function(x){var h2=parseInt(gTodayS(x));return h2>=8&&h2<12;}).length},
+   {lb:'Mid (10–17)',n:5,a:AGENTS.filter(function(x){return gTodayS(x).startsWith('10');}).length},
+   {lb:'Evening (17–00)',n:4,a:AGENTS.filter(function(x){var h2=parseInt(gTodayS(x));return h2>=17&&h2<20;}).length},
+   {lb:'Night (20+)',n:2,a:AGENTS.filter(function(x){var s=gTodayS(x);return parseInt(s)>=19||s.startsWith('C')||s.startsWith('M');}).length},
   ].forEach(function(c){
     h+='<div class="cov-row"><div class="cov-top"><span>'+c.lb+'</span><span style="color:'+(c.a>=c.n?'var(--green)':'var(--red)')+';">'+c.a+'/'+c.n+' needed '+(c.a>=c.n?'✅':'⚠️')+'</span></div>'
       +'<div class="cov-bg"><div class="cov-fill '+(c.a>=c.n?'fill-ok':'fill-low')+'" style="width:'+Math.min(100,Math.round(c.a/c.n*100))+'%"></div></div></div>';
@@ -4517,7 +4481,7 @@ function renderDashboard(){
   // M/C status
   h+='<div class="sh">Maker / Checker Status</div><div class="card"><div class="cb">';
   AGENTS.filter(function(a){return['maker','checker'].includes(a.r);}).forEach(function(a){
-    var s=effectiveTodayStatus(a);
+    var s=gTodayS(a);
     var active=!['OFF','P-Leave','Leave'].includes(s);
     h+='<div class="histrow"><div class="tm-av" style="background:'+avc(a.n)+';">'+ini(a.n)+'</div>'
       +'<div class="hinfo"><div class="htitle">'+a.n+' '+pill(a.r.toUpperCase(),a.r==='maker'?'p-amber':'p-navy')+'</div>'
@@ -4541,7 +4505,7 @@ function renderAttPanel(){
     +'<div style="font-size:12px;color:var(--t2);">Tap to mark status for Wed 04/03</div>'
     +'<button class="btn btn-navy btn-sm" onclick="saveAllAtt()" style="width:auto;">💾 Save All</button></div>';
   agents.forEach(function(a){
-    var s=effectiveTodayStatus(a);
+    var s=gTodayS(a);
     var autoS=s==='Sick'?'sick':s==='P-Leave'||s==='Leave'?'absent':'present';
     h+='<div class="att-row"><div class="att-info"><div class="att-nm">'+a.n+'</div><div class="att-sub">'+a.t+' · <span class="sc '+scCls(s)+'">'+scShort(s)+'</span></div></div>'
       +'<div class="att-btns" id="atb-'+a.id+'">'
@@ -4556,7 +4520,7 @@ function renderAttPanel(){
   document.getElementById('tt-att').innerHTML=h;
   // Auto-set
   agents.forEach(function(a){
-    var s=effectiveTodayStatus(a);
+    var s=gTodayS(a);
     if(s==='Sick') setAtt(a.id,'sick');
     else if(s==='OFF') setAtt(a.id,'absent');
     else setAtt(a.id,'present');
@@ -4911,21 +4875,21 @@ function rejectLeave(id){
 }
 
 function renderReportsPanel(){
-  var working=AGENTS.filter(function(a){return!['OFF','P-Leave','Leave','Sick','No Show','Permission'].includes(effectiveTodayStatus(a));}).length;
+  var working=AGENTS.filter(function(a){return!['OFF','P-Leave','Leave','Sick'].includes(gTodayS(a));}).length;
   var h='<div class="sh">Today\'s Summary — 04/03/2026</div>'
     +'<div class="team-summary"><div class="tscard c-green"><div class="tsnum">'+working+'</div><div class="tslbl">Present</div></div>'
-    +'<div class="tscard c-red"><div class="tsnum">'+AGENTS.filter(function(a){return effectiveTodayStatus(a)==='Sick';}).length+'</div><div class="tslbl">Sick</div></div>'
-    +'<div class="tscard c-amber"><div class="tsnum">'+AGENTS.filter(function(a){return['P-Leave','Leave','Permission'].includes(effectiveTodayStatus(a));}).length+'</div><div class="tslbl">On Leave</div></div>'
+    +'<div class="tscard c-red"><div class="tsnum">'+AGENTS.filter(function(a){return gTodayS(a)==='Sick';}).length+'</div><div class="tslbl">Sick</div></div>'
+    +'<div class="tscard c-amber"><div class="tsnum">'+AGENTS.filter(function(a){return['P-Leave','Leave'].includes(gTodayS(a));}).length+'</div><div class="tslbl">On Leave</div></div>'
     +'<div class="tscard c-navy"><div class="tsnum">'+AGENTS.filter(function(a){return gTodayS(a)==='OFF';}).length+'</div><div class="tslbl">Day Off</div></div></div>';
 
   h+='<div class="sh">Full Roster Today</div>';
   ['Inbound','Outbound','ITM','Wage','Retention','Leadership'].forEach(function(team){
     var m=AGENTS.filter(function(a){return a.t===team;});if(!m.length)return;
-    var w=m.filter(function(a){return!['OFF','P-Leave','Leave','Sick','No Show','Permission'].includes(effectiveTodayStatus(a));});
+    var w=m.filter(function(a){return!['OFF','P-Leave','Leave','Sick'].includes(gTodayS(a));});
     h+='<div class="dept-hdr"><div class="dept-title">'+team+'</div><div class="dept-count">'+w.length+'/'+m.length+' working</div></div>'
       +'<div class="dept-body">';
     m.forEach(function(a){
-      var s=effectiveTodayStatus(a);
+      var s=gTodayS(a);
       h+='<div class="tm-row"><div class="tm-av" style="background:'+avc(a.n)+';">'+ini(a.n)+'</div>'
         +'<div><div class="tm-name">'+a.n+'</div><div class="tm-sub"><span class="sc '+scCls(s)+'">'+s+'</span></div></div>'
         +'<div class="tm-right">'+pill(['OFF','P-Leave','Leave','Sick'].includes(s)?s.toUpperCase():'PRESENT',['OFF','P-Leave','Leave'].includes(s)?'p-gray':s==='Sick'?'p-red':'p-green')+'</div></div>';
@@ -4958,7 +4922,7 @@ function renderUploadPanel(){
     +'<div class="fg"><label class="lbl">Agent</label>'
     +'<select class="fld" id="manA">'+AGENTS.map(function(a){return'<option value="'+a.id+'">'+a.n+' ('+a.t+')</option>';}).join('')+'</select></div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" class="fg">'
-    +'<div><label class="lbl">Date</label><input type="date" class="fld" id="manD" value=""></div>'
+    +'<div><label class="lbl">Date</label><input type="date" class="fld" id="manD" value="'+today()+'"></div>'
     +'<div><label class="lbl">Shift</label><select class="fld" id="manS">'
     +'<option>09:00-16:00</option><option>10:00-17:00</option><option>12:00-19:00</option>'
     +'<option>17:00-00:00</option><option>19:00-02:00</option><option>20:00-03:00</option>'
@@ -6022,7 +5986,7 @@ function renderKpiRequestLists(){
   }).join(''):'<div class="empty"><div class="ep">No KPI requests yet</div></div>';
   var approvals=document.getElementById('kpiApprovalList'); if(approvals){
     var items=[]; ['extra','meeting','permission','issue'].forEach(function(k){(ks[k]||[]).forEach(function(x){ var ap=String(x.approver||x.approvedBy||x.organizer||''); if(ap===meName && String(x.status||'pending')==='pending'){ x._type=k; items.push(x);} });});
-    approvals.innerHTML=items.length?items.map(function(x){var title=x._type==='extra'?'Extra Break':x._type==='meeting'?'Meeting':x._type==='permission'?'Permission':'System Issue'; return '<div class="histrow"><div class="hinfo"><div class="htitle">'+title+'</div><div class="hmeta">'+((x.date||'')+' '+(x.time||''))+'</div></div><div class="hactions"><button class="btn btn-green btn-sm" onclick="approveDailyKPIReq(\'"+"+x._type+""+"\',\'"+"+x.id+""+"\')">Approve</button><button class="btn btn-red btn-sm" onclick="rejectDailyKPIReq(\'"+"+x._type+""+"\',\'"+"+x.id+""+"\')">Reject</button></div></div>';}).join(''):'<div class="empty"><div class="ep">No KPI approvals</div></div>';
+    approvals.innerHTML=items.length?items.map(function(x){var title=x._type==='extra'?'Extra Break':x._type==='meeting'?'Meeting':x._type==='permission'?'Permission':'System Issue'; var stamp=((x.date||'')+' '+(x.time||'')).trim(); return '<div class="histrow"><div class="hinfo"><div class="htitle">'+title+'</div><div class="hmeta">'+stamp+'</div></div><div class="hactions"><button class="btn btn-green btn-sm" onclick="approveDailyKPIReq(\''+x._type+'\',\''+x.id+'\')">Approve</button><button class="btn btn-red btn-sm" onclick="rejectDailyKPIReq(\''+x._type+'\',\''+x.id+'\')">Reject</button></div></div>';}).join(''):'<div class="empty"><div class="ep">No KPI approvals</div></div>';
   }
   var c=document.getElementById('kpiReqCount'); if(c) c.textContent=mine.length;
   var a=document.getElementById('kpiApprovalCount'); if(a) a.textContent=((document.querySelectorAll('#kpiApprovalList .histrow')||[]).length||0);
