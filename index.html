@@ -2241,6 +2241,7 @@ input,select,textarea,button{font-size:16px;}
       <div class="ftab on" onclick="swTab('reqTabs','rt-swap',this)">🔄 Swap</div>
       <div class="ftab" onclick="swTab('reqTabs','rt-leave',this)">🌴 Leave</div>
       <div class="ftab" onclick="swTab('reqTabs','rt-att',this)">✅ Attendance</div>
+      <div class="ftab" id="req-approvals-tab" onclick="swTab('reqTabs','rt-approvals',this)">📝 Approvals <span class="nbadge on" style="position:static;display:inline-block;vertical-align:middle;" id="reqApprovalBadge">0</span></div>
     </div>
     <div class="card" style="margin-bottom:10px;">
       <div class="cb" style="padding:12px;">
@@ -2293,6 +2294,11 @@ input,select,textarea,button{font-size:16px;}
         <div class="sh">My Leave History</div>
         <div class="card"><div class="cb" style="padding:0;" id="myLeaveHist"></div></div>
       </div>
+      <!-- APPROVALS -->
+      <div id="rt-approvals" style="display:none;">
+        <div id="reqApprovalsWrap"></div>
+      </div>
+
       <!-- ATTENDANCE -->
       <div id="rt-att" style="display:none;">
         <div class="sh">My Attendance — March 2026</div>
@@ -2535,7 +2541,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbw-aP1XpDJTRx0Vk2jFGPsOT_jj1s5uEhnhymyZf5ChZuJ5WB7Rm_TKN4WUwE6vuXehgQ/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxn-JeaQ7d-ugXgnOraLA6sz3i4k2Mue9zrK76Uz14_ioJGoCW6XVZxkIi-fJgaU5kDGQ/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -3224,7 +3230,7 @@ function renderTeam(){
     if(!smap[b.agent])return;
     if(b.status!=='cancelled')smap[b.agent].sched+=b.duration;
     if(b.status==='done')smap[b.agent].used+=b.duration;
-    if(b.status==='active'||b.status==='booked'){smap[b.agent].st='brk';smap[b.agent].brk=b;}
+    if(b.status==='active'){smap[b.agent].st='brk';smap[b.agent].brk=b;}
   });
   var onNow=Object.values(smap).filter(function(x){return x.st==='brk';}).length;
   var conEl=document.getElementById('conMeter');
@@ -3252,6 +3258,7 @@ function renderTeam(){
       return true;
     });
     if(!list.length)return;
+    list.sort(function(a,b){var sa=smap[a.name]||{st:'off'};var sb=smap[b.name]||{st:'off'};var ord={brk:0,on:1,off:2};var da=ord[sa.st]!==undefined?ord[sa.st]:3;var db=ord[sb.st]!==undefined?ord[sb.st]:3;return da-db||String(a.name).localeCompare(String(b.name));});
     h+='<div class="dept-hdr"><div class="dept-title">'+dept.label+'</div><div class="dept-count">'+list.length+'</div></div><div class="dept-body">';
     list.forEach(function(e){
       var st=smap[e.name]||{st:'off',sched:0};var isMe=e.name===me.name;
@@ -3481,11 +3488,11 @@ function hubRefreshBadge(){
   if(!me)return;
   var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;});
   var badge=document.getElementById('break-badge');
-  if(pend.length){badge.style.display='';badge.textContent=pend.length;}else{badge.style.display='none';}
-  var ann=(d.settings&&d.settings.announce)||''
+  if(badge){if(pend.length){badge.style.display='';badge.textContent=pend.length;}else{badge.style.display='none';}}
+  var ann=(d.settings&&d.settings.announce)||'';
   var hann=document.getElementById('hub-announce');
   var htxt=document.getElementById('hub-ann-text');
-  if(ann){hann.style.display='';htxt.textContent=ann;}else{hann.style.display='none';}
+  if(hann){if(ann){hann.style.display='';if(htxt)htxt.textContent=ann;}else{hann.style.display='none';}} else if(htxt&&ann){htxt.textContent=ann;}
 }
 
 // Override startApp to go to hub instead of directly to BS
@@ -3550,7 +3557,6 @@ function startApp(){
   if(typeof buildNav==='function') buildNav();
   if(typeof buildSwapWith==='function') buildSwapWith();
   if(typeof sp_renderNotifs==='function') sp_renderNotifs();
-  if(typeof buildSwapWith==='function') buildSwapWith();
 
   // Populate SP profile fields
   initSpProfile();
@@ -3746,7 +3752,7 @@ var sp_teamFilter='All';
 // ini shared from BS
 const COLORS=['#0A4A8A','#00A89A','#3DB549','#E08C00','#6B3FA0','#C0392B','#0A7FAE','#2E86C1'];
 // avc shared from BS
-function gTodayS(a){return a.sch[DATES.indexOf(TODAY)]||'OFF';}
+function gTodayS(a){var idx=DATES.indexOf(TODAY);return idx>=0?((a&&a.sch&&a.sch[idx])||'OFF'):'OFF';}
 function getAttScheduleOverride(agentName, baseShift, dateStr){
   if(typeof attGetEntry!=='function' || dateStr!==TODAY) return null;
   var att=attGetEntry(agentName);
@@ -3787,6 +3793,21 @@ function scShort(s){
 }
 function pill(txt,cls){return'<span class="pill '+cls+'">'+txt+'</span>';}
 function fmtTS(ts){return new Date(ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
+function fmtDateBasic(v){
+  if(!v) return '—';
+  var d = new Date(v);
+  if(isNaN(d.getTime())){
+    var s = String(v).trim();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s)){
+      var p=s.split('-');
+      d=new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
+    }else{
+      return s;
+    }
+  }
+  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+function fmtRangeBasic(a,b){ return fmtDateBasic(a)+' → '+fmtDateBasic(b); }
 function canDash(){var r=String((me&&me.loginRole)||'').toLowerCase(); var a=String((me&&me.access)||'').toLowerCase(); return ['tl','atl','manager','wfm','admin','readonly','management'].includes(r)||['manager','admin','readonly','management'].includes(a);}
 function canTeam(){var r=String((me&&me.loginRole)||'').toLowerCase(); var a=String((me&&me.access)||'').toLowerCase(); return ['tl','atl','manager','wfm','admin','readonly','management'].includes(r)||['manager','admin','readonly','management'].includes(a);}
 function canAdmin(){return['admin','manager','wfm'].includes(me&&me.loginRole);}
@@ -4125,8 +4146,19 @@ function setTeamFilter(t){
   buildSchGrid();
 }
 
+function openSwapFromGrid(agentId,dateStr){
+  if(!me||!isAgentUser(me)) return;
+  showPage('requests');
+  var sel=document.getElementById('swWith'); if(sel) sel.value=agentId||'';
+  var dt=document.getElementById('swDate'); if(dt) dt.value=dateStr||TODAY||today();
+  var rs=document.getElementById('swReason'); if(rs) rs.focus();
+  var tabs=document.querySelectorAll('#reqMainTabs .ftab');
+  if(typeof swTab==='function'&&tabs&&tabs[0]) swTab('reqTabs','rt-swap',tabs[0]);
+  sp_showToast('Swap request prefilled from schedule','ok');
+}
+
 function buildSchGrid(){
-  var display=sp_teamFilter==='All'?AGENTS:AGENTS.filter(function(a){return a.t===teamFilter;});
+  var display=sp_teamFilter==='All'?AGENTS:AGENTS.filter(function(a){return a.t===sp_teamFilter;});
   var teams=[...new Set(display.map(function(a){return a.t;}))];
   var th='<th class="name-h">Name</th>';
   DL.forEach(function(lb,i){
@@ -4143,7 +4175,9 @@ function buildSchGrid(){
       a.sch.forEach(function(s,i){
         var disp=getDisplayShift(a,DATES[i],i);
         var note=(DATES[i]===TODAY&&disp&&disp.shift!==s)?' title="Attendance updated by TL: '+disp.shift+'"':'';
-        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'" style="'+(WKND.includes(i)?'opacity:.5;':'')+'"'+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span></td>';
+        var canSwap=(me&&isAgentUser(me)&&a.n!==me.n&&!['OFF','P-Leave','Leave','Sick','Absent','Permission','No Show'].includes(disp.shift));
+        var click=canSwap?(' onclick="openSwapFromGrid(\''+a.id+'\',\''+DATES[i]+'\')" style="cursor:pointer;'+(WKND.includes(i)?'opacity:.5;':'')+'" title="Request swap with '+a.n+' on '+DATES[i]+'"'):(' style="'+(WKND.includes(i)?'opacity:.5;':'')+'"');
+        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'"'+click+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span></td>';
       });
       rows+='<tr>'+cells+'</tr>';
     });
@@ -4157,7 +4191,11 @@ function buildSchGrid(){
 // ════════════════════════════════════════════════
 function buildSwapWith(){
   var sel=document.getElementById('swWith');
-  AGENTS.filter(function(a){return a.id!==me.id&&['agent','maker','checker'].includes(a.r);}).forEach(function(a){
+  if(!sel||!me)return;
+  sel.innerHTML='<option value="">Select colleague</option>';
+  AGENTS.filter(function(a){
+    return String(a.id)!==String(me.id)&&['agent','maker','checker'].includes(a.r);
+  }).forEach(function(a){
     sel.innerHTML+='<option value="'+a.id+'">'+a.n+' ('+a.t+' · '+gTodayS(a)+')</option>';
   });
 }
@@ -4166,37 +4204,72 @@ function renderRequests(){
   renderLeaveBalPanel();
   renderMyLeaveHist();
   renderMyAttTab();
+  renderRequestsApprovals();
 }
 function submitSwap(){
-  var w=document.getElementById('swWith').value;
-  var r=document.getElementById('swReason').value;
-  var d=document.getElementById('swDate').value;
+  var swWithEl=document.getElementById('swWith');
+  var swReasonEl=document.getElementById('swReason');
+  var swDateEl=document.getElementById('swDate');
+  var w=swWithEl?swWithEl.value:'';
+  var r=swReasonEl?swReasonEl.value.trim():'';
+  var d=(swDateEl&&swDateEl.value)?swDateEl.value:TODAY;
+
   if(!w){sp_showToast('Select a colleague','err');return;}
-  var ag=AGENTS.find(function(a){return a.id===w;});
-  var entry={id:'SW'+(Date.now()%10000),from:me.n,to:ag.n,date:d,sA:gTodayS(me),sB:gTodayS(ag),reason:r,status:'pending',ts:new Date().toISOString()};
+
+  var ag=AGENTS.find(function(a){return String(a.id)===String(w);});
+  if(!ag){sp_showToast('Selected colleague not found','err');return;}
+
+  var entry={
+    id:(typeof uid==='function'?uid('SW'):('SW-'+Date.now()+'-'+Math.floor(Math.random()*1000))),
+    from:me.n,
+    to:ag.n,
+    date:d,
+    sA:gTodayS(me),
+    sB:gTodayS(ag),
+    reason:r,
+    status:'pending',
+    ts:new Date().toISOString()
+  };
+
   SWAPS.push(entry);
+
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',
     id:entry.id,from:entry.from,to:entry.to,date:entry.date,
-    fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,ts:entry.ts
+    fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,status:entry.status,ts:entry.ts
   }),headers:{'Content-Type':'text/plain'}})
   .then(function(r){return r.json();})
-  .then(function(res){if(res&&res.ok)setSy(true);else setSy(false);})
-  .catch(function(){setSy(false);});
+  .then(function(res){
+    if(res&&res.ok){
+      setSy(true);
+      sp_showToast('Swap request submitted!','ok');
+      renderMySwapHist();
+      renderRequestsApprovals();
+    }else{
+      setSy(false);
+      sp_showToast('Swap request failed to save','err');
+    }
+  })
+  .catch(function(){
+    setSy(false);
+    sp_showToast('Network error while saving swap request','err');
+  });
+
   logA('SWAP_REQUEST',me.n+' ↔ '+ag.n+' on '+d,'inf');
-  sp_showToast('Swap request submitted! TL notified.','ok');
-  renderMySwapHist();
 }
 function renderMySwapHist(){
-  var mine=SWAPS.filter(function(s){return s.from===me.n;});
+  var mine=SWAPS.filter(function(s){return s.from===me.n||s.to===me.n;});
+  mine.sort(function(a,b){return new Date(b.ts||0)-new Date(a.ts||0);});
   var h=mine.map(function(s){
+    var isMine=s.from===me.n;
+    var when=fmtTS(s.ts||s.date||'');
     return '<div class="swcard">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-      +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+s.date+'</span>'
-      +pill(s.status.toUpperCase(),s.status==='approved'?'p-green':s.status==='rejected'?'p-red':'p-amber')+'</div>'
-      +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">ME</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
+      +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+when+'</span>'
+      +pill(String(s.status||'pending').toUpperCase(),s.status==='approved'?'p-green':s.status==='rejected'?'p-red':'p-amber')+'</div>'
+      +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">'+(isMine?'ME':'FROM')+'</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA||s.fromShift)+'">'+(s.sA||s.fromShift||'')+'</span></div></div>'
       +'<div class="sw-arrow">⇄</div>'
-      +'<div class="sw-side to"><div class="sw-lbl">WITH</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div></div>'
-      +'<div style="font-size:11px;color:var(--t2);margin-top:6px;">📝 '+s.reason+'</div></div>';
+      +'<div class="sw-side to"><div class="sw-lbl">'+(isMine?'WITH':'TO')+'</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB||s.toShift)+'">'+(s.sB||s.toShift||'')+'</span></div></div></div>'
+      +'<div style="font-size:11px;color:var(--t2);margin-top:6px;">📝 '+(s.reason||'')+'</div></div>';
   }).join('');
   document.getElementById('mySwapHist').innerHTML=h||'<div class="empty"><div class="ep">No swap requests yet</div></div>';
 }
@@ -4215,13 +4288,13 @@ function openAnnualLeave(){
     }
   }
   var type=document.getElementById('lvType');
-  if(type) type.value='Annual Leave';
+  if(type){type.value='Annual Leave';type.setAttribute('disabled','disabled');}
   var from=document.getElementById('lvFrom');
   if(from) from.focus();
 }
 
 function submitLeave(){
-  var type=document.getElementById('lvType').value;
+  var type='Annual Leave';
   var from=document.getElementById('lvFrom').value;
   var to=document.getElementById('lvTo').value;
   var notes=document.getElementById('lvNotes').value;
@@ -4233,7 +4306,9 @@ function submitLeave(){
     sp_showToast('Leave end date cannot be before start date','err');
     return;
   }
-  var entry={id:'L'+(Date.now()%10000),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:new Date().toISOString()};
+  var dup=LEAVES.some(function(l){return l.agent===me.n&&l.status==='pending'&&l.from===from&&l.to===to;});
+  if(dup){sp_showToast('A pending annual leave already exists for this period','err');return;}
+  var entry={id:(typeof uid==='function'?uid('L'):('L-'+Date.now()+'-'+Math.floor(Math.random()*1000))),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:new Date().toISOString()};
   LEAVES.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveLeaveRequest',
     id:entry.id,agent:entry.agent,type:entry.type,from:entry.from,
@@ -4245,6 +4320,7 @@ function submitLeave(){
   logA('LEAVE_REQUEST',me.n+' submitted '+type+' from '+from,'inf');
   sp_showToast('Leave request submitted!','ok');
   renderMyLeaveHist();
+  renderRequestsApprovals();
 }
 function renderLeaveBalPanel(){
   var h=[{t:'Annual Leave',total:21,used:0},{t:'Sick Leave',total:10,used:1},{t:'Emergency',total:3,used:0}].map(function(b){
@@ -4263,7 +4339,7 @@ function renderMyLeaveHist(){
     +mine.map(function(l){
       return '<tr style="border-bottom:1px solid var(--border);">'
         +'<td style="padding:9px 12px;font-size:12px;font-weight:600;">'+l.type+'</td>'
-        +'<td style="padding:9px 12px;font-size:12px;color:var(--t2);">'+l.from+' → '+l.to+'</td>'
+        +'<td style="padding:9px 12px;font-size:12px;color:var(--t2);">'+fmtRangeBasic(l.from,l.to)+'</td>'
         +'<td style="padding:9px 12px;">'+pill(l.status.toUpperCase(),l.status==='approved'?'p-green':l.status==='rejected'?'p-red':'p-amber')+'</td></tr>';
     }).join('')+'</tbody></table>'
     :'<div style="padding:14px;text-align:center;font-size:12px;color:var(--t3);">No leave history</div>';
@@ -4271,20 +4347,99 @@ function renderMyLeaveHist(){
 }
 function renderLeaveTab(){renderLeaveBalPanel();renderMyLeaveHist();}
 function renderMyAttTab(){
+  var recs=(ATT_LOG||[]).filter(function(a){return a.agent===me.n;}).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));}).slice(0,10);
   var h='<table style="width:100%;border-collapse:collapse;">'
     +'<thead><tr style="background:var(--bg)"><th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">Date</th>'
     +'<th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">Shift</th>'
-    +'<th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">Status</th></tr></thead><tbody>';
-  DATES.slice(0,3).forEach(function(d,i){
-    var s=me.sch[i];
-    var work=!['OFF','P-Leave','Leave','Sick'].includes(s);
+    +'<th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">Attendance</th></tr></thead><tbody>';
+  if(!recs.length){
+    h+='<tr><td colspan="3" style="padding:12px;color:var(--t2);font-size:12px;">No attendance records yet</td></tr>';
+  } else recs.forEach(function(a){
     h+='<tr style="border-bottom:1px solid var(--border);">'
-      +'<td style="padding:9px 12px;font-size:12px;">'+(d===TODAY?'<span style="font-size:9px;background:rgba(13,92,166,.1);color:var(--navy);border-radius:3px;padding:1px 4px;margin-right:3px;">TODAY</span>':'')+d+'</td>'
-      +'<td style="padding:9px 12px;"><span class="sc '+scCls(s)+'">'+s+'</span></td>'
-      +'<td style="padding:9px 12px;">'+pill(work?'PRESENT':'OFF',work?'p-green':'p-gray')+'</td></tr>';
+      +'<td style="padding:9px 12px;font-size:12px;">'+a.date+'</td>'
+      +'<td style="padding:9px 12px;font-size:12px;">'+(a.newShift||gTodayS(me)||'—')+'</td>'
+      +'<td style="padding:9px 12px;font-size:12px;">'+(schedAttLabelFor(a.date,me.n)||a.status||'—')+'</td></tr>';
   });
   h+='</tbody></table>';
-  document.getElementById('myAttTable').innerHTML=h;
+  var el=document.getElementById('myAttTable'); if(el) el.innerHTML=h;
+}
+
+function canSeeRequestsApprovals(){
+  return !!(canTeam() || (typeof kpiCurrentUserIsApprover==='function' && kpiCurrentUserIsApprover()));
+}
+function allPendingKpiApprovalsForMe(){
+  if(typeof kpiAllEntries!=='function') return [];
+  var meName=String((me&&(me.n||me.name))||'').trim();
+  return kpiAllEntries().filter(function(x){
+    return String(x.approver||x.approvedBy||x.organizer||'')===meName && String(x.approvalStatus||'pending').toLowerCase()==='pending';
+  });
+}
+function renderRequestsApprovals(){
+  var tab=document.getElementById('req-approvals-tab');
+  var badge=document.getElementById('reqApprovalBadge');
+  var wrap=document.getElementById('reqApprovalsWrap');
+  var show=canSeeRequestsApprovals();
+  if(tab) tab.style.display=show?'':'none';
+  if(!show){
+    if(wrap) wrap.innerHTML='<div class="empty"><div class="ep">No approvals assigned to you</div></div>';
+    if(badge) badge.textContent='0';
+    return;
+  }
+
+  var swapPending=(SWAPS||[]).filter(function(s){ return String(s.status||'').toLowerCase()==='pending'; });
+  var leavePending=(LEAVES||[]).filter(function(l){ return String(l.status||'').toLowerCase()==='pending'; });
+  var kpiPending=allPendingKpiApprovalsForMe();
+  var total=swapPending.length+leavePending.length+kpiPending.length;
+  if(badge) badge.textContent=String(total);
+
+  var h='';
+
+  h+='<div class="card"><div class="ch"><div class="ctitle">🔄 Swap Approvals</div>'+pill(String(swapPending.length),'p-amber')+'</div><div class="cb">';
+  if(!swapPending.length) h+='<div class="empty"><div class="ep">No pending swap approvals</div></div>';
+  else swapPending.forEach(function(s){
+    h+='<div class="swcard">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:11px;color:var(--t2);">'+(s.id||'')+' · '+fmtTS(s.ts||'')+'</span>'+pill('PENDING','p-amber')+'</div>'
+      +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">FROM</div><div class="sw-name">'+(s.from||'')+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA||s.fromShift||'')+'">'+(s.sA||s.fromShift||'')+'</span></div></div>'
+      +'<div class="sw-arrow">⇄</div>'
+      +'<div class="sw-side to"><div class="sw-lbl">WITH</div><div class="sw-name">'+(s.to||'')+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB||s.toShift||'')+'">'+(s.sB||s.toShift||'')+'</span></div></div></div>'
+      +'<div style="font-size:11px;color:var(--t2);margin:8px 0;">📝 '+(s.reason||'')+'</div>'
+      +'<div style="display:flex;gap:8px;"><button class="btn btn-green btn-sm" onclick="approveSwapFromRequests(\''+(s.id||'')+'\')">✅ Approve</button><button class="btn btn-red btn-sm" onclick="rejectSwapFromRequests(\''+(s.id||'')+'\')">❌ Reject</button></div>'
+      +'</div>';
+  });
+  h+='</div></div>';
+
+  h+='<div class="card"><div class="ch"><div class="ctitle">🌴 Leave Approvals</div>'+pill(String(leavePending.length),'p-amber')+'</div><div class="cb">';
+  if(!leavePending.length) h+='<div class="empty"><div class="ep">No pending leave approvals</div></div>';
+  else leavePending.forEach(function(l){
+    h+='<div class="card" style="box-shadow:none;border:1px solid var(--border);margin-bottom:10px;"><div class="cb">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-size:13px;font-weight:700;">'+(l.agent||'')+'</div>'+pill('PENDING','p-amber')+'</div>'
+      +'<div style="font-size:12px;color:var(--t2);margin-bottom:8px;">'+(l.type||'Annual Leave')+' · '+fmtRangeBasic(l.from,l.to)+'</div>'
+      +'<div style="font-size:11px;color:var(--t2);margin-bottom:8px;">📝 '+(l.notes||'')+'</div>'
+      +'<div style="display:flex;gap:8px;"><button class="btn btn-green btn-sm" onclick="approveLeaveFromRequests(\''+(l.id||'')+'\')">✅ Approve</button><button class="btn btn-red btn-sm" onclick="rejectLeaveFromRequests(\''+(l.id||'')+'\')">❌ Reject</button></div>'
+      +'</div></div>';
+  });
+  h+='</div></div>';
+
+  h+='<div class="card"><div class="ch"><div class="ctitle">📋 Daily KPI Approvals</div>'+pill(String(kpiPending.length),'p-amber')+'</div><div class="cb">';
+  if(!kpiPending.length) h+='<div class="empty"><div class="ep">No pending KPI approvals</div></div>';
+  else kpiPending.forEach(function(x){
+    h+='<div class="kpi-item">'
+      +'<div class="kpi-item-head"><div><div class="kpi-item-title">'+kpiPrettyType(x.kpiType)+' · '+(x.agent||'')+'</div><div class="kpi-item-meta">'+kpiFmtMeta(x)+'</div></div><span class="kpi-status pending">PENDING</span></div>'
+      +'<div class="kpi-item-body">'+kpiSummary(x)+'</div>'
+      +'<div class="kpi-actions"><button class="kpi-mini-btn ok" type="button" onclick="approveDailyKPIFromRequests(\''+(x.kpiType||'')+'\',\''+String(x.id||'').replace(/'/g,"&#39;")+'\',\'approved\')">Approve</button><button class="kpi-mini-btn no" type="button" onclick="approveDailyKPIFromRequests(\''+(x.kpiType||'')+'\',\''+String(x.id||'').replace(/'/g,"&#39;")+'\',\'rejected\')">Reject</button></div>'
+      +'</div>';
+  });
+  h+='</div></div>';
+
+  if(wrap) wrap.innerHTML=h;
+}
+function approveSwapFromRequests(id){ approveSwap(id); setTimeout(renderRequestsApprovals,120); }
+function rejectSwapFromRequests(id){ rejectSwap(id); setTimeout(renderRequestsApprovals,120); }
+function approveLeaveFromRequests(id){ approveLeave(id); setTimeout(renderRequestsApprovals,120); }
+function rejectLeaveFromRequests(id){ rejectLeave(id); setTimeout(renderRequestsApprovals,120); }
+function approveDailyKPIFromRequests(type,id,status){
+  if(typeof kpiApproveItem==='function'){ kpiApproveItem(type,id,status); setTimeout(renderRequestsApprovals,200); }
+  return false;
 }
 
 // ════════════════════════════════════════════════
@@ -4630,8 +4785,9 @@ function saveAllAtt(){
   var e=Object.entries(attSel);if(!e.length){sp_showToast('Mark attendance first','err');return;}
   e.forEach(function(p){
     var a=AGENTS.find(function(x){return x.id===p[0];});
-    logA('ATTENDANCE',a.n+' → '+p[1].toUpperCase(),'inf');
-    saveSheet('Attendance',[a.n,'2026-03-04',p[1],me.n,new Date().toISOString()]);
+    if(!a)return;
+    logA('ATTENDANCE',a.n+' → '+String(p[1]).toUpperCase(),'inf');
+    saveSheet('Attendance',[a.n,today(),p[1],'','',me.n,new Date().toISOString()]);
   });
   sp_showToast('Attendance saved for '+e.length+' agents ✓','ok');
 }
@@ -4662,13 +4818,57 @@ function renderSwapApproval(){
   });
   document.getElementById('tt-swaps').innerHTML=h;
 }
+function findAgentByName(n){
+  return AGENTS.find(function(a){ return String(a.n||'')===String(n||''); }) || null;
+}
+function applyApprovedSwapEverywhere(s){
+  if(!s || !s.date) return false;
+  var idx = DATES.indexOf(s.date);
+  if(idx < 0) return false;
+
+  var a1 = findAgentByName(s.from);
+  var a2 = findAgentByName(s.to);
+  if(!a1 || !a2 || !a1.sch || !a2.sch) return false;
+
+  var old1 = a1.sch[idx] || 'OFF';
+  var old2 = a2.sch[idx] || 'OFF';
+
+  a1.sch[idx] = old2;
+  a2.sch[idx] = old1;
+
+  if(me){
+    if(String(me.n||me.name||'')===String(a1.n)) me.sch = a1.sch;
+    if(String(me.n||me.name||'')===String(a2.n)) me.sch = a2.sch;
+  }
+
+  if(typeof saveSheet==='function'){
+    try{
+      saveSheet('ScheduleChanges',[s.date,a1.n,a1.sch[idx],me?me.n:'System',new Date().toISOString()]);
+      saveSheet('ScheduleChanges',[s.date,a2.n,a2.sch[idx],me?me.n:'System',new Date().toISOString()]);
+    }catch(e){}
+  }
+
+  if(typeof renderMySchedule==='function') try{ renderMySchedule(); }catch(e){}
+  if(typeof renderFullSchedule==='function') try{ renderFullSchedule(); }catch(e){}
+  if(typeof sp_renderHome==='function') try{ sp_renderHome(); }catch(e){}
+  if(typeof renderDashboard==='function') try{ renderDashboard(); }catch(e){}
+  if(typeof buildSwapWith==='function') try{ buildSwapWith(); }catch(e){}
+  return true;
+}
 function approveSwap(id){
   var s=SWAPS.find(function(x){return x.id===id;});
-  if(s) s.status='approved';
+  if(s){
+    s.status='approved';
+    s.approvedAt=new Date().toISOString();
+    s.actionedBy=me?me.n:'';
+    applyApprovedSwapEverywhere(s);
+  }
   fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'approved',actionedBy:me.n}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   logA('SWAP_APPROVED',id+' approved by '+me.n,'inf');
-  sp_showToast('Swap approved ✓','ok');
+  sp_showToast('Swap approved ✓ · schedules updated','ok');
   renderSwapApproval();
+  renderRequestsApprovals();
+  renderRequests();
 }
 function rejectSwap(id){
   var s=SWAPS.find(function(x){return x.id===id;});
@@ -4677,6 +4877,7 @@ function rejectSwap(id){
   logA('SWAP_REJECTED',id+' rejected by '+me.n,'inf');
   sp_showToast('Swap rejected','inf');
   renderSwapApproval();
+  renderRequestsApprovals();
 }
 
 function renderLeaveApproval(){
@@ -4687,7 +4888,7 @@ function renderLeaveApproval(){
     h+='<div class="card"><div class="ch"><div class="ctitle">'+l.agent+'</div>'+pill('⏳ PENDING','p-amber')+'</div><div class="cb">'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;">'
       +'<div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:2px;">TYPE</div><div style="font-size:13px;font-weight:700;">'+l.type+'</div></div>'
-      +'<div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:2px;">PERIOD</div><div style="font-size:13px;font-weight:700;">'+l.from+' → '+l.to+'</div></div>'
+      +'<div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:2px;">PERIOD</div><div style="font-size:13px;font-weight:700;">'+fmtRangeBasic(l.from,l.to)+'</div></div>'
       +'<div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:2px;">DAYS</div><div style="font-size:13px;font-weight:700;">'+l.days+'</div></div></div>'
       +'<div style="font-size:11px;color:var(--t2);margin-bottom:12px;">📝 '+l.notes+'</div>'
       +'<div style="display:flex;gap:8px;">'
@@ -4698,7 +4899,7 @@ function renderLeaveApproval(){
   h+='<div class="sh">All Leaves</div><div class="card"><div class="cb" style="padding:0;">';
   LEAVES.forEach(function(l){
     h+='<div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--border);">'
-      +'<div style="flex:1;"><div style="font-size:13px;font-weight:700;">'+l.agent+'</div><div style="font-size:10px;color:var(--t2);">'+l.type+' · '+l.from+' → '+l.to+'</div></div>'
+      +'<div style="flex:1;"><div style="font-size:13px;font-weight:700;">'+l.agent+'</div><div style="font-size:10px;color:var(--t2);">'+l.type+' · '+fmtRangeBasic(l.from,l.to)+'</div></div>'
       +pill(l.status.toUpperCase(),l.status==='approved'?'p-green':l.status==='rejected'?'p-red':'p-amber')+'</div>';
   });
   h+='</div></div>';
@@ -4711,6 +4912,7 @@ function approveLeave(id){
   logA('LEAVE_APPROVED',id+' approved by '+me.n,'inf');
   sp_showToast('Leave approved ✓','ok');
   renderLeaveApproval();
+  renderRequestsApprovals();
 }
 function rejectLeave(id){
   var l=LEAVES.find(function(x){return x.id===id;});
@@ -4719,6 +4921,7 @@ function rejectLeave(id){
   logA('LEAVE_REJECTED',id+' rejected by '+me.n,'inf');
   sp_showToast('Leave rejected','inf');
   renderLeaveApproval();
+  renderRequestsApprovals();
 }
 
 function renderReportsPanel(){
@@ -5915,6 +6118,7 @@ function kpiApproveItem(type,id,status){
       if(res&&res.ok){
         kpiUpdateLocal(type,id,payload);
         renderKpiRequestLists();
+        renderRequestsApprovals();
         kpiShowMsg('KPI request '+status,'ok');
         setTimeout(function(){ try{ apiPull(); }catch(e){} },300);
       } else kpiShowMsg((res&&res.error)||'Failed to update KPI approval','err');
