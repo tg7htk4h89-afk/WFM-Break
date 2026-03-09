@@ -1556,6 +1556,10 @@ input,select,textarea,button{font-size:16px;}
         <button id="shiftBtn" class="btn-main" onclick="confirmShift()" disabled>Confirm &amp; Enter &rarr;</button>
         <button class="btn-back" onclick="backToLogin()">&larr; Back</button>
       </div>
+      <div id="rt-approvals" style="display:none">
+        <div class="sh">Approvals</div>
+        <div id="reqApprovalsWrap"><div class="empty"><div class="ep">No approvals waiting</div></div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -2241,6 +2245,7 @@ input,select,textarea,button{font-size:16px;}
       <div class="ftab on" onclick="swTab('reqTabs','rt-swap',this)">🔄 Swap</div>
       <div class="ftab" onclick="swTab('reqTabs','rt-leave',this)">🌴 Leave</div>
       <div class="ftab" onclick="swTab('reqTabs','rt-att',this)">✅ Attendance</div>
+      <div class="ftab" onclick="swTab('reqTabs','rt-approvals',this)">🛡️ Approvals <span class="nbadge on" style="position:static;display:inline-block;vertical-align:middle;" id="reqApprovalBadge">0</span></div>
     </div>
     <div class="card" style="margin-bottom:10px;">
       <div class="cb" style="padding:12px;">
@@ -4157,7 +4162,9 @@ function buildSchGrid(){
 // ════════════════════════════════════════════════
 function buildSwapWith(){
   var sel=document.getElementById('swWith');
-  AGENTS.filter(function(a){return a.id!==me.id&&['agent','maker','checker'].includes(a.r);}).forEach(function(a){
+  if(!sel||!me) return;
+  sel.innerHTML='<option value="">-- Select colleague --</option>';
+  AGENTS.filter(function(a){return String(a.id)!==String(me.id)&&['agent','maker','checker'].includes(a.r);}).forEach(function(a){
     sel.innerHTML+='<option value="'+a.id+'">'+a.n+' ('+a.t+' · '+gTodayS(a)+')</option>';
   });
 }
@@ -4166,6 +4173,7 @@ function renderRequests(){
   renderLeaveBalPanel();
   renderMyLeaveHist();
   renderMyAttTab();
+  renderRequestsApprovals();
 }
 
 function canMgmtApproveSwap(){
@@ -4215,19 +4223,21 @@ function submitSwap(){
   var r=document.getElementById('swReason').value;
   var d=document.getElementById('swDate').value;
   if(!w){sp_showToast('Select a colleague','err');return;}
-  var ag=AGENTS.find(function(a){return a.id===w;});
-  var entry={id:'SW'+(Date.now()%10000),from:me.n,to:ag.n,date:d,sA:gTodayS(me),sB:gTodayS(ag),reason:r,status:'pending_peer',ts:new Date().toISOString(),peerApprovedBy:'',peerApprovedAt:'',finalApprovedBy:'',finalApprovedAt:''};
+  var ag=AGENTS.find(function(a){return String(a.id)===String(w);});
+  if(!ag){sp_showToast('Selected colleague not found','err');return;}
+  var entry={id:'SW-'+Date.now()+'-'+Math.floor(Math.random()*1000),from:me.n,to:ag.n,date:d,sA:gTodayS(me),sB:gTodayS(ag),reason:r,status:'pending_peer',ts:new Date().toISOString(),peerApprovedBy:'',peerApprovedAt:'',finalApprovedBy:'',finalApprovedAt:''};
   SWAPS.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',
     id:entry.id,from:entry.from,to:entry.to,date:entry.date,
-    fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,ts:entry.ts
+    fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,status:entry.status,ts:entry.ts
   }),headers:{'Content-Type':'text/plain'}})
   .then(function(r){return r.json();})
-  .then(function(res){if(res&&res.ok)setSy(true);else setSy(false);})
-  .catch(function(){setSy(false);});
+  .then(function(res){if(res&&res.ok)setSy(true);else setSy(false); renderRequestsApprovals();})
+  .catch(function(){setSy(false); renderRequestsApprovals();});
   logA('SWAP_REQUEST',me.n+' ↔ '+ag.n+' on '+d,'inf');
   sp_showToast('Swap request submitted! Waiting for colleague approval.','ok');
   renderMySwapHist();
+  renderRequestsApprovals();
 }
 function renderMySwapHist(){
   var mine=SWAPS.filter(function(s){return s.from===me.n;});
@@ -4251,7 +4261,7 @@ function openAnnualLeave(){
     if(typeof swTab==='function' && leaveTab){
       swTab('reqTabs','rt-leave',leaveTab);
     }else{
-      ['rt-swap','rt-leave','rt-att'].forEach(function(id){
+      ['rt-swap','rt-leave','rt-att','rt-approvals'].forEach(function(id){
         var el=document.getElementById(id);
         if(el) el.style.display=(id==='rt-leave'?'block':'none');
       });
