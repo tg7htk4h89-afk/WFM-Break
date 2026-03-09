@@ -2254,7 +2254,7 @@ input,select,textarea,button{font-size:16px;}
         <div class="card">
           <div class="ch"><div class="ctitle">🔄 New Swap Request</div></div>
           <div class="cb">
-            <div class="fg"><label class="lbl">Swap Date</label><input type="date" class="fld" id="swDate" value="2026-03-09"></div>
+            <div class="fg"><label class="lbl">Swap Date</label><input type="date" class="fld" id="swDate" value="2026-03-09" onchange="buildSwapWith()"></div>
             <div class="fg"><label class="lbl">Swap With</label>
               <select class="fld" id="swWith"><option value="">-- Select colleague --</option></select>
             </div>
@@ -2541,8 +2541,8 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxn-JeaQ7d-ugXgnOraLA6sz3i4k2Mue9zrK76Uz14_ioJGoCW6XVZxkIi-fJgaU5kDGQ/exec';
-var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbzTnTKhwqf64HYMMe2A5d3Mw1Pgpv8Cvk0Cc1Yz-F4mdEjD-vYuekfiDXaxAXGpI3EC2w/exec';
+var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false,SCHEDULE_GRID_ROWS=[];
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
 function today(){
@@ -2739,8 +2739,9 @@ function _applyRemote(remote){
   if(Array.isArray(remote.leaves)) { LEAVES=remote.leaves; }
   if(Array.isArray(remote.actlog)) { ACTLOG=remote.actlog; }
   if(Array.isArray(remote.attendance)) { ATT_LOG=remote.attendance; }
+  if(Array.isArray(remote.scheduleGridRows)) { SCHEDULE_GRID_ROWS=remote.scheduleGridRows.slice(); applyScheduleGridRows(remote.scheduleGridRows); }
 
-  if((wasChanged||remote.swaps||remote.leaves||remote.attendance)&&me&&me.n) renderAll();
+  if((wasChanged||remote.swaps||remote.leaves||remote.attendance||remote.scheduleGridRows)&&me&&me.n) renderAll();
 }
 
 // ── Sync indicator dot ──
@@ -3753,6 +3754,83 @@ var sp_teamFilter='All';
 const COLORS=['#0A4A8A','#00A89A','#3DB549','#E08C00','#6B3FA0','#C0392B','#0A7FAE','#2E86C1'];
 // avc shared from BS
 function gTodayS(a){var idx=DATES.indexOf(TODAY);return idx>=0?((a&&a.sch&&a.sch[idx])||'OFF'):'OFF';}
+function getScheduleGridEntry(agentOrName,dateStr){
+  var nm = typeof agentOrName==='string' ? agentOrName : (agentOrName&&(agentOrName.n||agentOrName.name)||'');
+  dateStr = String(dateStr||TODAY||today());
+  if(!Array.isArray(SCHEDULE_GRID_ROWS) || !SCHEDULE_GRID_ROWS.length) return null;
+  return SCHEDULE_GRID_ROWS.find(function(r){
+    return String(r.agent||'')===String(nm) && String(r.date||'')===String(dateStr);
+  }) || null;
+}
+function getShiftOnDate(agent,dateStr){
+  if(!agent) return 'OFF';
+  var row = getScheduleGridEntry(agent,dateStr);
+  return row && row.shift ? String(row.shift) : 'OFF';
+}
+function getStatusOnDate(agent,dateStr){
+  var row = getScheduleGridEntry(agent,dateStr);
+  return row && row.status ? String(row.status) : '';
+}
+function getAttendanceOnDate(agentName,dateStr){
+  var rec = (ATT_LOG||[]).find(function(x){
+    return String(x.agent||'')===String(agentName||'') && String(x.date||'')===String(dateStr||'');
+  });
+  return rec || null;
+}
+function isBlockedAttendanceStatus(st){
+  st = String(st||'').trim().toLowerCase();
+  return ['sick','no show','noshow','absent','leave'].includes(st);
+}
+function validateSwapForDate(meAgent, otherAgent, dateStr){
+  if(!dateStr) return {ok:false,msg:'Select swap date'};
+  if(!meAgent || !otherAgent) return {ok:false,msg:'Invalid swap agents'};
+  if(String(meAgent.id)===String(otherAgent.id)) return {ok:false,msg:'You cannot swap with yourself'};
+
+  var myShift = getShiftOnDate(meAgent,dateStr);
+  var otherShift = getShiftOnDate(otherAgent,dateStr);
+
+  if(myShift==='OFF') return {ok:false,msg:'You are OFF on '+fmtDateBasic(dateStr)};
+  if(otherShift==='OFF') return {ok:false,msg:otherAgent.n+' is OFF on '+fmtDateBasic(dateStr)};
+
+  var myAtt = getAttendanceOnDate(meAgent.n,dateStr);
+  var otAtt = getAttendanceOnDate(otherAgent.n,dateStr);
+
+  if(myAtt && isBlockedAttendanceStatus(myAtt.status)) return {ok:false,msg:'Your attendance status blocks swap on '+fmtDateBasic(dateStr)};
+  if(otAtt && isBlockedAttendanceStatus(otAtt.status)) return {ok:false,msg:otherAgent.n+' has attendance status "'+otAtt.status+'" on '+fmtDateBasic(dateStr)};
+
+  var dup = (SWAPS||[]).some(function(s){
+    var samePair = (String(s.from||'')===String(meAgent.n||'') && String(s.to||'')===String(otherAgent.n||'')) ||
+                   (String(s.from||'')===String(otherAgent.n||'') && String(s.to||'')===String(meAgent.n||''));
+    return samePair && String(s.date||'')===String(dateStr) && String(s.status||'').toLowerCase()==='pending';
+  });
+  if(dup) return {ok:false,msg:'A pending swap already exists for this date'};
+
+  return {ok:true,myShift:myShift,otherShift:otherShift};
+}
+function applyScheduleGridRows(rows){
+  SCHEDULE_GRID_ROWS = Array.isArray(rows) ? rows.slice() : [];
+  // rebuild AGENTS schedule arrays from ScheduleGrid so legacy UI stays aligned
+  AGENTS.forEach(function(a){ a.sch = Array.isArray(a.sch)?a.sch:[]; });
+  var idxMap={}; DATES.forEach(function(d,i){ idxMap[String(d)] = i; });
+
+  AGENTS.forEach(function(a){
+    var base = new Array(DATES.length).fill('OFF');
+    var list = SCHEDULE_GRID_ROWS.filter(function(r){ return String(r.agent||'')===String(a.n||''); });
+    list.forEach(function(r){
+      var idx = idxMap[String(r.date||'')];
+      if(idx===undefined) return;
+      base[idx] = String(r.shift||'OFF');
+      if(r.team) a.t = r.team;
+      if(r.role) a.r = r.role;
+      if(me && String(me.n||me.name||'')===String(a.n||'')){
+        if(r.team) me.t = r.team;
+        if(r.role) me.r = r.role;
+      }
+    });
+    a.sch = base;
+    if(me && String(me.n||me.name||'')===String(a.n||'')) me.sch = base;
+  });
+}
 function getAttScheduleOverride(agentName, baseShift, dateStr){
   if(typeof attGetEntry!=='function' || dateStr!==TODAY) return null;
   var att=attGetEntry(agentName);
@@ -3772,7 +3850,7 @@ function getAttScheduleOverride(agentName, baseShift, dateStr){
   return null;
 }
 function getDisplayShift(agentObj, dateStr, idx){
-  var base=((agentObj&&agentObj.sch&&agentObj.sch[idx])||'OFF');
+  var base=getShiftOnDate(agentObj, dateStr);
   var o=getAttScheduleOverride(agentObj&&agentObj.n?agentObj.n:'', base, dateStr);
   return o||{shift:base, cls:scCls(base), short:scShort(base), badge:''};
 }
@@ -4087,33 +4165,45 @@ function sp_renderHome(){
 // MY SCHEDULE
 // ════════════════════════════════════════════════
 function renderMySchedule(){
-  if(!me||!me.n||!me.sch) return;
+  if(!me||!me.n) return;
   document.getElementById('schAgentName').textContent=(me.n||me.name||'')+' · '+(me.t||me.dept||'');
+  var counts={};
   var h='<table style="width:100%;border-collapse:collapse;">'
     +'<thead><tr style="background:var(--bg);"><th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Date</th>'
     +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Status</th>'
-    +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Shift</th></tr></thead><tbody>';
+    +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Shift</th>'
+    +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Attendance</th></tr></thead><tbody>';
   DATES.forEach(function(d,i){
-    var s=me.sch[i];
+    var baseShift=getShiftOnDate(me,d);
     var isToday=d===TODAY;
     var isW=WKND.includes(i);
     var dispInfo=getDisplayShift(me,d,i);
     var work=!['OFF','P-Leave','Leave','Sick','Absent'].includes(dispInfo.shift);
-    var attEntry=(isToday&&typeof attTodayStatus==='function')?attTodayStatus(me.n||me.name):null;
+    var attEntry=(ATT_LOG||[]).find(function(x){ return String(x.agent||'')===String(me.n||me.name||'') && String(x.date||'')===String(d); }) || null;
+    var attText=attEntry && attEntry.status ? String(attEntry.status) : (getStatusOnDate(me,d)||'—');
+    counts[attText]= (counts[attText]||0)+ (attText && attText!=='—' ? 1:0);
     var attBadge='';
-    if(attEntry){var attSt=typeof ATT_STATUSES!=='undefined'?ATT_STATUSES.find(function(x){return x.k===attEntry.status;}):null;
+    if(isToday && attEntry){var attSt=typeof ATT_STATUSES!=='undefined'?ATT_STATUSES.find(function(x){return x.k===attEntry.status;}):null;
       attBadge=attSt?' <span class="pill '+attSt.pillCls+'" style="font-size:10px;">'+attSt.pillLbl+'</span>':'';
     }
-    var dispShift=(isToday&&dispInfo&&dispInfo.shift!==s)
+    var dispShift=(dispInfo&&dispInfo.shift!==baseShift)
       ?('<span class="sc '+dispInfo.cls+'">'+dispInfo.shift+'</span><span style="font-size:10px;color:var(--teal);"> ✎</span>')
       :('<span class="sc '+dispInfo.cls+'">'+dispInfo.shift+'</span>');
     h+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.04);':'')+'">'
       +'<td style="padding:10px 12px;font-size:12px;">'+(isToday?'<span style="font-size:9px;font-weight:800;color:var(--navy);background:rgba(13,92,166,.1);border-radius:4px;padding:2px 5px;margin-right:4px;">TODAY</span>':'')+DL[i]+attBadge+'</td>'
-      +'<td style="padding:10px 12px;">'+pill(isW&&!work?'Weekend':s==='OFF'?'Off':work?'Working':'Leave/Sick',isW&&!work||s==='OFF'?'p-gray':work?'p-green':'p-red')+'</td>'
-      +'<td style="padding:10px 12px;">'+dispShift+'</td></tr>';
+      +'<td style="padding:10px 12px;">'+pill(isW&&!work?'Weekend':baseShift==='OFF'?'Off':work?'Working':'Leave/Sick',isW&&!work||baseShift==='OFF'?'p-gray':work?'p-green':'p-red')+'</td>'
+      +'<td style="padding:10px 12px;">'+dispShift+'</td>'
+      +'<td style="padding:10px 12px;font-size:12px;">'+attText+'</td></tr>';
   });
   h+='</tbody></table>';
   document.getElementById('mySchTable').innerHTML=h;
+  var wrap=document.getElementById('myAttSummary');
+  if(wrap){
+    var pills=Object.keys(counts).filter(function(k){return counts[k]>0 && k!=='—';}).map(function(k){
+      return '<span class="pill p-gray" style="margin-right:6px;margin-bottom:6px;display:inline-block;">'+k+': '+counts[k]+'</span>';
+    }).join('');
+    wrap.innerHTML=pills||'';
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -4149,8 +4239,9 @@ function setTeamFilter(t){
 function openSwapFromGrid(agentId,dateStr){
   if(!me||!isAgentUser(me)) return;
   showPage('requests');
-  var sel=document.getElementById('swWith'); if(sel) sel.value=agentId||'';
   var dt=document.getElementById('swDate'); if(dt) dt.value=dateStr||TODAY||today();
+  if(typeof buildSwapWith==='function') buildSwapWith();
+  var sel=document.getElementById('swWith'); if(sel) sel.value=agentId||'';
   var rs=document.getElementById('swReason'); if(rs) rs.focus();
   var tabs=document.querySelectorAll('#reqMainTabs .ftab');
   if(typeof swTab==='function'&&tabs&&tabs[0]) swTab('reqTabs','rt-swap',tabs[0]);
@@ -4172,12 +4263,12 @@ function buildSchGrid(){
     members.forEach(function(a){
       var mc=a.r==='maker'?' <span style="font-size:8px;background:var(--abg);color:var(--amber);padding:1px 4px;border-radius:3px;">M</span>':a.r==='checker'?' <span style="font-size:8px;background:rgba(13,92,166,.1);color:var(--navy);padding:1px 4px;border-radius:3px;">C</span>':'';
       var cells='<td class="name-c">'+a.n+mc+'</td>';
-      a.sch.forEach(function(s,i){
-        var disp=getDisplayShift(a,DATES[i],i);
-        var note=(DATES[i]===TODAY&&disp&&disp.shift!==s)?' title="Attendance updated by TL: '+disp.shift+'"':'';
+      DATES.forEach(function(dt,i){
+        var disp=getDisplayShift(a,dt,i);
+        var note=(dt===TODAY&&disp&&disp.shift!==getShiftOnDate(a,dt))?' title="Attendance updated by TL: '+disp.shift+'"':'';
         var canSwap=(me&&isAgentUser(me)&&a.n!==me.n&&!['OFF','P-Leave','Leave','Sick','Absent','Permission','No Show'].includes(disp.shift));
-        var click=canSwap?(' onclick="openSwapFromGrid(\''+a.id+'\',\''+DATES[i]+'\')" style="cursor:pointer;'+(WKND.includes(i)?'opacity:.5;':'')+'" title="Request swap with '+a.n+' on '+DATES[i]+'"'):(' style="'+(WKND.includes(i)?'opacity:.5;':'')+'"');
-        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'"'+click+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span></td>';
+        var click=canSwap?(' onclick="openSwapFromGrid(\''+a.id+'\',\''+dt+'\')" style="cursor:pointer;'+(WKND.includes(i)?'opacity:.5;':'')+'" title="Request swap with '+a.n+' on '+dt+'"'):(' style="'+(WKND.includes(i)?'opacity:.5;':'')+'"');
+        cells+='<td class="'+(dt===TODAY?'today-c':'')+'"'+click+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span></td>';
       });
       rows+='<tr>'+cells+'</tr>';
     });
@@ -4192,11 +4283,14 @@ function buildSchGrid(){
 function buildSwapWith(){
   var sel=document.getElementById('swWith');
   if(!sel||!me)return;
+  var swDateEl=document.getElementById('swDate');
+  var d=(swDateEl&&swDateEl.value)?swDateEl.value:(TODAY||today());
   sel.innerHTML='<option value="">Select colleague</option>';
   AGENTS.filter(function(a){
     return String(a.id)!==String(me.id)&&['agent','maker','checker'].includes(a.r);
   }).forEach(function(a){
-    sel.innerHTML+='<option value="'+a.id+'">'+a.n+' ('+a.t+' · '+gTodayS(a)+')</option>';
+    var sh = getShiftOnDate(a,d);
+    sel.innerHTML+='<option value="'+a.id+'">'+a.n+' ('+a.t+' · '+sh+')</option>';
   });
 }
 function renderRequests(){
@@ -4219,13 +4313,16 @@ function submitSwap(){
   var ag=AGENTS.find(function(a){return String(a.id)===String(w);});
   if(!ag){sp_showToast('Selected colleague not found','err');return;}
 
+  var chk = validateSwapForDate(me, ag, d);
+  if(!chk.ok){ sp_showToast(chk.msg,'err'); return; }
+
   var entry={
     id:(typeof uid==='function'?uid('SW'):('SW-'+Date.now()+'-'+Math.floor(Math.random()*1000))),
     from:me.n,
     to:ag.n,
     date:d,
-    sA:gTodayS(me),
-    sB:gTodayS(ag),
+    sA:chk.myShift,
+    sB:chk.otherShift,
     reason:r,
     status:'pending',
     ts:new Date().toISOString()
@@ -4241,9 +4338,10 @@ function submitSwap(){
   .then(function(res){
     if(res&&res.ok){
       setSy(true);
-      sp_showToast('Swap request submitted!','ok');
+      sp_showToast('Swap request submitted for '+fmtDateBasic(d)+'!','ok');
       renderMySwapHist();
       renderRequestsApprovals();
+      renderRequests();
     }else{
       setSy(false);
       sp_showToast('Swap request failed to save','err');
@@ -4254,7 +4352,7 @@ function submitSwap(){
     sp_showToast('Network error while saving swap request','err');
   });
 
-  logA('SWAP_REQUEST',me.n+' ↔ '+ag.n+' on '+d,'inf');
+  logA('SWAP_REQUEST',me.n+' ↔ '+ag.n+' on '+d+' ['+entry.sA+' ↔ '+entry.sB+']','inf');
 }
 function renderMySwapHist(){
   var mine=SWAPS.filter(function(s){return s.from===me.n||s.to===me.n;});
@@ -4266,7 +4364,7 @@ function renderMySwapHist(){
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
       +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+when+'</span>'
       +pill(String(s.status||'pending').toUpperCase(),s.status==='approved'?'p-green':s.status==='rejected'?'p-red':'p-amber')+'</div>'
-      +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">'+(isMine?'ME':'FROM')+'</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA||s.fromShift)+'">'+(s.sA||s.fromShift||'')+'</span></div></div>'
+      +'<div style="font-size:11px;color:var(--t2);margin:-2px 0 8px;">📅 Swap Date: '+fmtDateBasic(s.date||'')+'</div>'+'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">'+(isMine?'ME':'FROM')+'</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA||s.fromShift)+'">'+(s.sA||s.fromShift||'')+'</span></div></div>'
       +'<div class="sw-arrow">⇄</div>'
       +'<div class="sw-side to"><div class="sw-lbl">'+(isMine?'WITH':'TO')+'</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB||s.toShift)+'">'+(s.sB||s.toShift||'')+'</span></div></div></div>'
       +'<div style="font-size:11px;color:var(--t2);margin-top:6px;">📝 '+(s.reason||'')+'</div></div>';
@@ -4399,6 +4497,7 @@ function renderRequestsApprovals(){
   else swapPending.forEach(function(s){
     h+='<div class="swcard">'
       +'<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:11px;color:var(--t2);">'+(s.id||'')+' · '+fmtTS(s.ts||'')+'</span>'+pill('PENDING','p-amber')+'</div>'
+      +'<div style="font-size:11px;color:var(--t2);margin:-2px 0 8px;">📅 Swap Date: '+fmtDateBasic(s.date||'')+'</div>'
       +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">FROM</div><div class="sw-name">'+(s.from||'')+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA||s.fromShift||'')+'">'+(s.sA||s.fromShift||'')+'</span></div></div>'
       +'<div class="sw-arrow">⇄</div>'
       +'<div class="sw-side to"><div class="sw-lbl">WITH</div><div class="sw-name">'+(s.to||'')+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB||s.toShift||'')+'">'+(s.sB||s.toShift||'')+'</span></div></div></div>'
@@ -4802,6 +4901,7 @@ function renderSwapApproval(){
       +'<div style="display:flex;justify-content:space-between;margin-bottom:8px;">'
       +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+fmtTS(s.ts)+'</span>'
       +pill('⏳ PENDING','p-amber')+'</div>'
+      +'<div style="font-size:11px;color:var(--t2);margin:-2px 0 8px;">📅 Swap Date: '+fmtDateBasic(s.date||'')+'</div>'
       +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">FROM</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
       +'<div class="sw-arrow">⇄</div>'
       +'<div class="sw-side to"><div class="sw-lbl">WITH</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div></div>'
