@@ -2461,6 +2461,29 @@ function pad(v){return('0'+v).slice(-2);}
 function toMin(h){if(!h)return 0;var p=h.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
 function fromMin(m){m=((m%1440)+1440)%1440;return pad(Math.floor(m/60))+':'+pad(m%60);}
 function fmt12(h){if(!h)return'';var p=h.split(':');var hh=parseInt(p[0])%24;var m=hh%12||12;return m+':'+p[1]+' '+(hh<12?'AM':'PM');}
+function fmtDate(d){
+  if(!d)return'—';
+  // Already YYYY-MM-DD
+  var m=String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m){
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return parseInt(m[3])+' '+months[parseInt(m[2])-1]+' '+m[1];
+  }
+  // Try parsing as date
+  var dt=new Date(d);
+  if(!isNaN(dt.getTime())){
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return dt.getDate()+' '+months[dt.getMonth()]+' '+dt.getFullYear();
+  }
+  return String(d);
+}
+function fmtTs(ts){
+  if(!ts)return'—';
+  var dt=new Date(ts);
+  if(isNaN(dt.getTime()))return String(ts).substring(0,10);
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return dt.getDate()+' '+months[dt.getMonth()]+' '+dt.getFullYear();
+}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 function avc(n){var h=0;for(var i=0;i<n.length;i++)h=(h+n.charCodeAt(i))%AVC.length;return AVC[h];}
 function ini(n){var p=n.trim().split(' ');return(p.length>=2?p[0][0]+p[1][0]:p[0].slice(0,2)).toUpperCase();}
@@ -2645,7 +2668,11 @@ function _applyRemote(remote){
 
   // ── Populate SP data arrays from Sheets ──
   if(Array.isArray(remote.swaps)){
-    SWAPS=remote.swaps;
+    SWAPS=remote.swaps.map(function(s){
+      // Normalize legacy "pending" status from Sheets → "pending_peer"
+      if(s.status==='pending') s.status='pending_peer';
+      return s;
+    });
     // Re-apply approved swaps to AGENTS schedule array
     SWAPS.filter(function(s){return s.status==='approved';}).forEach(function(s){
       _applySwapToSchedule&&_applySwapToSchedule(s);
@@ -4165,7 +4192,7 @@ function _swCard(s, extraBtns){
   extraBtns=extraBtns||'';
   return '<div class="swcard">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-    +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+s.date+'</span>'
+    +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · Swap: '+fmtDate(s.date)+(s.ts?' · '+fmtTs(s.ts):'')+'</span>'
     +_swStatusPill(s.status)+'</div>'
     +'<div class="sw-sides">'
       +'<div class="sw-side from"><div class="sw-lbl">FROM</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
@@ -4179,11 +4206,19 @@ function _swCard(s, extraBtns){
 function renderMySwapHist(){
   var mine=SWAPS.filter(function(s){return s.from===me.n||s.to===me.n;});
   mine.sort(function(a,b){return(b.ts||'').localeCompare(a.ts||'');});
-  var h=mine.map(function(s){return _swCard(s,'');}).join('');
+  var h=mine.map(function(s){
+    var btns='';
+    // Agent B: show Accept/Decline if this request is addressed to me and awaiting my response
+    if(s.to===me.n && (s.status==='pending_peer'||s.status==='pending')){
+      btns='<button class="btn btn-green btn-sm" data-sid="'+s.id+'" onclick="respondSwap(this.dataset.sid,true)">✓ Accept</button>'
+          +'<button class="btn btn-red btn-sm" data-sid="'+s.id+'" onclick="respondSwap(this.dataset.sid,false)">✕ Decline</button>';
+    }
+    return _swCard(s,btns);
+  }).join('');
   document.getElementById('mySwapHist').innerHTML=h||'<div class="empty"><div class="ep">No swap requests yet</div></div>';
 }
 function renderSwapInbox(){
-  var inbox=SWAPS.filter(function(s){return s.to===me.n&&s.status==='pending_peer';});
+  var inbox=SWAPS.filter(function(s){return s.to===me.n&&(s.status==='pending_peer'||s.status==='pending');});
   var wrap=document.getElementById('swapInboxWrap');
   var cont=document.getElementById('swapInbox');
   var badge=document.getElementById('swapInboxBadge');
@@ -4665,7 +4700,7 @@ function renderSwapApproval(){
     peer.forEach(function(s){
       h+='<div class="histrow"><div class="hicon" style="background:rgba(224,140,0,.1);">⏳</div>'
         +'<div class="hinfo"><div class="htitle">'+s.from+' → '+s.to+'</div>'
-        +'<div class="hmeta">'+s.date+' · '+s.sA+' ⇄ '+s.sB+'</div></div>'
+        +'<div class="hmeta">'+fmtDate(s.date)+' · '+s.sA+' ⇄ '+s.sB+'</div></div>'
         +_swStatusPill('pending_peer')+'</div>';
     });
   }
@@ -4698,7 +4733,7 @@ function renderSwapApproval(){
     var bg=s.status==='approved'?'var(--gbg)':'var(--rbg)';
     h+='<div class="histrow"><div class="hicon" style="background:'+bg+';">'+ic+'</div>'
       +'<div class="hinfo"><div class="htitle">'+s.from+' ↔ '+s.to+'</div>'
-      +'<div class="hmeta">'+s.date+' · '+s.sA+' ⇄ '+s.sB+'</div></div>'
+      +'<div class="hmeta">'+fmtDate(s.date)+' · '+s.sA+' ⇄ '+s.sB+'</div></div>'
       +_swStatusPill(s.status)+'</div>';
   });
   document.getElementById('tt-swaps').innerHTML=h;
@@ -5783,7 +5818,7 @@ function renderProfilePage(){
     if(!mine.length){swEl.innerHTML='<div style="padding:14px;text-align:center;font-size:12px;color:var(--t3);">No swap requests</div>';return;}
     swEl.innerHTML=mine.map(function(sw){
       var isFrom=sw.from===(me.n||me.name);
-      return '<div style="padding:11px 13px;border-bottom:1px solid var(--border);">'        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'        +'<span style="font-size:11px;font-weight:700;color:var(--t2);">'+sw.id+' &middot; '+sw.date+'</span>'        +pill(sw.status.toUpperCase(),sw.status==='approved'?'p-green':sw.status==='rejected'?'p-red':'p-amber')+'</div>'        +'<div style="font-size:12px;font-weight:600;color:var(--t1);">'+(isFrom?'Swap request to '+sw.to:'Swap request from '+sw.from)+'</div>'        +'<div style="font-size:11px;color:var(--t2);margin-top:3px;">&#x1F4DD; '+sw.reason+'</div>'        +'</div>';
+      return '<div style="padding:11px 13px;border-bottom:1px solid var(--border);">'        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'        +'<span style="font-size:11px;font-weight:700;color:var(--t2);">'+sw.id+' &middot; '+fmtDate(sw.date)+'</span>'        +pill(sw.status.toUpperCase(),sw.status==='approved'?'p-green':sw.status==='rejected'?'p-red':'p-amber')+'</div>'        +'<div style="font-size:12px;font-weight:600;color:var(--t1);">'+(isFrom?'Swap request to '+sw.to:'Swap request from '+sw.from)+'</div>'        +'<div style="font-size:11px;color:var(--t2);margin-top:3px;">&#x1F4DD; '+sw.reason+'</div>'        +'</div>';
     }).join('');
   }
 }
