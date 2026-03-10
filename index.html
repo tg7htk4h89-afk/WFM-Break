@@ -1340,11 +1340,11 @@ body{background:#0a3d7a;}
   .u-hero-name{font-size:21px;}
   .u-hc-val{font-size:18px;}
   .u-qcard{padding:13px 8px;}
-  .u-qcard-ic{font-size:24px;}
-}
-
-
-/* ── Attendance Feature ───────────────────────────────────── */
+  .u-qcard-ic{font-size:26px;margin-bottom:6px;}
+.u-qcard{position:relative;}
+.u-qcard-badge{position:absolute;top:6px;right:6px;background:#E53E3E;color:#fff;border-radius:10px;min-width:18px;height:18px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;}
+.u-qcard-alert{border:1.5px solid rgba(229,62,62,.3);background:rgba(229,62,62,.04);}
+/* Presence Feature ───────────────────────────────────── */
 .att-page-tabs{display:flex;gap:6px;margin-bottom:12px;}
 .att-ptab{flex:1;padding:9px 12px;border:1.5px solid var(--border);background:var(--white);border-radius:var(--r);font-size:12px;font-weight:700;color:var(--t2);cursor:pointer;transition:all .15s;}
 .att-ptab.on{background:var(--navy);color:#fff;border-color:var(--navy);}
@@ -1559,6 +1559,15 @@ input,select,textarea,button{font-size:16px;}
       <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Break Booked</div>
       <div id="u-booked-time" style="font-size:14px;font-weight:800;color:#fff;"></div>
       <button onclick="uNav('breaks','home')" style="margin-top:10px;background:rgba(255,255,255,.14);border:none;color:#fff;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;">Start When Ready &rarr;</button>
+    </div>
+
+    <!-- Pending Approvals (managers only, hidden for agents) -->
+    <div class="u-card" id="u-pending-approvals" style="display:none;margin-bottom:12px;border-left:3px solid #0D5CA6;">
+      <div class="u-card-hdr">
+        <div class="u-card-title">🔔 Pending Approvals</div>
+        <button class="u-card-link" onclick="openApprovals()">View All &rarr;</button>
+      </div>
+      <div id="u-pending-body"></div>
     </div>
 
     <!-- Quick actions -->
@@ -3774,6 +3783,7 @@ function fmtTS(ts){return new Date(ts).toLocaleString('en-GB',{day:'2-digit',mon
 function canDash(){var r=String((me&&me.loginRole)||'').toLowerCase(); var a=String((me&&me.access)||'').toLowerCase(); return ['tl','atl','manager','wfm','admin','readonly','management'].includes(r)||['tl','wfm','manager','admin','readonly','management'].includes(a);}
 function canTeam(){var r=String((me&&me.loginRole)||'').toLowerCase(); var a=String((me&&me.access)||'').toLowerCase(); return ['tl','atl','manager','wfm','admin','readonly','management'].includes(r)||['manager','admin','readonly','management'].includes(a);}
 function canAdmin(){return['admin','manager','wfm','tl'].includes(me&&(me.loginRole||me.access));}
+function isAdminUser(){var r=me&&(me.loginRole||me.access);return r==='admin'||r==='wfm';}
 
 // ════════════════════════════════════════════════
 // LOGIN
@@ -4480,11 +4490,16 @@ var ATT_STATUSES=[
 
 // ── Get agent list visible to current user ───────────────────
 function attGetAgents(){
-  var list=AGENTS.filter(function(a){return a.r!=='admin';});
-  if(me&&(me.loginRole==='atl'||me.loginRole==='tl')){
+  // Include all non-admin agents
+  var list=AGENTS.filter(function(a){return a.r!=='admin'&&a.r!=='wfm';});
+  var role=me&&(me.loginRole||me.access);
+  // TL/ATL: only their own team, no override
+  if(me&&(role==='atl'||role==='tl')){
     var myDept=me.t||me.dept||'';
     list=list.filter(function(a){return a.t===myDept;});
+    return list;  // dept filter doesn't apply for TL (already scoped)
   }
+  // wfm/manager/admin: apply the user-selected dept filter ('' = all)
   if(_attDeptFilter&&_attDeptFilter!==''){
     list=list.filter(function(a){return a.t===_attDeptFilter;});
   }
@@ -4520,6 +4535,9 @@ function renderAttendance(){
     if(me.loginRole==='atl'||me.loginRole==='tl'){
       allDepts=[me.t||me.dept||''];
       _attDeptFilter=allDepts[0];
+    } else {
+      // wfm/manager/admin: show all depts; only keep filter if user explicitly chose one
+      // (filter is reset to '' on navigation, so on first load they see everything)
     }
     var dh='<button class="ftab'+((!_attDeptFilter||_attDeptFilter==='')?(' on'):'')+'" onclick="_attDeptFilter=\'\';renderAttendance()">All</button>';
     allDepts.forEach(function(d){
@@ -4589,12 +4607,29 @@ function attBuildCard(agent){
       +(sel.note||'')+'</textarea>';
   }
   extraHtml+='</div>';
+  var isSaved=!!(saved&&!sel);
+  var markerName=saved&&saved.markedBy;
+  var isMyEntry=markerName===(me.n||me.name);
+  var canEdit=isAdminUser()||isMyEntry;
+  var isLocked=isSaved&&!canEdit;
+
+  // Lock status buttons if entry already saved by someone else
+  if(isLocked){
+    btnHtml='<div style="font-size:11px;color:#c0392b;padding:6px 0 4px;font-style:italic;">🔒 Locked — marked by <strong>'+markerName+'</strong>. Admin only to edit.</div>';
+    extraHtml='<div class="att-extra"></div>';
+  }
+
   var actionHtml='';
-  if(saved&&!sel){
-    actionHtml='<div class="att-saved-badge">✅ Saved by <strong>'+saved.markedBy+'</strong>'
-      +' at '+saved.ts.substring(11,16)
-      +' · <button style="background:none;border:none;color:var(--navy);font-size:11px;font-weight:700;cursor:pointer;padding:0;" '
-      +'onclick="attEdit(\''+agent.id+'\')">Edit</button></div>';
+  if(isSaved){
+    var editBtn='';
+    if(canEdit){
+      editBtn=' &nbsp;·&nbsp; <button style="background:none;border:none;color:var(--navy);font-size:11px;font-weight:700;cursor:pointer;padding:0;" onclick="attEdit(\''+agent.id+'\')">'+( isAdminUser()&&!isMyEntry?'⚙️ Admin Edit':'Edit')+'</button>';
+    }
+    var badgeStyle=isLocked
+      ?'background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,.2);color:#c0392b;'
+      :'background:var(--gbg);border:1px solid var(--green);color:var(--green);';
+    actionHtml='<div style="'+badgeStyle+'border-radius:var(--r);padding:8px 12px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;margin:0 13px 11px;">'
+      +(isLocked?'🔒':'✅')+' Saved by <strong>'+markerName+'</strong> at '+saved.ts.substring(11,16)+editBtn+'</div>';
   } else if(sel){
     actionHtml='<div class="att-save-row">'
       +'<button class="att-save-btn" onclick="attSaveOne(\''+agent.id+'\')">💾 Save</button>'
@@ -4615,6 +4650,12 @@ function attBuildCard(agent){
 
 // ── Select status for agent ──────────────────────────────────
 function attSelectStatus(agentId,status){
+  // Block if already saved by someone else and current user can't edit
+  var saved=attGetEntry((AGENTS.find(function(a){return a.id===agentId;})||{}).n);
+  if(saved){
+    var isMyEntry=saved.markedBy===(me.n||me.name);
+    if(!isAdminUser()&&!isMyEntry){sp_showToast('Locked — only '+saved.markedBy+' or admin can edit','err');return;}
+  }
   if(!_attSelMap[agentId]) _attSelMap[agentId]={};
   _attSelMap[agentId].status=status;
   if(status!=='late') delete _attSelMap[agentId].note;
@@ -4630,6 +4671,11 @@ function attEdit(agentId){
   var agent=AGENTS.find(function(a){return a.id===agentId;});
   if(!agent) return;
   var saved=attGetEntry(agent.n);
+  // Only allow if admin or original marker
+  if(saved){
+    var isMyEntry=saved.markedBy===(me.n||me.name);
+    if(!isAdminUser()&&!isMyEntry){sp_showToast('Only '+saved.markedBy+' or admin can edit this entry','err');return;}
+  }
   if(saved) _attSelMap[agentId]={status:saved.status,note:saved.note||'',newShift:saved.newShift||'',fromTime:((saved.newShift||'').split(' - ')[0]||''),toTime:((saved.newShift||'').split(' - ')[1]||''),extraNote:saved.extraNote||''};
   var card=document.getElementById('attc-'+agentId);
   if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
@@ -4648,6 +4694,15 @@ function attClear(agentId){
 function attSaveOne(agentId){
   var agent=AGENTS.find(function(a){return a.id===agentId;});
   if(!agent){sp_showToast('Agent not found','err');return;}
+  // Check lock: if already saved by someone else, block
+  var existingEntry=attGetEntry(agent.n);
+  if(existingEntry){
+    var isMyEntry=existingEntry.markedBy===(me.n||me.name);
+    if(!isAdminUser()&&!isMyEntry){
+      sp_showToast('🔒 Locked by '+existingEntry.markedBy+' — only admin can override','err');
+      return;
+    }
+  }
   var sel=_attSelMap[agentId];
   if(!sel||!sel.status){sp_showToast('Select a status first','err');return;}
   var arrivalNote='';
@@ -4776,6 +4831,38 @@ function rejectSwap(id){
   sp_showToast('Swap rejected','inf');
   renderSwapApproval();
   uUpdateBadges&&uUpdateBadges();
+}
+function openApprovals(){
+  if(!canAdmin()) return;
+  // Swap approvals are in sp-app (pg-team2/teamTabs), not bs-app
+  // Use the SP section directly
+  var bsApp=document.getElementById('bs-app');
+  var spApp=document.getElementById('sp-app');
+  var uHome=document.getElementById('u-home');
+  if(uHome) uHome.classList.remove('on');
+  if(bsApp){bsApp.style.display='none';bsApp.classList.remove('u-active');}
+  if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+  var sp=document.getElementById('sp-sApp');
+  if(sp){sp.style.display='block';sp.classList.add('on');}
+  _uInjectSpNav();
+  // Update topbar title
+  var tEl=document.getElementById('u-title'); if(tEl) tEl.textContent='Approvals';
+  var backBtn=document.getElementById('u-back'); if(backBtn) backBtn.classList.add('show');
+  // Directly show sp2-pg-team and trigger Swaps tab
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  var tPg=document.getElementById('sp2-pg-team');
+  if(tPg) tPg.classList.add('on');
+  setTimeout(function(){
+    // Click the Swaps tab
+    var tabs=document.querySelectorAll('#teamTabs .ftab');
+    for(var i=0;i<tabs.length;i++){
+      if((tabs[i].getAttribute('onclick')||'').indexOf('tt-swaps')>=0){
+        tabs[i].click();
+        return;
+      }
+    }
+    if(typeof renderSwapApproval==='function') renderSwapApproval();
+  },150);
 }
 function _applySwapToSchedule(s){
   // Swap the sch[] entries for both agents on the swap date
@@ -5400,16 +5487,43 @@ function uNav(section, subPage){
     if(typeof gp==='function') gp(subPage||'home');
     _uBsTabOn(subPage||'home');
 
-  }else if(section==='schedule'||section==='attendance'||section==='requests'||section==='kpi'||section==='team'||section==='wfm'||section==='me'){
+  }else if(section==='team'){
+    var isMgrForTeam=isManagementUser(me)||canAdmin();
+    if(!isMgrForTeam){
+      // Regular TL/ATL: show sp-app approvals view (sp2-pg-team with swap/leave tabs)
+      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+      var sp3=document.getElementById('sp-sApp');
+      if(sp3){sp3.style.display='block';sp3.classList.add('on');}
+      _uInjectSpNav();
+      document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+      var tPg2=document.getElementById('sp2-pg-team');if(tPg2)tPg2.classList.add('on');
+      if(typeof renderSwapApproval==='function') renderSwapApproval();
+      if(typeof renderAttPanel==='function') renderAttPanel();
+    } else {
+      // Manager/WFM/Admin: show break monitor (lives in bs-app #pg-team)
+      if(bsApp){bsApp.style.display='block';bsApp.classList.add('u-active');}
+      var sApp2=document.getElementById('sApp');
+      if(sApp2&&sApp2.className!=='on') sApp2.className='on';
+      if(typeof renderStrip==='function') renderStrip();
+      _uInjectBsNav();
+      if(typeof gp==='function') gp('team');
+      _uBsTabOn('team');
+    }
+
+  }else if(section==='schedule'||section==='attendance'||section==='requests'||section==='kpi'||section==='wfm'||section==='me'){
     if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
     var sp=document.getElementById('sp-sApp');
     if(sp){sp.style.display='block';sp.classList.add('on');}
     _uInjectSpNav();
-    var pageMap={schedule:'schedule',attendance:'attendance',requests:'requests',kpi:'kpi',team:'team',wfm:'dashboard',me:'settings'};
+    var pageMap={schedule:'schedule',attendance:'attendance',requests:'requests',kpi:'kpi',wfm:'dashboard',me:'settings'};
     var pg = subPage || pageMap[section] || 'schedule';
     if(typeof showPage==='function') showPage(pg);
     _uSpTabOn(pg);
-    if(pg==='attendance'){ setTimeout(function(){ if(typeof renderAttendance==='function') renderAttendance(); }, 50); }
+    if(pg==='attendance'){
+      // Reset dept filter for wfm/manager/admin so they see ALL agents
+      if(me && !['tl','atl'].includes(me.loginRole||me.access)) _attDeptFilter='';
+      setTimeout(function(){ if(typeof renderAttendance==='function') renderAttendance(); }, 50);
+    }
   }
 
   if(typeof uUpdateBadges==='function') uUpdateBadges();
@@ -5559,6 +5673,45 @@ function renderUnifiedHome(){
     else annEl.classList.remove('on');
   }
 
+  // ── Pending Approvals card (managers only) ──────────────────────
+  var pendCard=el('u-pending-approvals');
+  if(isMgr){
+    var pendSwaps=SWAPS.filter(function(s){return s.status==='pending_mgmt';});
+    var pendLeaves=LEAVES.filter(function(l){return l.status==='pending';});
+    var total=pendSwaps.length+pendLeaves.length;
+    if(pendCard){
+      pendCard.style.display='';
+      var bodyEl=el('u-pending-body');
+      if(bodyEl){
+        if(!total){
+          bodyEl.innerHTML='<div style="padding:12px 16px;text-align:center;font-size:12px;color:var(--t3);">✅ No pending approvals</div>';
+        } else {
+          var ph='';
+          pendSwaps.forEach(function(s){
+            ph+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #EEF4FB;gap:10px;">'
+              +'<div style="display:flex;align-items:center;gap:10px;">'
+              +'<div style="width:34px;height:34px;border-radius:9px;background:rgba(13,92,166,.12);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🔄</div>'
+              +'<div><div style="font-size:12px;font-weight:700;color:#0A2E5A;">Swap: '+s.from+' ↔ '+s.to+'</div>'
+              +'<div style="font-size:10px;color:#8AAACF;margin-top:1px;">'+fmtDate(s.date)+' · '+s.sA+' ⇄ '+s.sB+'</div></div></div>'
+              +'<button onclick="openApprovals()" style="flex-shrink:0;background:#0D5CA6;border:none;color:#fff;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">Review</button>'
+              +'</div>';
+          });
+          pendLeaves.forEach(function(l){
+            ph+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #EEF4FB;gap:10px;">'
+              +'<div style="display:flex;align-items:center;gap:10px;">'
+              +'<div style="width:34px;height:34px;border-radius:9px;background:rgba(0,168,154,.1);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🌴</div>'
+              +'<div><div style="font-size:12px;font-weight:700;color:#0A2E5A;">Leave: '+(l.agent||'')+'</div>'
+              +'<div style="font-size:10px;color:#8AAACF;margin-top:1px;">'+(l.from||'')+(l.to?' – '+l.to:'')+' · '+(l.type||'')+'</div></div></div>'
+              +'<button onclick="openApprovals()" style="flex-shrink:0;background:#00A89A;border:none;color:#fff;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">Review</button>'              +'</div>';
+          });
+          bodyEl.innerHTML=ph;
+        }
+      }
+    }
+  } else {
+    if(pendCard) pendCard.style.display='none';
+  }
+
   // ── Team on break now ─────────────────────────────────────────────
   var tnEl = el('u-team-list');
   if(tnEl){
@@ -5603,16 +5756,22 @@ function renderUnifiedHome(){
       {ic:'👤',title:'My Profile',sub:'Breaks & attendance',fn:"uNav('me')"},
     ];
     if(isManager){
+      var pendApprove=SWAPS.filter(function(s){return s.status==='pending_mgmt';}).length
+                    +LEAVES.filter(function(l){return l.status==='pending';}).length;
+      var approvalSub=pendApprove?pendApprove+' awaiting approval':'No pending items';
+      var approvalIc=pendApprove?'🔔':'✅';
       cards=[
         {ic:'📅',title:'Full Schedule',sub:'All agents',fn:"uNav('schedule');showPage('fullsch')"},
+        {ic:'👥',title:'Monitor Breaks',sub:'Team status live',fn:"uNav('team')"},
         {ic:'✅',title:'Attendance',sub:'Update team status',fn:"uNav('attendance')"},
-        {ic:'👥',title:'Monitor Breaks',sub:'View team breaks',fn:"uNav('home')"},
-        {ic:'⚙️',title:'Profile',sub:'User settings',fn:"uNav('me')"},
+        {ic:approvalIc,title:'Approvals',sub:approvalSub,fn:"openApprovals()",badge:pendApprove||0},
       ];
     }
     var qh='';
     cards.forEach(function(card){
-      qh+='<div class="u-qcard" onclick="'+card.fn+'">'+
+      var badgeHtml=card.badge?'<div class="u-qcard-badge">'+card.badge+'</div>':'';
+      qh+='<div class="u-qcard'+(card.badge?' u-qcard-alert':'')+'\" onclick="'+card.fn+'">'+
+        badgeHtml+
         '<div class="u-qcard-ic">'+card.ic+'</div>'+
         '<div class="u-qcard-title">'+card.title+'</div>'+
         '<div class="u-qcard-sub">'+card.sub+'</div>'+
