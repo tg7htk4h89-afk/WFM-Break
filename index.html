@@ -2378,6 +2378,18 @@ input,select,textarea,button{font-size:16px;}
         </form>
       </div>
     </div>
+
+    <!-- KPI HISTORY LAST 5 DAYS -->
+    <div class="card" style="margin-top:14px;">
+      <div class="ch">
+        <div class="ctitle">📅 My KPI History</div>
+        <div style="font-size:11px;color:var(--t2);">Last 5 days</div>
+      </div>
+      <div class="cb" id="kpiHistBody">
+        <div style="text-align:center;padding:18px 0;font-size:12px;color:var(--t3);">Loading...</div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ═══ SETTINGS ═══ -->
@@ -5864,8 +5876,98 @@ function kpiSetTodayDefaults(){
 }
 function renderDailyKPIStats(){
   var s=kpiStore();
-  var ids={kpiStatExtra:s.extra.length,kpiStatMeeting:s.meeting.length,kpiStatPermission:s.permission.length,kpiStatIssue:s.issue.length};
+  var agentName=me&&(me.n||me.name);
+  // Filter to only THIS agent's entries (today only for the summary counts)
+  var today_=kpiTodayIso();
+  function myToday(arr){ return arr.filter(function(e){return e.agent===agentName&&e.date===today_;}); }
+  var ids={
+    kpiStatExtra:myToday(s.extra).length,
+    kpiStatMeeting:myToday(s.meeting).length,
+    kpiStatPermission:myToday(s.permission).length,
+    kpiStatIssue:myToday(s.issue).length
+  };
   Object.keys(ids).forEach(function(id){var e=document.getElementById(id); if(e) e.textContent=ids[id];});
+  renderKpiHistory();
+}
+function renderKpiHistory(){
+  var el=document.getElementById('kpiHistBody');
+  if(!el) return;
+  var s=kpiStore();
+  var agentName=me&&(me.n||me.name);
+  if(!agentName){el.innerHTML='';return;}
+
+  // Get last 5 calendar days (Kuwait UTC+3)
+  var days=[];
+  for(var i=0;i<5;i++){
+    var d=new Date(Date.now()+3*60*60*1000 - i*86400000);
+    days.push(d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()));
+  }
+
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtD(iso){
+    var p=iso.split('-');
+    var d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+    var today_=kpiTodayIso();
+    var label=iso===today_?'Today':p[2]*1+' '+months[parseInt(p[1])-1];
+    return label;
+  }
+
+  var typeLabels={extra:'Extra Break',meeting:'Meeting',permission:'Permission',issue:'System Issue'};
+  var typeCls={extra:'c-navy',meeting:'c-teal',permission:'c-amber',issue:'c-red'};
+  var typeIcons={extra:'☕',meeting:'📋',permission:'🕐',issue:'⚙️'};
+
+  var html='';
+  var hasAny=false;
+
+  days.forEach(function(day){
+    // Collect all entries for this agent on this day across all types
+    var entries=[];
+    ['extra','meeting','permission','issue'].forEach(function(type){
+      (s[type]||[]).forEach(function(e){
+        if(e.agent===agentName&&e.date===day) entries.push(Object.assign({_type:type},e));
+      });
+    });
+    if(!entries.length) return;
+    hasAny=true;
+
+    // Sort by time
+    entries.sort(function(a,b){return(a.time||'').localeCompare(b.time||'');});
+
+    html+='<div style="margin-bottom:14px;">';
+    html+='<div style="font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;padding:0 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;">'+fmtD(day)+(day===kpiTodayIso()?' · Today':'')+' <span style="font-weight:400;opacity:.6;">('+entries.length+' entr'+(entries.length===1?'y':'ies')+')</span></div>';
+
+    entries.forEach(function(e){
+      var cls=typeCls[e._type]||'c-navy';
+      var icon=typeIcons[e._type]||'📌';
+      var lbl=typeLabels[e._type]||e._type;
+
+      // Build detail line depending on type
+      var detail='';
+      if(e._type==='extra')    detail=(e.duration?e.duration+' · ':'')+(e.reason||'');
+      if(e._type==='meeting')  detail=(e.duration?e.duration+' · ':'')+(e.subject||'');
+      if(e._type==='permission') detail=(e.from&&e.to?e.from+' – '+e.to+' · ':'')+( e.permissionType||'');
+      if(e._type==='issue')    detail=(e.duration?e.duration+' · ':'')+(e.application||'')+(e.issueType?' ['+e.issueType+']':'');
+
+      html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">';
+      html+='<div style="font-size:16px;line-height:1;margin-top:1px;">'+icon+'</div>';
+      html+='<div style="flex:1;min-width:0;">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">';
+      html+='<span style="font-size:12px;font-weight:700;color:var(--navy);">'+lbl+'</span>';
+      html+='<span style="font-size:10px;color:var(--t3);">'+(e.time||'')+'</span>';
+      html+='</div>';
+      if(detail) html+='<div style="font-size:11px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+detail+'</div>';
+      if(e.approvedBy) html+='<div style="font-size:10px;color:var(--t3);margin-top:2px;">Approved by: '+e.approvedBy+'</div>';
+      html+='</div>';
+      html+='</div>';
+    });
+
+    html+='</div>';
+  });
+
+  if(!hasAny){
+    html='<div style="text-align:center;padding:18px 0;font-size:12px;color:var(--t3);">No KPI entries in the last 5 days</div>';
+  }
+  el.innerHTML=html;
 }
 function setKpiTab(key){
   var map={extra:'kpiPaneExtra',meeting:'kpiPaneMeeting',permission:'kpiPanePermission',issue:'kpiPaneIssue'};
@@ -5877,7 +5979,7 @@ function setKpiTab(key){
 }
 function initDailyKPIPage(){
   kpiSetTodayDefaults();
-  renderDailyKPIStats();
+  renderDailyKPIStats();  // also calls renderKpiHistory internally
   if(_kpiInit) return;
   _kpiInit=true;
   document.querySelectorAll('#kpiTabs .ftab').forEach(function(tab){
