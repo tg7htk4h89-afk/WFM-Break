@@ -2242,14 +2242,25 @@ input,select,textarea,button{font-size:16px;}
   </div>
 
   <!-- ═══ TEAM (TL/ATL/WFM/Manager) ═══ -->
-  <div class="pg" id="sp2-pg-team">
-    <div class="ftabs">
+  <!-- ═══ BREAK MONITOR (management only) ═══ -->
+  <div class="pg" id="pg-monitor">
+    <div id="mon-summary" style="margin-bottom:8px;"></div>
+    <div id="mon-meter" style="margin-bottom:8px;"></div>
+    <div class="ftabs" id="mon-filters"></div>
+    <div id="mon-list"></div>
+    <div style="height:80px;"></div>
+  </div>
+
+    <div class="pg" id="sp2-pg-team">
+    <div class="ftabs" id="teamMainTabs">
+      <div class="ftab" onclick="swTab('teamTabs','tt-monitor',this);renderTeamMonitor()">👥 Monitor</div>
       <div class="ftab on" onclick="swTab('teamTabs','tt-att',this)">✅ Attendance</div>
       <div class="ftab" onclick="swTab('teamTabs','tt-swaps',this)">🔄 Swaps <span class="nbadge on" style="position:static;display:inline-block;vertical-align:middle;" id="swapBadgeTeam">0</span></div>
       <div class="ftab" onclick="swTab('teamTabs','tt-leaves',this)">🌴 Leaves</div>
       <div class="ftab" onclick="swTab('teamTabs','tt-reports',this)">📊 Reports</div>
     </div>
     <div id="teamTabs">
+      <div id="tt-monitor" style="display:none;"></div>
       <div id="tt-att"></div>
       <div id="tt-swaps" style="display:none;"></div>
       <div id="tt-leaves" style="display:none;"></div>
@@ -2940,6 +2951,9 @@ function renderAll(){
   var bsApp=document.getElementById('bs-app');
   var ac=bsApp?bsApp.querySelector('.pg.on'):document.querySelector('.pg.on');
   if(ac){var id=ac.id.replace('pg-','');if(id==='home')renderHome();else if(id==='book')buildSlotGrid();else if(id==='team')renderTeam();else if(id==='swap')renderSwap();else if(id==='hist')renderHistory();else if(id==='admin')renderAdmin();}
+  // Refresh team monitor if open
+  var ttMon=document.getElementById('tt-monitor');
+  if(ttMon&&ttMon.style.display!=='none'&&typeof renderTeamMonitor==='function') renderTeamMonitor();
   var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;});
   var badge=document.getElementById('swbadge');if(badge){badge.className='nbadge'+(pend.length?' on':'');if(pend.length)badge.textContent=pend.length;}
   var _bd=document.getElementById('bdot');if(_bd)_bd.className='bdot'+(pend.length?' on':'');
@@ -3181,6 +3195,86 @@ function confirmBook(){
   document.getElementById('durcard').style.display='none';document.getElementById('bookbtnwrap').style.display='none';buildSlotGrid();
 }
 
+function renderTeamMonitor(){
+  var el=document.getElementById('mon-list');
+  var summaryEl=document.getElementById('mon-summary');
+  var meterEl=document.getElementById('mon-meter');
+  var filtersEl=document.getElementById('mon-filters');
+  if(!el) return;
+  var d=gd();var s=d.settings||{};var mc=s.maxCon||2;var daily=s.dailyMin||45;
+  var logins=(d.logins&&d.logins[today()])||{};var bs=tdb(d);
+  var smap={};
+  EMPS.forEach(function(e){smap[e.name]={st:'off',brk:null,sched:0,used:0};});
+  Object.keys(logins).forEach(function(n){if(smap[n])smap[n].st='on';});
+  bs.forEach(function(b){
+    if(!smap[b.agent])return;
+    if(b.status!=='cancelled')smap[b.agent].sched+=b.duration;
+    if(b.status==='done')smap[b.agent].used+=b.duration;
+    if(b.status==='active'||b.status==='booked'){smap[b.agent].st='brk';smap[b.agent].brk=b;}
+  });
+  var onNow=Object.values(smap).filter(function(x){return x.st==='brk';}).length;
+  var totalMins=bs.filter(function(b){return b.status==='done';}).reduce(function(a,b){return a+b.duration;},0);
+  var online=Object.keys(logins).length;
+  var agents=EMPS.filter(function(e){return e.access!=='admin';});
+
+  // Summary bar
+  if(summaryEl) summaryEl.innerHTML='<div class="team-summary">'
+    +'<div class="tscard c-navy"><div class="tsnum">'+agents.length+'</div><div class="tslbl">Total</div></div>'
+    +'<div class="tscard c-amber"><div class="tsnum">'+onNow+'</div><div class="tslbl">On Break</div></div>'
+    +'<div class="tscard c-green"><div class="tsnum">'+online+'</div><div class="tslbl">Online</div></div>'
+    +'<div class="tscard c-teal"><div class="tsnum">'+totalMins+'</div><div class="tslbl">Min Used</div></div>'
+    +'</div>';
+  var h='';
+
+  // Concurrent meter
+  var dots='';for(var i=0;i<mc;i++){dots+='<div class="cdot'+(i<onNow?(onNow>=mc?' max':' act'):'')+'" style="width:18px;height:18px;border-radius:50%;background:'+(i<onNow?(onNow>=mc?'var(--red)':'var(--amber)'):'rgba(0,0,0,.1)')+';display:inline-block;margin:2px;"></div>';}
+  if(meterEl) meterEl.innerHTML='<div class="card" style="padding:12px 14px;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;">'
+    +'<div><div style="font-size:12px;font-weight:700;color:var(--navy);">'+onNow+' of '+mc+' on break now</div>'
+    +'<div style="font-size:11px;color:var(--t2);">'+(onNow>=mc?'⛔ No more breaks':'✅ '+(mc-onNow)+' slot'+(mc-onNow!==1?'s':'')+' available')+'</div>'
+    +'<div style="margin-top:6px;">'+dots+'</div></div>'
+    +'<div style="font-size:36px;font-weight:900;color:'+(onNow>=mc?'var(--red)':onNow>0?'var(--amber)':'var(--green)')+';">'+onNow+'</div>'
+    +'</div></div>';
+
+  // Filter tabs
+  var filters=[{k:'',l:'All'},{k:'brk',l:'🔴 On Break'},{k:'on',l:'🟢 Online'}];
+  var fh='';
+    filters.forEach(function(f){
+    var cls='ftab'+(tmFilter===f.k?' on':'');
+    fh+='<div class="'+cls+'" data-tf="'+f.k+'" onclick="setTMF(this.getAttribute(\'data-tf\'))">'+f.l+'</div>';
+  });
+  if(filtersEl) filtersEl.innerHTML=fh;
+
+  // Agent rows grouped by dept
+  DEPTS.forEach(function(dept){
+    var list=agents.filter(function(e){
+      if(e.dept!==dept.key) return false;
+      if(tmFilter==='brk') return smap[e.name]&&smap[e.name].st==='brk';
+      if(tmFilter==='on')  return smap[e.name]&&smap[e.name].st==='on';
+      return true;
+    });
+    if(!list.length) return;
+    h+='<div class="dept-hdr"><div class="dept-title">'+dept.label+'</div><div class="dept-count">'+list.length+'</div></div><div class="dept-body">';
+    list.forEach(function(e){
+      var st=smap[e.name]||{st:'off',sched:0};
+      var pct=Math.min(st.sched/daily*100,100);
+      var balcol=st.sched>=daily?'var(--red)':st.sched>daily*.7?'var(--amber)':'var(--green)';
+      var balLeft=Math.max(daily-st.sched,0);
+      var dot=st.st==='brk'?'on':st.st==='on'?'ok':'off';
+      var elstr='';if(st.brk&&st.brk.startedAt){var r2=st.brk.duration-elapseMin(st.brk.startedAt);elstr=r2>0?r2+' min left':'Overdue';}
+      h+='<div class="tm-row">'
+        +'<div class="tm-av" style="background:'+avc(e.name)+'">'+ini(e.name)+'<div class="av-dot '+dot+'"></div></div>'
+        +'<div style="flex:1;min-width:0"><div class="tm-name">'+e.name+'</div>'
+        +'<div class="tm-sub"><span>'+e.role+'</span>'+(st.brk&&elstr?'<span style="color:'+(elstr==='Overdue'?'var(--red)':'var(--amber)')+';font-weight:700"> · '+elstr+'</span>':'')+'</div>'
+        +'<div class="bkprog"><div class="bkpfill" style="width:'+pct+'%;background:'+balcol+'"></div></div></div>'
+        +'<div class="tm-right">'+(st.st==='brk'?'<span class="pill p-amber"><span class="pdot"></span>On Break</span>':'<span class="pill '+(st.st==='on'?'p-green':'p-navy')+'"><span class="pdot"></span>'+(st.st==='on'?'Online':'Offline')+'</span>')
+        +'<div style="font-size:11px;color:var(--t3);margin-top:3px"><span style="color:'+balcol+';font-weight:700">'+balLeft+'m left</span></div></div></div>';
+    });
+    h+='</div>';
+  });
+  if(!el) return;
+  el.innerHTML=h||'<div class="empty" style="padding:30px 0;text-align:center;color:var(--t3);">No agents match this filter</div>';
+}
 function renderTeam(){
   var d=gd();var s=d.settings||{};var mc=s.maxCon||2;var daily=s.dailyMin||45;
   var logins=(d.logins&&d.logins[today()])||{};var bs=tdb(d);
@@ -3238,6 +3332,7 @@ function renderTeam(){
   document.getElementById('teamList').innerHTML=h||'<div class="empty"><div class="ei">👥</div><div class="ep">No agents match this filter</div></div>';
 }
 function setTF(k){tmFilter=k;renderTeam();}
+function setTMF(k){tmFilter=k;renderTeamMonitor();}
 
 function renderSwap(){
   var d=gd();var bs=tdb(d);var b=myBreak(d);
@@ -3448,7 +3543,10 @@ function renderHubHome(){
 function hubRefreshBadge(){
   if(!me)return;
   try{
-    var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;});
+    // Refresh team monitor if open
+  var ttMon=document.getElementById('tt-monitor');
+  if(ttMon&&ttMon.style.display!=='none'&&typeof renderTeamMonitor==='function') renderTeamMonitor();
+  var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;});
     var badge=document.getElementById('break-badge');
     if(badge){if(pend.length){badge.style.display='';badge.textContent=pend.length;}else{badge.style.display='none';}}
     var ann=(d.settings&&d.settings.announce)||'';
@@ -3952,7 +4050,14 @@ function showPage(id){
   if(id==='requests') renderRequests();
   if(id==='kpi') initDailyKPIPage();
   if(id==='dashboard') renderDashboard();
-  if(id==='team') sp_renderTeam();
+  if(id==='team'){
+    if(isManagementUser(me)||canAdmin()){
+      // managers: redirect to break monitor page
+      document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+      var _mp=document.getElementById('pg-monitor');if(_mp)_mp.classList.add('on');
+      renderTeamMonitor();
+    } else { sp_renderTeam(); }
+  }
   if(id==='admin') sp_renderAdmin();
 }
 
@@ -3966,6 +4071,7 @@ function swTab(groupId,targetId,el){
   el.closest('.ftabs').querySelectorAll('.ftab').forEach(function(f){f.classList.remove('on');});
   el.classList.add('on');
   // Re-render target
+  if(targetId==='tt-monitor') renderTeamMonitor();
   if(targetId==='tt-att') renderAttPanel();
   if(targetId==='tt-swaps') renderSwapApproval();
   if(targetId==='tt-leaves') renderLeaveApproval();
@@ -4489,15 +4595,20 @@ var ATT_STATUSES=[
 ];
 
 // ── Get agent list visible to current user ───────────────────
+var ATT_OFF_STATUSES=['OFF','Leave','P-Leave','Sick','Weekend'];
 function attGetAgents(){
-  // Include all non-admin agents
-  var list=AGENTS.filter(function(a){return a.r!=='admin'&&a.r!=='wfm';});
+  // Only agents who are scheduled to work today
+  var list=AGENTS.filter(function(a){
+    if(a.r==='admin'||a.r==='wfm') return false;
+    var shift=gTodayS(a)||'OFF';
+    return ATT_OFF_STATUSES.indexOf(shift)<0;  // exclude off/leave/sick/weekend
+  });
   var role=me&&(me.loginRole||me.access);
   // TL/ATL: only their own team, no override
   if(me&&(role==='atl'||role==='tl')){
     var myDept=me.t||me.dept||'';
     list=list.filter(function(a){return a.t===myDept;});
-    return list;  // dept filter doesn't apply for TL (already scoped)
+    return list;
   }
   // wfm/manager/admin: apply the user-selected dept filter ('' = all)
   if(_attDeptFilter&&_attDeptFilter!==''){
@@ -5488,26 +5599,23 @@ function uNav(section, subPage){
     _uBsTabOn(subPage||'home');
 
   }else if(section==='team'){
-    var isMgrForTeam=isManagementUser(me)||canAdmin();
-    if(!isMgrForTeam){
-      // Regular TL/ATL: show sp-app approvals view (sp2-pg-team with swap/leave tabs)
-      if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
-      var sp3=document.getElementById('sp-sApp');
-      if(sp3){sp3.style.display='block';sp3.classList.add('on');}
-      _uInjectSpNav();
-      document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
-      var tPg2=document.getElementById('sp2-pg-team');if(tPg2)tPg2.classList.add('on');
-      if(typeof renderSwapApproval==='function') renderSwapApproval();
-      if(typeof renderAttPanel==='function') renderAttPanel();
+    // Show sp-app shell
+    if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+    var sp3=document.getElementById('sp-sApp');
+    if(sp3){sp3.style.display='block';sp3.classList.add('on');}
+    _uInjectSpNav();
+    document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+    if(isManagementUser(me)||canAdmin()){
+      // Managers/WFM/Admin: dedicated break monitor page
+      var monPg=document.getElementById('pg-monitor');
+      if(monPg) monPg.classList.add('on');
+      renderTeamMonitor();
     } else {
-      // Manager/WFM/Admin: show break monitor (lives in bs-app #pg-team)
-      if(bsApp){bsApp.style.display='block';bsApp.classList.add('u-active');}
-      var sApp2=document.getElementById('sApp');
-      if(sApp2&&sApp2.className!=='on') sApp2.className='on';
-      if(typeof renderStrip==='function') renderStrip();
-      _uInjectBsNav();
-      if(typeof gp==='function') gp('team');
-      _uBsTabOn('team');
+      // TL/ATL: team management page (swaps + attendance + leaves)
+      var tPg3=document.getElementById('sp2-pg-team');
+      if(tPg3) tPg3.classList.add('on');
+      if(typeof renderAttPanel==='function') renderAttPanel();
+      if(typeof renderSwapApproval==='function') renderSwapApproval();
     }
 
   }else if(section==='schedule'||section==='attendance'||section==='requests'||section==='kpi'||section==='wfm'||section==='me'){
