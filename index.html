@@ -1391,94 +1391,6 @@ html,body{min-height:100%;height:auto!important;overflow-x:hidden!important;over
 #u-app #u-home,.pg{width:100%;max-width:100%;}
 @media(max-width:420px){.pg{padding:10px!important}.u-hero{padding:18px 14px 24px!important}.u-card{margin-bottom:10px!important}.u-hero-cards{grid-template-columns:1fr!important}.u-quick-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}.u-week-inner{min-width:0!important;grid-template-columns:repeat(7,minmax(0,1fr))!important}.u-hc-val{font-size:24px!important}.hub-body{max-width:100%!important;padding:14px 10px!important}}
 
-
-/* ── iPhone shift-step fit fixes ───────────────────────── */
-#hub-login{
-  overflow-y:auto!important;
-  align-items:flex-start!important;
-  padding-top:max(12px, env(safe-area-inset-top))!important;
-  padding-bottom:calc(18px + env(safe-area-inset-bottom))!important;
-  -webkit-overflow-scrolling:touch;
-}
-.lbox{
-  width:min(100%, 380px)!important;
-  max-width:calc(100vw - 22px)!important;
-  margin:0 auto;
-}
-#step2{
-  max-height:calc(100svh - 170px);
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  padding-bottom:0!important;
-}
-#step2 .idcard{margin-bottom:14px!important;}
-#step2 h3{font-size:16px!important; margin-bottom:2px!important;}
-#step2 p{margin-bottom:12px!important;}
-#step2 .lbl{margin-bottom:7px!important;}
-#step2 .sgrid{
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:10px!important;
-  max-height:none!important;
-  overflow:visible!important;
-  margin-bottom:14px!important;
-}
-#step2 .stile{
-  min-height:88px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:12px 8px!important;
-}
-#step2 .fg{margin-top:0!important;margin-bottom:0!important;}
-#step2 .shift-actions{
-  position:sticky;
-  bottom:0;
-  left:0;
-  right:0;
-  background:linear-gradient(180deg, rgba(255,255,255,0) 0%, #fff 18%, #fff 100%);
-  padding-top:12px;
-  padding-bottom:calc(8px + env(safe-area-inset-bottom));
-  margin-top:14px;
-}
-#step2 #shiftBtn{margin-top:0!important;}
-#step2 .btn-back{margin-top:8px!important;}
-@media (max-width:430px){
-  #hub-login{padding-left:10px!important;padding-right:10px!important;}
-  .lbox{max-width:calc(100vw - 20px)!important;border-radius:16px!important;}
-  .lhdr{padding:18px 18px 14px!important;}
-  .lkib{font-size:18px!important;letter-spacing:3px!important;}
-  .lfull{font-size:9px!important;line-height:1.35!important;}
-  .lemb{width:48px!important;height:48px!important;border-radius:12px!important;margin-bottom:8px!important;}
-  .lemb img{max-width:82%!important;max-height:82%!important;object-fit:contain!important;}
-  .lstep{padding:18px 16px 16px!important;}
-  #step2{max-height:calc(100svh - 150px)!important;}
-  #step2 .idcard{padding:12px!important;gap:10px!important;}
-  #step2 .idav{width:42px!important;height:42px!important;font-size:15px!important;}
-  #step2 .idname{font-size:13px!important;}
-  #step2 .idrole{font-size:10px!important;}
-  #step2 .sticon{font-size:19px!important;margin-bottom:4px!important;}
-  #step2 .sttime{font-size:10px!important;line-height:1.25!important;}
-}
-
-
-.kpi-list{display:grid;gap:10px;}
-.kpi-item{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;}
-.kpi-item-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:8px;}
-.kpi-item-title{font-size:13px;font-weight:800;color:var(--navy);}
-.kpi-item-meta{font-size:11px;color:var(--muted);line-height:1.5;}
-.kpi-status{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;}
-.kpi-status.pending{background:rgba(243,156,18,.13);color:var(--amber);}
-.kpi-status.approved{background:rgba(39,174,96,.13);color:var(--green);}
-.kpi-status.rejected{background:rgba(231,76,60,.13);color:var(--red);}
-.kpi-item-body{font-size:12px;color:var(--ink);line-height:1.55;}
-.kpi-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
-.kpi-mini-btn{border:0;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;}
-.kpi-mini-btn.ok{background:rgba(39,174,96,.14);color:var(--green);}
-.kpi-mini-btn.no{background:rgba(231,76,60,.14);color:var(--red);}
-.kpi-empty{padding:10px 0;color:var(--muted);font-size:12px;}
-
 </style>
 
 <style id="iphone-fit-patch">
@@ -1537,10 +1449,15 @@ input,select,textarea,button{font-size:16px;}
         <div class="idav" id="idav">?</div>
         <div><div class="idname" id="idname">&mdash;</div><div class="idrole" id="idrole">&mdash;</div></div>
       </div>
-      <h3>Select Your Shift</h3>
-      <p>Choose your working hours for today</p>
-      <label class="lbl">Shift</label>
-      <div class="sgrid" id="shiftGrid"></div>
+      <h3>Your Shift Today</h3>
+      <p>Detected from your schedule</p>
+      <div id="autoShiftDisplay" style="background:rgba(13,92,166,.06);border:1.5px solid rgba(13,92,166,.15);border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:26px;">&#128188;</div>
+        <div>
+          <div style="font-size:11px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Today's Shift</div>
+          <div id="autoShiftLabel" style="font-size:16px;font-weight:800;color:var(--navy);margin-top:2px;">Loading...</div>
+        </div>
+      </div>
 
       <div class="fg" style="margin-top:6px;">
         <label class="lbl">Voicemail Task</label>
@@ -1552,14 +1469,8 @@ input,select,textarea,button{font-size:16px;}
         </label>
       </div>
 
-      <div class="shift-actions">
-        <button id="shiftBtn" class="btn-main" onclick="confirmShift()" disabled>Confirm &amp; Enter &rarr;</button>
-        <button class="btn-back" onclick="backToLogin()">&larr; Back</button>
-      </div>
-      <div id="rt-approvals" style="display:none">
-        <div class="sh">Approvals</div>
-        <div id="reqApprovalsWrap"><div class="empty"><div class="ep">No approvals waiting</div></div></div>
-      </div>
+      <button id="shiftBtn" class="btn-main" onclick="confirmShift()">Enter Portal &rarr;</button>
+      <button class="btn-back" onclick="backToLogin()">&larr; Back</button>
     </div>
   </div>
 </div>
@@ -1621,11 +1532,13 @@ input,select,textarea,button{font-size:16px;}
   <!-- Announcement -->
   <div class="u-ann" id="u-ann-bar">
     <span style="font-size:20px;flex-shrink:0;">📢</span>
-    <div>
+    <div style="flex:1;">
       <div style="font-size:9px;font-weight:800;color:#00A89A;text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px;">Announcement</div>
       <div id="u-ann-text" style="font-size:12px;color:#0A2E5A;line-height:1.5;"></div>
     </div>
+    <button onclick="toggleAnnBar()" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;color:#0A2E5A;flex-shrink:0;opacity:.6;" title="Hide">✕</button>
   </div>
+  <button id="u-ann-show" onclick="toggleAnnBar()" style="display:none;background:rgba(0,168,154,.12);border:1px solid rgba(0,168,154,.3);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:#00A89A;cursor:pointer;margin:6px 16px 0;width:calc(100% - 32px);">📢 Show Announcement</button>
 
   <div class="u-body">
 
@@ -2233,7 +2146,7 @@ input,select,textarea,button{font-size:16px;}
 
   <!-- ═══ FULL SCHEDULE ═══ -->
   <div class="pg" id="pg-fullsch">
-    <div class="sh">Full Schedule Grid — 02–14 March 2026</div>
+    <div class="sh" id="fullSchTitle">Full Schedule Grid</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="schLegend"></div>
     <div class="ftabs" id="teamFilter"></div>
     <div class="sch-wrap" id="schGridWrap"></div>
@@ -2245,20 +2158,24 @@ input,select,textarea,button{font-size:16px;}
       <div class="ftab on" onclick="swTab('reqTabs','rt-swap',this)">🔄 Swap</div>
       <div class="ftab" onclick="swTab('reqTabs','rt-leave',this)">🌴 Leave</div>
       <div class="ftab" onclick="swTab('reqTabs','rt-att',this)">✅ Attendance</div>
-      <div class="ftab" onclick="swTab('reqTabs','rt-approvals',this)">🛡️ Approvals <span class="nbadge on" style="position:static;display:inline-block;vertical-align:middle;" id="reqApprovalBadge">0</span></div>
     </div>
-    <div class="card" style="margin-bottom:10px;">
-      <div class="cb" style="padding:12px;">
-        <button class="btn btn-navy" type="button" onclick="openAnnualLeave()" style="width:100%;">🌴 Apply for Annual Leave</button>
-      </div>
-    </div>
+
     <div id="reqTabs">
       <!-- SWAP -->
       <div id="rt-swap">
+        <!-- Incoming swap requests for this agent -->
+        <div id="swapInboxWrap" style="display:none;">
+          <div class="sh" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>📬 Swap Requests for You</span>
+            <span id="swapInboxBadge" class="nbadge on" style="position:static;display:inline-block;"></span>
+          </div>
+          <div id="swapInbox"></div>
+        </div>
+
         <div class="card">
           <div class="ch"><div class="ctitle">🔄 New Swap Request</div></div>
           <div class="cb">
-            <div class="fg"><label class="lbl">Swap Date</label><input type="date" class="fld" id="swDate" value="2026-03-09"></div>
+            <div class="fg"><label class="lbl">Swap Date</label><input type="date" class="fld" id="swDate" value="2026-03-09" onchange="buildSwapWith(this.value)"></div>
             <div class="fg"><label class="lbl">Swap With</label>
               <select class="fld" id="swWith"><option value="">-- Select colleague --</option></select>
             </div>
@@ -2393,7 +2310,7 @@ input,select,textarea,button{font-size:16px;}
           </div>
           <div class="fg"><label class="lbl">Reason</label><input class="fld" type="text" id="kpiExtraReason" placeholder="Reason for extra break"></div>
           <div class="kpi-grid kpi-grid-2">
-            <div class="fg"><label class="lbl">Approver</label><select class="fld" id="kpiExtraApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+            <div class="fg"><label class="lbl">Approved By</label><select class="fld" id="kpiExtraApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
             <div class="fg"><label class="lbl">Comment</label><input class="fld" type="text" id="kpiExtraComment" placeholder="Optional comment"></div>
           </div>
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('extra')">Submit Extra Break</button>
@@ -2410,7 +2327,7 @@ input,select,textarea,button{font-size:16px;}
           </div>
           <div class="fg"><label class="lbl">Subject</label><input class="fld" type="text" id="kpiMeetingSubject" placeholder="Meeting subject"></div>
           <div class="kpi-grid kpi-grid-2">
-            <div class="fg"><label class="lbl">Approver</label><select class="fld" id="kpiMeetingOrganizer"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+            <div class="fg"><label class="lbl">Organizer</label><select class="fld" id="kpiMeetingOrganizer"><option value="">Select organizer</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
             <div class="fg"><label class="lbl">Comment</label><input class="fld" type="text" id="kpiMeetingComment" placeholder="Optional comment"></div>
           </div>
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('meeting')">Submit Meeting</button>
@@ -2434,7 +2351,7 @@ input,select,textarea,button{font-size:16px;}
             <div class="fg"><label class="lbl">Permissions Type</label><select class="fld" id="kpiPermissionType"><option value="">Select type</option><option>Personal permissions</option><option>Official permissions</option></select></div>
           </div>
           <div class="fg"><label class="lbl">Reason</label><input class="fld" type="text" id="kpiPermissionReason" placeholder="Permission reason"></div>
-          <div class="fg"><label class="lbl">Approver</label><select class="fld" id="kpiPermissionApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+          <div class="fg"><label class="lbl">Approved By</label><select class="fld" id="kpiPermissionApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('permission')">Submit Permission</button>
         </form>
 
@@ -2450,7 +2367,7 @@ input,select,textarea,button{font-size:16px;}
           <div class="fg"><label class="lbl">Application</label><input class="fld" type="text" id="kpiIssueApplication" placeholder="Application / system name"></div>
           <div class="fg"><label class="lbl">Description</label><textarea class="ann-ta" id="kpiIssueDescription" placeholder="Describe the issue"></textarea></div>
           <div class="kpi-grid kpi-grid-2">
-            <div class="fg"><label class="lbl">Approver</label><select class="fld" id="kpiIssueApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
+            <div class="fg"><label class="lbl">Approved By</label><select class="fld" id="kpiIssueApprovedBy"><option value="">Select approver</option><option>Alanoud Alotaibi</option><option>Mohammad Alothman</option><option>Shouq Alkandari</option><option>Hasan Alajmi</option><option>Naser Bandar</option><option>Badreyah BoRubayea</option><option>Mohammad Abdulraheem</option><option>Taher AlBaghli</option><option>Talal Aljareki</option></select></div>
             <div class="fg"><label class="lbl">Issue Type</label><select class="fld" id="kpiIssueType"><option value="">Select issue type</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div>
           </div>
           <div class="kpi-grid kpi-grid-2">
@@ -2460,16 +2377,6 @@ input,select,textarea,button{font-size:16px;}
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('issue')">Submit System Issue</button>
         </form>
       </div>
-    </div>
-
-    <div class="card" id="kpiRequestsCard">
-      <div class="ch"><div class="ctitle">My KPI Requests</div><div class="pill p-teal"><span class="pdot"></span><span id="kpiReqCount">0</span></div></div>
-      <div class="cb"><div id="kpiMyRequestsList" class="kpi-list"></div></div>
-    </div>
-
-    <div class="card" id="kpiApprovalCard" style="display:none;">
-      <div class="ch"><div class="ctitle">KPI Approvals</div><div class="pill p-amber"><span class="pdot"></span><span id="kpiApprovalCount">0</span></div></div>
-      <div class="cb"><div id="kpiApprovalList" class="kpi-list"></div></div>
     </div>
   </div>
 
@@ -2540,7 +2447,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxTjbAQHQPt11Ct1_2UnX5lfp6WIVvHdm7ywqxhOr7t7fL_RHYiHtu-QIelQyvp9EF-ng/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbzi_yZk_GD3MaxaKMkBbE0y_AA26eXg4KwFmH4loikH_WGHh__vsDXjN0qvEIJ_DTaQLw/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2607,6 +2514,9 @@ function myBreak(d){
     if(!f&&b.agent===me.name&&(b.status==='booked'||b.status==='active'))f=b;
   });
   return f;
+}
+function myBreaks(d){
+  return tdb(d).filter(function(b){return b.agent===me.name&&(b.status==='booked'||b.status==='active');});
 }
 
 // ── WRITE: update cache immediately → push to Sheets ──
@@ -2734,7 +2644,13 @@ function _applyRemote(remote){
   try{localStorage.setItem(SK,JSON.stringify(newD));}catch(e){}
 
   // ── Populate SP data arrays from Sheets ──
-  if(Array.isArray(remote.swaps))  { SWAPS=remote.swaps; }
+  if(Array.isArray(remote.swaps)){
+    SWAPS=remote.swaps;
+    // Re-apply approved swaps to AGENTS schedule array
+    SWAPS.filter(function(s){return s.status==='approved';}).forEach(function(s){
+      _applySwapToSchedule&&_applySwapToSchedule(s);
+    });
+  }
   if(Array.isArray(remote.leaves)) { LEAVES=remote.leaves; }
   if(Array.isArray(remote.actlog)) { ACTLOG=remote.actlog; }
   if(Array.isArray(remote.attendance)) { ATT_LOG=remote.attendance; }
@@ -2819,17 +2735,16 @@ function showStep2(emp){
   document.getElementById('step1').className='lstep';document.getElementById('step2').className='lstep on';
   var av=document.getElementById('idav');av.textContent=ini(emp.name);av.style.background=avc(emp.name);
   document.getElementById('idname').textContent=emp.name;document.getElementById('idrole').textContent=emp.role;
-  selShift=null;var h='';
-  SHIFTS.forEach(function(s,i){h+='<div class="stile" id="so'+i+'" onclick="pickShift('+i+')">'+'<div class="sticon">'+s.icon+'</div><div class="sttime">'+s.label+'</div></div>';});
-  document.getElementById('shiftGrid').innerHTML=h;document.getElementById('shiftBtn').disabled=true;
+  // Auto-detect shift from schedule
+  selShift=buildAutoShiftFor(emp);
+  var lbl=document.getElementById('autoShiftLabel');
+  if(lbl) lbl.textContent=selShift&&selShift.label&&selShift.label!=='Management'?selShift.label:'No shift found — OFF today';
   selVoicemail=false;
   var vm=document.getElementById('vmTaskChk');
   if(vm) vm.checked=false;
 }
 function pickShift(i){
   selShift=SHIFTS[i];
-  document.querySelectorAll('.stile').forEach(function(el,j){el.className='stile'+(j===i?' sel':'');});
-  document.getElementById('shiftBtn').disabled=false;
 }
 function confirmShift(){
   if(!selShift||!pendEmp)return;
@@ -2887,12 +2802,14 @@ function _startSession(){
 }
 
 function doSignOut(){
+  if(typeof doUnifiedSignOut==='function'){doUnifiedSignOut();return;}
   me=null;selSlot=null;selDur=15;tmFilter='';
   [clkInt,syncInt,tmrInt].forEach(function(t){if(t)clearInterval(t);});clkInt=syncInt=tmrInt=null;
   document.getElementById('pwInput').value='';
   document.getElementById('step1').className='lstep on';document.getElementById('step2').className='lstep';
-  document.getElementById('nav-admin').style.display='none'; // reset for next user
-  document.getElementById('bs-app').style.display='none';document.getElementById('hub-app').style.display='block';hubRefreshBadge();
+  var na=document.getElementById('nav-admin');if(na)na.style.display='none';
+  var bsa=document.getElementById('bs-app');if(bsa)bsa.style.display='none';
+  var hl=document.getElementById('hub-login');if(hl){hl.style.display='flex';hl.classList.remove('hidden');}
 }
 
 function bs_originalStartApp(){
@@ -3066,11 +2983,6 @@ function renderHome(){
     var list=EMPS.filter(function(e){return e.dept===dept.key&&e.access!=='admin';});
     if(!list.length)return;
     th+='<div style="font-size:10px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;padding:10px 13px 5px;background:var(--bg);border-bottom:1px solid var(--border);">'+dept.label+'</div>';
-    list.sort(function(a,b){
-      var sa=smap2[a.name]||{st:'off'};var sb=smap2[b.name]||{st:'off'};
-      function rk(x){return x.st==='on'?0:x.st==='brk'?1:2;}
-      var ra=rk(sa),rb=rk(sb);if(ra!==rb)return ra-rb;return String(a.name||'').localeCompare(String(b.name||''));
-    });
     list.forEach(function(e){
       var st=smap2[e.name]||{st:'off',sched:0,used:0};
       var isMe=e.name===me.name;
@@ -3093,7 +3005,7 @@ function renderHome(){
     });
   });
   teamEl.innerHTML=th||'<div style="padding:16px;text-align:center;font-size:12px;color:var(--t3);">No agents found</div>';
-}function startBreak(){var d=gd();var b=myBreak(d);if(!b||b.status!=='booked')return;var nowM=toMin(nowHH());var shiftStart=toMin(me&&me.shift?me.shift:'00:00');var adjNow=(shiftStart>=720&&nowM<shiftStart&&nowM<480)?nowM+1440:nowM;var breakM=toMin(b.breakStart);var adjBreak=(breakM<480&&shiftStart>=720)?breakM+1440:breakM;if(adjNow<adjBreak){showToast('You can start your break at '+fmt12(b.breakStart),'warn');return;}b.status='active';b.startedAt=Date.now();sv(d);showToast('Break started! Enjoy ☕','ok');addNotif('☕ Break started at '+fmt12(b.breakStart));renderAll();}
+}function startBreak(){var d=gd();var b=myBreak(d);if(!b||b.status!=='booked')return;b.status='active';b.startedAt=Date.now();sv(d);showToast('Break started! Enjoy ☕','ok');addNotif('☕ Break started at '+fmt12(b.breakStart));renderAll();}
 function endBreak(){var d=gd();var b=myBreak(d);if(!b||b.status!=='active')return;var el=Math.ceil((Date.now()-b.startedAt)/60000);b.status='done';b.duration=el;b.endedAt=Date.now();sv(d);showToast('Break ended · '+el+' min','ok');renderAll();if(typeof uUpdateBadges==='function')uUpdateBadges();if(typeof renderUnifiedHome==='function'&&document.getElementById('u-home')&&document.getElementById('u-home').classList.contains('on'))renderUnifiedHome();}
 function cancelBreak(){var d=gd();var b=myBreak(d);if(!b)return;b.status='cancelled';sv(d);showToast('Break cancelled');renderAll();}
 
@@ -3211,7 +3123,7 @@ function confirmBook(){
   if(selDur>rem){showToast('Not enough time remaining','err');return;}
   var m=selSlot.min;var smCB=toMin(me.shift);var conf=tdb(d).filter(function(b){if(b.status==='cancelled')return false;var bs=toMin(b.breakStart);var bsA=(bs<480&&smCB>=720)?bs+1440:bs;return bsA<=m&&bsA+b.duration>m;});
   if(conf.length>=maxAllowed){showToast((me&&me.handleVoicemail)?'Voicemail extra slot already used here':'Slot is now full!','err');buildSlotGrid();return;}
-  if(myBreak(d)){showToast('You already have a break booked','err');return;}
+  if(myBreaks(d).length>=2){showToast('You already have 2 breaks booked','err');return;}
   var nb={id:uid(),agent:me.name,breakStart:selSlot.hhmm,duration:selDur,status:'booked',bookedAt:Date.now(),voicemailOverride:!!(me&&me.handleVoicemail&&conf.length>=mc)};
   tdb(d).push(nb);sv(d);var bt=fmt12(selSlot.hhmm);selSlot=null;selDur=15;
   showToast('Break booked for '+bt+((nb.voicemailOverride)?' · voicemail exception':''),'ok');addNotif('📅 Break booked for '+bt+((nb.voicemailOverride)?' (voicemail exception)':''));
@@ -3298,8 +3210,8 @@ function renderSwap(){
           +'<div class="swtitle">Wants your '+fmt12(req.targetSlot)+' slot</div>'
           +'<div class="swmeta">In exchange they offer their '+fmt12(req.mySlot)+' slot</div>'
           +'<div class="swbtns">'
-          +'<button class="btn btn-green btn-sm" onclick="respTakeover(\''+req.id+'\',true)">✓ Accept</button>'
-          +'<button class="btn btn-red btn-sm" onclick="respTakeover(\''+req.id+'\',false)">✕ Decline</button>'
+          +'<button class="btn btn-green btn-sm" data-id="\'+req.id+'\'" onclick="respTakeover(this.dataset.id,true)">✓ Accept</button>'
+          +'<button class="btn btn-red btn-sm" data-id="\'+req.id+'\'" onclick="respTakeover(this.dataset.id,false)">✕ Decline</button>'
           +'</div></div>';
       } else {
         h+='<div class="swcard">'
@@ -3307,8 +3219,8 @@ function renderSwap(){
           +'<div class="swtitle">Swap Request</div>'
           +'<div class="swmeta">Their slot: '+fmt12(req.swapOffer)+' → Your slot: '+fmt12(req.breakStart)+'</div>'
           +'<div class="swbtns">'
-          +'<button class="btn btn-green btn-sm" onclick="respSwap(\''+req.id+'\',true)">✓ Accept</button>'
-          +'<button class="btn btn-red btn-sm" onclick="respSwap(\''+req.id+'\',false)">✕ Decline</button>'
+          +'<button class="btn btn-green btn-sm" data-id="\'+req.id+'\'" onclick="respSwap(this.dataset.id,true)">✓ Accept</button>'
+          +'<button class="btn btn-red btn-sm" data-id="\'+req.id+'\'" onclick="respSwap(this.dataset.id,false)">✕ Decline</button>'
           +'</div></div>';
       }
     });
@@ -3336,7 +3248,7 @@ function renderSwap(){
       h2+='<div class="swcard"><div class="swfrom">To '+req.targetAgent+'</div>'
         +'<div class="swtitle">Requesting their '+fmt12(req.targetSlot)+' slot</div>'
         +'<div class="swmeta">Offering my '+fmt12(req.mySlot)+' slot</div>'
-        +'<div class="swbtns"><button class="btn btn-outline btn-sm" onclick="cancelTakeover(\''+req.id+'\')">Cancel Request</button></div></div>';
+        +'<div class="swbtns"><button class="btn btn-outline btn-sm" data-id="\'+req.id+'\'" onclick="cancelTakeover(this.dataset.id)">Cancel Request</button></div></div>';
     });
   }
 
@@ -3361,7 +3273,7 @@ function renderSwap(){
         h2+='<div class="swcard"><div class="swfrom">'+oth.agent+'</div>'
           +'<div class="swtitle">'+fmt12(oth.breakStart)+' · '+oth.duration+' min</div>'
           +'<div class="swmeta">Your slot: '+fmt12(b.breakStart)+'</div>'
-          +'<div class="swbtns">'+(sent?'<span class="pill p-amber">⏳ Sent</span>':'<button class="btn btn-navy btn-sm" onclick="doSwapReq(\''+b.id+'\',\''+oth.id+'\')">Request Swap</button>')+'</div></div>';
+          +'<div class="swbtns">'+(sent?'<span class="pill p-amber">⏳ Sent</span>':'<button class="btn btn-navy btn-sm" data-bid="\'+b.id+'+'" data-oid="'+oth.id+'+'+'" onclick="doSwapReq(this.dataset.bid,this.dataset.oid)">Request Swap</button>')+'</div></div>';
       });
     }
   }
@@ -3770,10 +3682,30 @@ function getAttScheduleOverride(agentName, baseShift, dateStr){
   }
   return null;
 }
+function getSwapOverride(agentName, dateStr){
+  // Check if an approved swap changes this agent's shift on this date
+  if(!Array.isArray(SWAPS)||!SWAPS.length)return null;
+  for(var i=0;i<SWAPS.length;i++){
+    var s=SWAPS[i];
+    if(s.status!=='approved'||s.date!==dateStr)continue;
+    if(s.from===agentName){
+      return {shift:s.sB,cls:scCls(s.sB),short:scShort(s.sB),badge:'Swapped'};
+    }
+    if(s.to===agentName){
+      return {shift:s.sA,cls:scCls(s.sA),short:scShort(s.sA),badge:'Swapped'};
+    }
+  }
+  return null;
+}
 function getDisplayShift(agentObj, dateStr, idx){
   var base=((agentObj&&agentObj.sch&&agentObj.sch[idx])||'OFF');
+  // Priority 1: ATT_LOG override (today only)
   var o=getAttScheduleOverride(agentObj&&agentObj.n?agentObj.n:'', base, dateStr);
-  return o||{shift:base, cls:scCls(base), short:scShort(base), badge:''};
+  if(o)return o;
+  // Priority 2: Approved swap override (any date)
+  var sw=getSwapOverride(agentObj&&agentObj.n?agentObj.n:'', dateStr);
+  if(sw)return sw;
+  return {shift:base, cls:scCls(base), short:scShort(base), badge:''};
 }
 function scCls(s){
   if(!s||s==='—')return'';
@@ -4059,7 +3991,7 @@ function sp_renderHome(){
   // ── Pending requests badge ───────────────────────────────────────
   var pcEl = document.getElementById('sp-pending-count');
   if(pcEl){
-    var mySw  = SWAPS.filter(function(s){return (s.from===me.n||s.to===me.n)&&s.status==='pending';}).length;
+    var mySw  = SWAPS.filter(function(s){return (s.from===me.n||s.to===me.n)&&['pending_peer','pending_mgmt'].includes(s.status);}).length;
     var myLv  = LEAVES.filter(function(l){return l.agent===me.n&&l.status==='pending';}).length;
     var total = mySw+myLv;
     pcEl.textContent = total>0 ? total+' pending' : 'Swaps & Leave';
@@ -4106,6 +4038,12 @@ function renderMySchedule(){
 var allTeams=['All','Inbound','Outbound','ITM','Wage','Retention','Assist TL','Leadership','Back Office','OP','SQ','WFM','Quality','Management'];
 
 function renderFullSchedule(){
+  // Dynamic title from DATES
+  var titleEl=document.getElementById('fullSchTitle');
+  if(titleEl&&DATES&&DATES.length){
+    var fmtD=function(s){var p=s.split('-');return p[2]+'/'+p[1];};
+    titleEl.textContent='Schedule Grid — '+fmtD(DATES[0])+' – '+fmtD(DATES[DATES.length-1]);
+  }
   // Legend
   var leg='';
   [['sc-m','Morning'],['sc-a','Afternoon'],['sc-e','Evening'],['sc-n','Night'],
@@ -4131,7 +4069,8 @@ function setTeamFilter(t){
 }
 
 function buildSchGrid(){
-  var display=sp_teamFilter==='All'?AGENTS:AGENTS.filter(function(a){return a.t===teamFilter;});
+  var display=(sp_teamFilter==='All'?AGENTS:AGENTS.filter(function(a){return a.t===teamFilter;}))
+    .filter(function(a){return a.t!=='Management';});
   var teams=[...new Set(display.map(function(a){return a.t;}))];
   var th='<th class="name-h">Name</th>';
   DL.forEach(function(lb,i){
@@ -4145,10 +4084,13 @@ function buildSchGrid(){
     members.forEach(function(a){
       var mc=a.r==='maker'?' <span style="font-size:8px;background:var(--abg);color:var(--amber);padding:1px 4px;border-radius:3px;">M</span>':a.r==='checker'?' <span style="font-size:8px;background:rgba(13,92,166,.1);color:var(--navy);padding:1px 4px;border-radius:3px;">C</span>':'';
       var cells='<td class="name-c">'+a.n+mc+'</td>';
+      var isMe=(me&&a.n===me.n);
       a.sch.forEach(function(s,i){
         var disp=getDisplayShift(a,DATES[i],i);
         var note=(DATES[i]===TODAY&&disp&&disp.shift!==s)?' title="Attendance updated by TL: '+disp.shift+'"':'';
-        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'" style="'+(WKND.includes(i)?'opacity:.5;':'')+'"'+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span></td>';
+        var notOff=disp.shift!=='OFF'&&disp.shift!=='Leave'&&disp.shift!=='Sick';
+        var swapBtn=isMe&&notOff?'<button onclick="openQuickSwap(\''+DATES[i]+'\',' +'\''+disp.shift+'\')" style="display:block;margin-top:3px;font-size:9px;background:#0D5CA6;color:#fff;border:none;border-radius:4px;padding:2px 5px;cursor:pointer;width:100%;">Swap</button>':'';
+        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'" style="'+(WKND.includes(i)?'opacity:.5;':'')+'"'+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span>'+swapBtn+'</td>';
       });
       rows+='<tr>'+cells+'</tr>';
     });
@@ -4160,99 +4102,110 @@ function buildSchGrid(){
 // ════════════════════════════════════════════════
 // REQUESTS
 // ════════════════════════════════════════════════
-function buildSwapWith(){
+function buildSwapWith(dateStr){
   var sel=document.getElementById('swWith');
-  if(!sel||!me) return;
+  if(!sel)return;
   sel.innerHTML='<option value="">-- Select colleague --</option>';
-  AGENTS.filter(function(a){return String(a.id)!==String(me.id)&&['agent','maker','checker'].includes(a.r);}).forEach(function(a){
-    sel.innerHTML+='<option value="'+a.id+'">'+a.n+' ('+a.t+' · '+gTodayS(a)+')</option>';
+  var d=dateStr||document.getElementById('swDate').value||today();
+  var idx=DATES.indexOf(d);
+  AGENTS.filter(function(a){
+    if(a.id===(me&&me.id))return false;
+    if(!['agent','maker','checker'].includes(a.r))return false;
+    // Only show agents working on the selected date (not OFF)
+    if(idx>=0){var s=a.sch[idx]||'OFF';if(s==='OFF'||s==='Leave'||s==='Sick')return false;}
+    return true;
+  }).forEach(function(a){
+    var sched=idx>=0?(a.sch[idx]||'OFF'):'?';
+    sel.innerHTML+='<option value="'+a.id+'">'+a.n+' — '+sched+'</option>';
   });
 }
 function renderRequests(){
+  renderSwapInbox();
   renderMySwapHist();
   renderLeaveBalPanel();
   renderMyLeaveHist();
   renderMyAttTab();
-  renderRequestsApprovals();
-}
-
-function canMgmtApproveSwap(){
-  if(!me) return false;
-  var role=String(me.r||me.role||'').toLowerCase();
-  var team=String(me.t||me.team||'').toLowerCase();
-  return ['manager','head','management','readonly','wfm','atl','tl'].includes(role) || team==='management';
-}
-function renderRequestsApprovals(){
-  var wrap=document.getElementById('reqApprovalsWrap');
-  if(!wrap) return;
-  var uname=(me&&(me.n||me.name))||'';
-  var peer=SWAPS.filter(function(s){ return s.status==='pending_peer' && s.to===uname; });
-  var mgmt=SWAPS.filter(function(s){ return s.status==='pending_management'; });
-  var html='';
-  if(peer.length){
-    html+='<div class="sh">Swap Confirmations</div>';
-    peer.forEach(function(s){
-      html+='<div class="swcard"><div style="display:flex;justify-content:space-between;margin-bottom:8px;">'
-        +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+s.date+'</span>'+pill('WAITING YOU','p-amber')+'</div>'
-        +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">FROM</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
-        +'<div class="sw-arrow">⇄</div><div class="sw-side to"><div class="sw-lbl">TO</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div></div>'
-        +'<div style="font-size:11px;color:var(--t2);margin:8px 0;">📝 '+(s.reason||'')+'</div>'
-        +'<div style="display:flex;gap:8px;"><button class="btn btn-green btn-sm" onclick="peerApproveSwap(\''+s.id+'\')">✅ Confirm</button>'
-        +'<button class="btn btn-red btn-sm" onclick="peerRejectSwap(\''+s.id+'\')">❌ Reject</button></div></div>';
-    });
-  }
-  if(canMgmtApproveSwap() && mgmt.length){
-    html+='<div class="sh">Management Swap Approvals</div>';
-    mgmt.forEach(function(s){
-      html+='<div class="swcard"><div style="display:flex;justify-content:space-between;margin-bottom:8px;">'
-        +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+s.date+'</span>'+pill('WAITING MGMT','p-amber')+'</div>'
-        +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">FROM</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
-        +'<div class="sw-arrow">⇄</div><div class="sw-side to"><div class="sw-lbl">TO</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div></div>'
-        +'<div style="font-size:11px;color:var(--t2);margin:8px 0;">Peer approved by '+(s.peerApprovedBy||'—')+'</div>'
-        +'<div style="display:flex;gap:8px;"><button class="btn btn-green btn-sm" onclick="approveSwap(\''+s.id+'\')">✅ Approve</button>'
-        +'<button class="btn btn-red btn-sm" onclick="rejectSwap(\''+s.id+'\')">❌ Reject</button></div></div>';
-    });
-  }
-  if(!html) html='<div class="empty"><div class="ep">No approvals waiting</div></div>';
-  wrap.innerHTML=html;
-  var badge=document.getElementById('reqApprovalBadge');
-  if(badge) badge.textContent=peer.length + (canMgmtApproveSwap()?mgmt.length:0);
 }
 function submitSwap(){
   var w=document.getElementById('swWith').value;
   var r=document.getElementById('swReason').value;
   var d=document.getElementById('swDate').value;
   if(!w){sp_showToast('Select a colleague','err');return;}
-  var ag=AGENTS.find(function(a){return String(a.id)===String(w);});
-  if(!ag){sp_showToast('Selected colleague not found','err');return;}
-  var entry={id:'SW-'+Date.now()+'-'+Math.floor(Math.random()*1000),from:me.n,to:ag.n,date:d,sA:gTodayS(me),sB:gTodayS(ag),reason:r,status:'pending_peer',ts:new Date().toISOString(),peerApprovedBy:'',peerApprovedAt:'',finalApprovedBy:'',finalApprovedAt:''};
+  var ag=AGENTS.find(function(a){return a.id===w;});
+  var idx_=DATES.indexOf(d);var sA_=idx_>=0?(me&&AGENTS.find(function(a){return a.n===me.n;})&&AGENTS.find(function(a){return a.n===me.n;}).sch[idx_])||gTodayS(me):gTodayS(me);var sB_=idx_>=0?(ag.sch[idx_]||'OFF'):gTodayS(ag);  var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:d,sA:sA_,sB:sB_,reason:r,status:'pending_peer',ts:new Date().toISOString()};
   SWAPS.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',
     id:entry.id,from:entry.from,to:entry.to,date:entry.date,
-    fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,status:entry.status,ts:entry.ts
+    fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,ts:entry.ts
   }),headers:{'Content-Type':'text/plain'}})
   .then(function(r){return r.json();})
-  .then(function(res){if(res&&res.ok)setSy(true);else setSy(false); renderRequestsApprovals();})
-  .catch(function(){setSy(false); renderRequestsApprovals();});
+  .then(function(res){if(res&&res.ok)setSy(true);else setSy(false);})
+  .catch(function(){setSy(false);});
   logA('SWAP_REQUEST',me.n+' ↔ '+ag.n+' on '+d,'inf');
-  sp_showToast('Swap request submitted! Waiting for colleague approval.','ok');
+  sp_showToast('Swap request submitted! TL notified.','ok');
   renderMySwapHist();
-  renderRequestsApprovals();
+}
+function _swStatusPill(status){
+  if(status==='pending_peer')    return pill('⏳ AWAITING PEER','p-amber');
+  if(status==='peer_declined')   return pill('🚫 PEER DECLINED','p-red');
+  if(status==='pending_mgmt')    return pill('🔄 AWAITING MGMT','p-amber');
+  if(status==='approved')        return pill('✅ APPROVED','p-green');
+  if(status==='rejected')        return pill('❌ REJECTED','p-red');
+  return pill((status||'PENDING').toUpperCase(),'p-amber');
+}
+function _swCard(s, extraBtns){
+  extraBtns=extraBtns||'';
+  return '<div class="swcard">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+    +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+s.date+'</span>'
+    +_swStatusPill(s.status)+'</div>'
+    +'<div class="sw-sides">'
+      +'<div class="sw-side from"><div class="sw-lbl">FROM</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
+      +'<div class="sw-arrow">⇄</div>'
+      +'<div class="sw-side to"><div class="sw-lbl">WITH</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div>'
+    +'</div>'
+    +(s.reason?'<div style="font-size:11px;color:var(--t2);margin-top:6px;">📝 '+s.reason+'</div>':'')
+    +(extraBtns?'<div style="display:flex;gap:8px;margin-top:10px;">'+extraBtns+'</div>':'')
+    +'</div>';
 }
 function renderMySwapHist(){
-  var mine=SWAPS.filter(function(s){return s.from===me.n;});
-  var h=mine.map(function(s){
-    return '<div class="swcard">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-      +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+s.date+'</span>'
-      +pill(s.status.toUpperCase(),s.status==='approved'?'p-green':s.status==='rejected'?'p-red':'p-amber')+'</div>'
-      +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">ME</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
-      +'<div class="sw-arrow">⇄</div>'
-      +'<div class="sw-side to"><div class="sw-lbl">WITH</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div></div>'
-      +'<div style="font-size:11px;color:var(--t2);margin-top:6px;">📝 '+s.reason+'</div></div>';
-  }).join('');
+  var mine=SWAPS.filter(function(s){return s.from===me.n||s.to===me.n;});
+  mine.sort(function(a,b){return(b.ts||'').localeCompare(a.ts||'');});
+  var h=mine.map(function(s){return _swCard(s,'');}).join('');
   document.getElementById('mySwapHist').innerHTML=h||'<div class="empty"><div class="ep">No swap requests yet</div></div>';
 }
+function renderSwapInbox(){
+  var inbox=SWAPS.filter(function(s){return s.to===me.n&&s.status==='pending_peer';});
+  var wrap=document.getElementById('swapInboxWrap');
+  var cont=document.getElementById('swapInbox');
+  var badge=document.getElementById('swapInboxBadge');
+  if(!wrap||!cont)return;
+  if(!inbox.length){wrap.style.display='none';return;}
+  wrap.style.display='';
+  if(badge) badge.textContent=inbox.length;
+  var h=inbox.map(function(s){
+    var btns='<button class="btn btn-green btn-sm" data-sid="'+s.id+'" onclick="respondSwap(this.dataset.sid,true)">✓ Accept</button>'
+            +'<button class="btn btn-red btn-sm" data-sid="'+s.id+'" onclick="respondSwap(this.dataset.sid,false)">✕ Decline</button>';
+    return _swCard(s,btns);
+  }).join('');
+  cont.innerHTML=h;
+}
+function respondSwap(id, accept){
+  var s=SWAPS.find(function(x){return x.id===id;});
+  if(!s)return;
+  s.status=accept?'pending_mgmt':'peer_declined';
+  s.peerActionBy=me.n;
+  s.peerActionAt=new Date().toISOString();
+  fetch(API,{method:'POST',body:JSON.stringify({
+    action:'updateSwapStatus',id:id,
+    status:s.status,peerActionBy:me.n,peerActionAt:s.peerActionAt
+  }),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  logA&&logA('SWAP_PEER_'+(accept?'ACCEPTED':'DECLINED'),id+' by '+me.n,'inf');
+  sp_showToast(accept?'Accepted — waiting for management approval 👍':'Swap declined',accept?'ok':'inf');
+  renderRequests();
+  uUpdateBadges&&uUpdateBadges();
+}
+
 function openAnnualLeave(){
   var leavePane=document.getElementById('rt-leave');
   if(leavePane){
@@ -4261,7 +4214,7 @@ function openAnnualLeave(){
     if(typeof swTab==='function' && leaveTab){
       swTab('reqTabs','rt-leave',leaveTab);
     }else{
-      ['rt-swap','rt-leave','rt-att','rt-approvals'].forEach(function(id){
+      ['rt-swap','rt-leave','rt-att'].forEach(function(id){
         var el=document.getElementById(id);
         if(el) el.style.display=(id==='rt-leave'?'block':'none');
       });
@@ -4348,7 +4301,7 @@ function renderDashboard(){
   var working=AGENTS.filter(function(a){return!['OFF','P-Leave','Leave','Sick'].includes(gTodayS(a))&&!['manager','head'].includes(a.r);}).length;
   var sick=AGENTS.filter(function(a){return gTodayS(a)==='Sick';}).length;
   var onLv=AGENTS.filter(function(a){return['P-Leave','Leave'].includes(gTodayS(a));}).length;
-  var pendA=SWAPS.filter(function(s){return s.status==='pending';}).length+LEAVES.filter(function(l){return l.status==='pending';}).length;
+  var pendA=SWAPS.filter(function(s){return s.status==='pending_mgmt';}).length+LEAVES.filter(function(l){return l.status==='pending';}).length;
 
   var h='<div class="sh">Today — Wed 04 March 2026</div>'
     +'<div class="team-summary"><div class="tscard c-navy"><div class="tsnum">'+working+'</div><div class="tslbl">Working</div></div>'
@@ -4690,62 +4643,95 @@ function saveAllAtt(){
 }
 
 function renderSwapApproval(){
-  var pending=SWAPS.filter(function(s){return s.status==='pending';});
-  document.getElementById('swapBadgeTeam').textContent=pending.length;
-  var h='<div class="sh">Pending Swaps ('+pending.length+')</div>';
-  if(!pending.length){h+='<div class="empty"><div class="ei">🎉</div><div class="ep">No pending swap requests</div></div>';}
-  else pending.forEach(function(s){
-    h+='<div class="swcard">'
-      +'<div style="display:flex;justify-content:space-between;margin-bottom:8px;">'
-      +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+fmtTS(s.ts)+'</span>'
-      +pill('⏳ PENDING','p-amber')+'</div>'
-      +'<div class="sw-sides"><div class="sw-side from"><div class="sw-lbl">FROM</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
-      +'<div class="sw-arrow">⇄</div>'
-      +'<div class="sw-side to"><div class="sw-lbl">WITH</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div></div>'
-      +'<div style="font-size:11px;color:var(--t2);margin:8px 0;">📝 '+s.reason+'</div>'
-      +'<div style="display:flex;gap:8px;">'
-      +'<button class="btn btn-green btn-sm" onclick="approveSwap(\''+s.id+'\')">✅ Approve</button>'
-      +'<button class="btn btn-red btn-sm" onclick="rejectSwap(\''+s.id+'\')">❌ Reject</button></div></div>';
-  });
+  var pending=SWAPS.filter(function(s){return s.status==='pending_mgmt';});
+  var peer=SWAPS.filter(function(s){return s.status==='pending_peer';});
+  var done=SWAPS.filter(function(s){return s.status==='approved'||s.status==='rejected'||s.status==='peer_declined';});
+  var badgeEl=document.getElementById('swapBadgeTeam');
+  if(badgeEl) badgeEl.textContent=pending.length;
+
+  var h='';
+
+  // Waiting for peer confirmation - info only for management
+  if(peer.length){
+    h+='<div class="sh">Waiting for Peer Confirmation ('+peer.length+')</div>';
+    peer.forEach(function(s){
+      h+='<div class="histrow"><div class="hicon" style="background:rgba(224,140,0,.1);">⏳</div>'
+        +'<div class="hinfo"><div class="htitle">'+s.from+' → '+s.to+'</div>'
+        +'<div class="hmeta">'+s.date+' · '+s.sA+' ⇄ '+s.sB+'</div></div>'
+        +_swStatusPill('pending_peer')+'</div>';
+    });
+  }
+
+  h+='<div class="sh">Pending Approval ('+pending.length+')</div>';
+  if(!pending.length){
+    h+='<div class="empty"><div class="ei">🎉</div><div class="ep">No swaps awaiting approval</div></div>';
+  } else {
+    pending.forEach(function(s){
+      h+='<div class="swcard">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:8px;">'
+        +'<span style="font-size:11px;color:var(--t2);">'+s.id+' · '+fmtTS(s.ts)+'</span>'
+        +pill('🔄 PEER CONFIRMED','p-amber')+'</div>'
+        +'<div class="sw-sides">'
+          +'<div class="sw-side from"><div class="sw-lbl">FROM</div><div class="sw-name">'+s.from+'</div><div class="sw-shift"><span class="sc '+scCls(s.sA)+'">'+s.sA+'</span></div></div>'
+          +'<div class="sw-arrow">⇄</div>'
+          +'<div class="sw-side to"><div class="sw-lbl">WITH</div><div class="sw-name">'+s.to+'</div><div class="sw-shift"><span class="sc '+scCls(s.sB)+'">'+s.sB+'</span></div></div>'
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--t2);margin:8px 0;">📝 '+s.reason+'</div>'
+        +'<div style="font-size:10px;color:var(--t3);margin-bottom:8px;">✅ Accepted by '+s.to+(s.peerActionAt?' on '+fmtTS(s.peerActionAt):'')+'</div>'
+        +'<div style="display:flex;gap:8px;">'
+        +'<button class="btn btn-green btn-sm" data-sid="'+s.id+'" onclick="approveSwap(this.dataset.sid)">✅ Approve</button>'
+        +'<button class="btn btn-red btn-sm" data-sid="'+s.id+'" onclick="rejectSwap(this.dataset.sid)">❌ Reject</button></div></div>';
+    });
+  }
+
   h+='<div class="sh">Completed</div>';
-  SWAPS.filter(function(s){return s.status!=='pending';}).forEach(function(s){
-    h+='<div class="histrow"><div class="hicon" style="background:'+(s.status==='approved'?'var(--gbg)':'var(--rbg)')+';">'+(s.status==='approved'?'✅':'❌')+'</div>'
-      +'<div class="hinfo"><div class="htitle">'+s.from+' ↔ '+s.to+'</div><div class="hmeta">'+s.date+' · '+fmtTS(s.ts)+'</div></div>'
-      +pill(s.status.toUpperCase(),s.status==='approved'?'p-green':'p-red')+'</div>';
+  done.forEach(function(s){
+    var ic=s.status==='approved'?'✅':s.status==='peer_declined'?'🚫':'❌';
+    var bg=s.status==='approved'?'var(--gbg)':'var(--rbg)';
+    h+='<div class="histrow"><div class="hicon" style="background:'+bg+';">'+ic+'</div>'
+      +'<div class="hinfo"><div class="htitle">'+s.from+' ↔ '+s.to+'</div>'
+      +'<div class="hmeta">'+s.date+' · '+s.sA+' ⇄ '+s.sB+'</div></div>'
+      +_swStatusPill(s.status)+'</div>';
   });
   document.getElementById('tt-swaps').innerHTML=h;
 }
-function peerApproveSwap(id){
-  var s=SWAPS.find(function(x){return x.id===id;});
-  if(s){ s.status='pending_management'; s.peerApprovedBy=me.n; s.peerApprovedAt=new Date().toISOString(); }
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'pending_management',actionedBy:me.n}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
-  logA('SWAP_PEER_APPROVED',id+' confirmed by '+me.n,'inf');
-  sp_showToast('Swap confirmed. Waiting for management approval.','ok');
-  renderRequestsApprovals(); renderMySwapHist();
-}
-function peerRejectSwap(id){
-  var s=SWAPS.find(function(x){return x.id===id;});
-  if(s) s.status='rejected';
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'rejected',actionedBy:me.n}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
-  logA('SWAP_PEER_REJECTED',id+' rejected by '+me.n,'inf');
-  sp_showToast('Swap rejected','inf');
-  renderRequestsApprovals(); renderMySwapHist();
-}
 function approveSwap(id){
   var s=SWAPS.find(function(x){return x.id===id;});
-  if(s){ s.status='approved'; s.finalApprovedBy=me.n; s.finalApprovedAt=new Date().toISOString(); }
+  if(!s)return;
+  s.status='approved';
+  s.actionedBy=me.n;
+  s.actionedAt=new Date().toISOString();
+  // Apply schedule override: swap shifts for both agents on the swap date
+  _applySwapToSchedule(s);
   fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'approved',actionedBy:me.n}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
-  logA('SWAP_APPROVED',id+' approved by '+me.n,'inf');
-  sp_showToast('Swap approved ✓','ok');
-  renderSwapApproval(); renderRequestsApprovals(); renderMySwapHist();
+  logA&&logA('SWAP_APPROVED',id+' approved by '+me.n,'ok');
+  sp_showToast('Swap approved ✓ — schedule updated','ok');
+  renderSwapApproval();
+  if(typeof buildSchGrid==='function') buildSchGrid();
+  uUpdateBadges&&uUpdateBadges();
 }
 function rejectSwap(id){
   var s=SWAPS.find(function(x){return x.id===id;});
-  if(s) s.status='rejected';
+  if(!s)return;
+  s.status='rejected';
+  s.actionedBy=me.n;
+  s.actionedAt=new Date().toISOString();
   fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'rejected',actionedBy:me.n}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
-  logA('SWAP_REJECTED',id+' rejected by '+me.n,'inf');
+  logA&&logA('SWAP_REJECTED',id+' rejected by '+me.n,'inf');
   sp_showToast('Swap rejected','inf');
-  renderSwapApproval(); renderRequestsApprovals(); renderMySwapHist();
+  renderSwapApproval();
+  uUpdateBadges&&uUpdateBadges();
+}
+function _applySwapToSchedule(s){
+  // Swap the sch[] entries for both agents on the swap date
+  var idx=DATES.indexOf(s.date);
+  if(idx<0)return;
+  var agA=AGENTS.find(function(a){return a.n===s.from;});
+  var agB=AGENTS.find(function(a){return a.n===s.to;});
+  if(!agA||!agB)return;
+  var tmp=agA.sch[idx];
+  agA.sch[idx]=agB.sch[idx];
+  agB.sch[idx]=tmp;
 }
 
 function renderLeaveApproval(){
@@ -5486,7 +5472,7 @@ function renderUnifiedHome(){
   if(wkEl && agEnt){
     var wh='<div class="u-week-inner">';
     DATES.forEach(function(date,i){
-      var sch  = agEnt.sch[i]||'OFF';
+      var _disp=(typeof getDisplayShift==='function')?getDisplayShift(agEnt,date,i):{shift:agEnt.sch[i]||'OFF',short:agEnt.sch[i]||'OFF'}; var sch=_disp.shift;
       var isT  = date===TODAY;
       var isWk = WKND.indexOf(i)>=0;
       var isSick = sch==='Sick';
@@ -5499,7 +5485,7 @@ function renderUnifiedHome(){
       else if(isLeave)cls+=' leave';
       else if(isWk||off) cls+=' off';
       else           cls+=' working';
-      var shiftShort = off?'—':sch.split('-')[0];
+      var shiftShort = off?'—':(_disp.short||sch.split('-')[0]);
       wh+='<div class="'+cls+'" title="'+dl[0]+' '+dl[1]+': '+sch+'">'+
         '<div class="wd-dow">'+dl[0]+'</div>'+
         '<div class="wd-d">'+dl[1]+'</div>'+
@@ -5589,12 +5575,11 @@ function uUpdateBadges(){
   var reqBadge = document.getElementById('u-req-badge');
   var d = gd();
   // Swap badge (pending swap requests for me)
-  var pendSwap = typeof tdb==='function'?tdb(d).filter(function(b){
-    return b.status==='swap_pending'&&b.swapWith===me.name;
-  }).length:0;
+  var pendSwap = (typeof tdb==='function'?tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;}).length:0)
+              + SWAPS.filter(function(s){return s.to===me.name&&s.status==='pending_peer';}).length;
   if(swpBadge){swpBadge.textContent=pendSwap;swpBadge.className='unbadge'+(pendSwap?' on':'');}
   // Request badge (pending leaves/swaps I submitted)
-  var myPend = SWAPS.filter(function(s){return (s.from===me.name||s.to===me.name)&&s.status==='pending';}).length
+  var myPend = SWAPS.filter(function(s){return (s.from===me.name||s.to===me.name)&&['pending_peer','pending_mgmt'].includes(s.status);}).length
              + LEAVES.filter(function(l){return l.agent===me.name&&l.status==='pending';}).length;
   if(reqBadge){reqBadge.textContent=myPend;reqBadge.className='unbadge'+(myPend?' on':'');}
 }
@@ -5644,23 +5629,26 @@ function initUnified(){
 
 // ── Unified sign out ──────────────────────────────────────────────
 function doUnifiedSignOut(){
-  me=null;pendEmp=null;selShift=null;
-  [clkInt,syncInt,tmrInt,sp_clkTO].forEach(function(t){clearInterval(t);});
+  me=null;pendEmp=null;selShift=null;selSlot=null;selDur=15;
+  [clkInt,syncInt,tmrInt,sp_clkTO].forEach(function(t){if(t)clearInterval(t);});
   clkInt=syncInt=tmrInt=sp_clkTO=null;
 
   // Remove unified class
   document.body.classList.remove('unified');
-  document.getElementById('u-topbar').classList.remove('on');
-  document.getElementById('u-bnav').classList.remove('on');
-  document.getElementById('u-home').classList.remove('on');
-  document.getElementById('bs-app').style.display='none';
-  document.getElementById('sp-app').style.display='none';
+  var tb=document.getElementById('u-topbar');if(tb)tb.classList.remove('on');
+  var bn=document.getElementById('u-bnav');if(bn)bn.classList.remove('on');
+  var uh=document.getElementById('u-home');if(uh)uh.classList.remove('on');
+  var bsa=document.getElementById('bs-app');if(bsa)bsa.style.display='none';
+  var spa=document.getElementById('sp-app');if(spa)spa.style.display='none';
+  var ua=document.getElementById('u-app');if(ua)ua.style.display='none';
+  var na=document.getElementById('nav-admin');if(na)na.style.display='none';
 
-  // Back to login
+  // Back to login screen
   document.getElementById('pwInput').value='';
   document.getElementById('step1').className='lstep on';
   document.getElementById('step2').className='lstep';
-  document.getElementById('hub-login').style.display='flex';
+  var hl=document.getElementById('hub-login');
+  if(hl){hl.style.display='flex';hl.classList.remove('hidden');}
 }
 
 // ── Patch tickTimer to update unified home ─────────────────────────
@@ -5842,9 +5830,7 @@ function setKpiTab(key){
 }
 function initDailyKPIPage(){
   kpiSetTodayDefaults();
-  populateKpiApprovers();
   renderDailyKPIStats();
-  renderKpiRequestLists();
   if(_kpiInit) return;
   _kpiInit=true;
   document.querySelectorAll('#kpiTabs .ftab').forEach(function(tab){
@@ -5864,133 +5850,6 @@ function kpiResetForm(type){
   }
   kpiSetTodayDefaults();
 }
-function kpiApproverUsers(){
-  var out=[];
-  var seen={};
-  (Array.isArray(EMPS)?EMPS:[]).forEach(function(u){
-    var acc=String((u&&u.access)||'').toLowerCase();
-    var name=String((u&&u.name)||'').trim();
-    if(!name||acc==='agent') return;
-    if(seen[name]) return;
-    seen[name]=1;
-    out.push({name:name,role:String(u.role||''),dept:String(u.dept||'')});
-  });
-  (Array.isArray(AGENTS)?AGENTS:[]).forEach(function(u){
-    var name=String((u&&u.n)||'').trim();
-    var role=String((u&&u.r)||'').toLowerCase();
-    var team=String((u&&u.t)||'');
-    if(!name||role==='agent') return;
-    if(seen[name]) return;
-    seen[name]=1;
-    out.push({name:name,role:String(u.r||''),dept:team});
-  });
-  return out.sort(function(a,b){return a.name.localeCompare(b.name);});
-}
-function populateKpiApprovers(){
-  var list=kpiApproverUsers();
-  ['kpiExtraApprovedBy','kpiMeetingOrganizer','kpiPermissionApprovedBy','kpiIssueApprovedBy'].forEach(function(id){
-    var sel=document.getElementById(id); if(!sel) return;
-    var keep=sel.value||'';
-    sel.innerHTML='<option value="">Select approver</option>'+list.map(function(x){return '<option value="'+x.name.replace(/"/g,'&quot;')+'">'+x.name+' — '+(x.role||x.dept||'Management')+'</option>';}).join('');
-    if(keep && list.some(function(x){return x.name===keep;})) sel.value=keep;
-  });
-}
-function kpiCurrentUserName(){ return String((me&&(me.n||me.name))||'').trim(); }
-function kpiCurrentUserIsApprover(){ return kpiApproverUsers().some(function(x){ return x.name===kpiCurrentUserName(); }); }
-function kpiAllEntries(){
-  var s=kpiStore();
-  var out=[];
-  ['extra','meeting','permission','issue'].forEach(function(t){
-    (Array.isArray(s[t])?s[t]:[]).forEach(function(item){
-      out.push(Object.assign({kpiType:t}, item||{}));
-    });
-  });
-  return out.sort(function(a,b){ return String(b.approvedAt||b.createdAt||b.ts||'').localeCompare(String(a.approvedAt||a.createdAt||a.ts||'')); });
-}
-function kpiStatusClass(st){ st=String(st||'pending').toLowerCase(); return st==='approved'?'approved':(st==='rejected'?'rejected':'pending'); }
-function kpiPrettyType(t){ return ({extra:'Extra Break',meeting:'Meeting',permission:'Permission',issue:'System Issue'})[t]||t; }
-function kpiFmtMeta(x){
-  var bits=[];
-  if(x.date) bits.push(x.date);
-  if(x.time) bits.push(x.time);
-  if(x.shift) bits.push(x.shift);
-  if(x.approver) bits.push('Approver: '+x.approver);
-  return bits.join(' · ');
-}
-function kpiSummary(x){
-  if(x.kpiType==='extra') return 'Reason: '+(x.reason||'—')+' · Duration: '+(x.duration||'—');
-  if(x.kpiType==='meeting') return 'Subject: '+(x.subject||'—')+' · Duration: '+(x.duration||'—');
-  if(x.kpiType==='permission') return 'Reason: '+(x.reason||'—')+' · '+(x.from||'')+(x.to?(' - '+x.to):'');
-  if(x.kpiType==='issue') return 'App: '+(x.application||'—')+' · '+(x.issueType||'—');
-  return '';
-}
-function renderKpiRequestLists(){
-  var mine=kpiAllEntries().filter(function(x){ return String(x.agent||'')===kpiCurrentUserName(); });
-  var myWrap=document.getElementById('kpiMyRequestsList');
-  var myCount=document.getElementById('kpiReqCount');
-  if(myCount) myCount.textContent=String(mine.length);
-  if(myWrap){
-    if(!mine.length){ myWrap.innerHTML='<div class="kpi-empty">No KPI requests yet.</div>'; }
-    else myWrap.innerHTML=mine.slice(0,12).map(function(x){
-      var approvedMeta='';
-      if(x.approvalStatus==='approved' || x.approvalStatus==='rejected'){ approvedMeta='<div class="kpi-item-meta">Action by '+(x.approvalActionBy||x.approver||'—')+' · '+(x.approvalDate||'')+(x.approvalTime?(' '+x.approvalTime):'')+'</div>'; }
-      return '<div class="kpi-item">'+
-        '<div class="kpi-item-head"><div><div class="kpi-item-title">'+kpiPrettyType(x.kpiType)+'</div><div class="kpi-item-meta">'+kpiFmtMeta(x)+'</div></div><span class="kpi-status '+kpiStatusClass(x.approvalStatus)+'">'+String(x.approvalStatus||'pending').toUpperCase()+'</span></div>'+
-        '<div class="kpi-item-body">'+kpiSummary(x)+'</div>'+approvedMeta+
-      '</div>';
-    }).join('');
-  }
-  var apprCard=document.getElementById('kpiApprovalCard');
-  var apprWrap=document.getElementById('kpiApprovalList');
-  var apprCount=document.getElementById('kpiApprovalCount');
-  var canApprove=kpiCurrentUserIsApprover();
-  if(apprCard) apprCard.style.display=canApprove?'':'none';
-  if(!canApprove) return;
-  var mineToApprove=kpiAllEntries().filter(function(x){ return String(x.approver||'')===kpiCurrentUserName() && String(x.approvalStatus||'pending').toLowerCase()==='pending'; });
-  if(apprCount) apprCount.textContent=String(mineToApprove.length);
-  if(apprWrap){
-    if(!mineToApprove.length){ apprWrap.innerHTML='<div class="kpi-empty">No pending KPI approvals assigned to you.</div>'; }
-    else {
-      apprWrap.innerHTML=mineToApprove.slice(0,20).map(function(x){
-        return '<div class="kpi-item">'+
-          '<div class="kpi-item-head"><div><div class="kpi-item-title">'+kpiPrettyType(x.kpiType)+' · '+(x.agent||'')+'</div><div class="kpi-item-meta">'+kpiFmtMeta(x)+'</div></div><span class="kpi-status pending">PENDING</span></div>'+
-          '<div class="kpi-item-body">'+kpiSummary(x)+'</div>'+
-          '<div class="kpi-actions">'+
-            '<button class="kpi-mini-btn ok js-kpi-approve" type="button" data-kpi-type="'+x.kpiType+'" data-kpi-id="'+String(x.id||'').replace(/"/g,'&quot;')+'" data-kpi-status="approved">Approve</button>'+
-            '<button class="kpi-mini-btn no js-kpi-approve" type="button" data-kpi-type="'+x.kpiType+'" data-kpi-id="'+String(x.id||'').replace(/"/g,'&quot;')+'" data-kpi-status="rejected">Reject</button>'+
-          '</div>'+
-        '</div>';
-      }).join('');
-      apprWrap.querySelectorAll('.js-kpi-approve').forEach(function(btn){
-        btn.onclick=function(){ return kpiApproveItem(btn.getAttribute('data-kpi-type'), btn.getAttribute('data-kpi-id'), btn.getAttribute('data-kpi-status')); };
-      });
-    }
-  }
-}
-function kpiUpdateLocal(type,id,patch){
-  var d=gd(), store=kpiStore();
-  var arr=Array.isArray(store[type])?store[type]:[];
-  var idx=arr.findIndex(function(x){ return String((x&&x.id)||'')===String(id||''); });
-  if(idx>=0) arr[idx]=Object.assign({},arr[idx],patch||{});
-  d.dailyKpi=store;
-  sv(d);
-}
-function kpiApproveItem(type,id,status){
-  if(!API){ kpiShowMsg('API not configured','err'); return false; }
-  var payload={action:'approveDailyKPI',type:type,id:id,status:status,approvalActionBy:kpiCurrentUserName(),approvalDate:kpiTodayIso(),approvalTime:kpiNowHm(),approvedAt:new Date().toISOString()};
-  fetch(API,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}})
-    .then(function(r){return r.json();})
-    .then(function(res){
-      if(res&&res.ok){
-        kpiUpdateLocal(type,id,payload);
-        renderKpiRequestLists();
-        kpiShowMsg('KPI request '+status,'ok');
-        setTimeout(function(){ try{ apiPull(); }catch(e){} },300);
-      } else kpiShowMsg((res&&res.error)||'Failed to update KPI approval','err');
-    })
-    .catch(function(){ kpiShowMsg('Network error while updating KPI approval','err'); });
-  return false;
-}
 function submitDailyKPI(type){
   var payload={
     id:'KPI-'+Date.now()+'-'+Math.random().toString(36).slice(2,7).toUpperCase(),
@@ -6005,31 +5864,24 @@ function submitDailyKPI(type){
   var action='';
   if(type==='extra'){
     action='saveDailyKPIExtra';
-    payload.date=kpiVal('kpiExtraDate'); payload.time=kpiVal('kpiExtraTime'); payload.shift=kpiVal('kpiExtraShift'); payload.duration=kpiVal('kpiExtraDuration'); payload.reason=kpiVal('kpiExtraReason'); payload.approvedBy=kpiVal('kpiExtraApprovedBy'); payload.approver=payload.approvedBy; payload.comment=kpiVal('kpiExtraComment');
+    payload.date=kpiVal('kpiExtraDate'); payload.time=kpiVal('kpiExtraTime'); payload.shift=kpiVal('kpiExtraShift'); payload.duration=kpiVal('kpiExtraDuration'); payload.reason=kpiVal('kpiExtraReason'); payload.approvedBy=kpiVal('kpiExtraApprovedBy'); payload.comment=kpiVal('kpiExtraComment');
     if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.duration) missing.push('Duration'); if(!payload.reason) missing.push('Reason'); if(!payload.approvedBy) missing.push('Approved By');
   } else if(type==='meeting'){
     action='saveDailyKPIMeeting';
-    payload.date=kpiVal('kpiMeetingDate'); payload.time=kpiVal('kpiMeetingTime'); payload.shift=kpiVal('kpiMeetingShift'); payload.duration=kpiVal('kpiMeetingDuration'); payload.subject=kpiVal('kpiMeetingSubject'); payload.organizer=kpiVal('kpiMeetingOrganizer'); payload.approver=payload.organizer; payload.comment=kpiVal('kpiMeetingComment');
+    payload.date=kpiVal('kpiMeetingDate'); payload.time=kpiVal('kpiMeetingTime'); payload.shift=kpiVal('kpiMeetingShift'); payload.duration=kpiVal('kpiMeetingDuration'); payload.subject=kpiVal('kpiMeetingSubject'); payload.organizer=kpiVal('kpiMeetingOrganizer'); payload.comment=kpiVal('kpiMeetingComment');
     if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.duration) missing.push('Duration'); if(!payload.subject) missing.push('Subject'); if(!payload.organizer) missing.push('Organizer');
   } else if(type==='permission'){
     action='saveDailyKPIPermission';
-    payload.date=kpiVal('kpiPermissionDate'); payload.time=kpiVal('kpiPermissionTime'); payload.shift=kpiVal('kpiPermissionShift'); payload.duration=kpiVal('kpiPermissionDuration'); payload.from=kpiVal('kpiPermissionFrom'); payload.to=kpiVal('kpiPermissionTo'); payload.monthlyCount=kpiVal('kpiPermissionCount'); payload.permissionType=kpiVal('kpiPermissionType'); payload.reason=kpiVal('kpiPermissionReason'); payload.approvedBy=kpiVal('kpiPermissionApprovedBy'); payload.approver=payload.approvedBy;
+    payload.date=kpiVal('kpiPermissionDate'); payload.time=kpiVal('kpiPermissionTime'); payload.shift=kpiVal('kpiPermissionShift'); payload.duration=kpiVal('kpiPermissionDuration'); payload.from=kpiVal('kpiPermissionFrom'); payload.to=kpiVal('kpiPermissionTo'); payload.monthlyCount=kpiVal('kpiPermissionCount'); payload.permissionType=kpiVal('kpiPermissionType'); payload.reason=kpiVal('kpiPermissionReason'); payload.approvedBy=kpiVal('kpiPermissionApprovedBy');
     if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.from) missing.push('From'); if(!payload.to) missing.push('To'); if(!payload.duration) missing.push('Duration'); if(!payload.permissionType) missing.push('Permissions Type'); if(!payload.reason) missing.push('Reason'); if(!payload.approvedBy) missing.push('Approved By');
   } else if(type==='issue'){
     action='saveDailyKPIIssue';
-    payload.date=kpiVal('kpiIssueDate'); payload.time=kpiVal('kpiIssueTime'); payload.shift=kpiVal('kpiIssueShift'); payload.duration=kpiVal('kpiIssueDuration'); payload.application=kpiVal('kpiIssueApplication'); payload.description=kpiVal('kpiIssueDescription'); payload.approvedBy=kpiVal('kpiIssueApprovedBy'); payload.approver=payload.approvedBy; payload.issueType=kpiVal('kpiIssueType'); payload.comment=kpiVal('kpiIssueComment'); payload.helpdesk=kpiVal('kpiIssueHelpdesk'); payload.helpdeskNo=payload.helpdesk;
+    payload.date=kpiVal('kpiIssueDate'); payload.time=kpiVal('kpiIssueTime'); payload.shift=kpiVal('kpiIssueShift'); payload.duration=kpiVal('kpiIssueDuration'); payload.application=kpiVal('kpiIssueApplication'); payload.description=kpiVal('kpiIssueDescription'); payload.approvedBy=kpiVal('kpiIssueApprovedBy'); payload.issueType=kpiVal('kpiIssueType'); payload.comment=kpiVal('kpiIssueComment'); payload.helpdesk=kpiVal('kpiIssueHelpdesk'); payload.helpdeskNo=payload.helpdesk;
     if(!payload.date) missing.push('Date'); if(!payload.time) missing.push('Time'); if(!payload.shift) missing.push('Shift'); if(!payload.application) missing.push('Application'); if(!payload.duration) missing.push('Duration'); if(!payload.description) missing.push('Description'); if(!payload.approvedBy) missing.push('Approved By'); if(!payload.issueType) missing.push('Issue Type');
   } else return false;
 
   if(missing.length){ kpiShowMsg('Please complete: '+missing.join(', '),'err'); return false; }
   if(type==='permission' && payload.from && payload.to && payload.from>=payload.to){ kpiShowMsg('Permission “To” time must be later than “From” time','err'); return false; }
-  payload.approvalStatus='pending';
-  payload.approvalRequestedAt=new Date().toISOString();
-  payload.approvalDate='';
-  payload.approvalTime='';
-  payload.approvalActionBy='';
-  payload.approvedAt='';
-  payload.submittedAt=payload.createdAt;
 
   function commitLocal(){
     var d=gd();
@@ -6038,7 +5890,6 @@ function submitDailyKPI(type){
     d.dailyKpi=store;
     sv(d);
     renderDailyKPIStats();
-    renderKpiRequestLists();
     kpiResetForm(type);
   }
 
@@ -6152,5 +6003,88 @@ function initSpProfile(){
   setEl('schAgentName',n+' · '+t);
 }
 </script>
+
+// ── Toggle announcement bar ────────────────────────────────────────
+function toggleAnnBar(){
+  var bar=document.getElementById('u-ann-bar');
+  var showBtn=document.getElementById('u-ann-show');
+  if(!bar)return;
+  var hidden=bar.style.display==='none';
+  bar.style.display=hidden?'':('none');
+  if(showBtn)showBtn.style.display=hidden?'none':'block';
+}
+
+// ── Quick Swap from schedule grid ────────────────────────────────────
+var _qs_date='',_qs_myShift='';
+function openQuickSwap(date,shift){
+  _qs_date=date;_qs_myShift=shift;
+  var ol=document.getElementById('quickSwapOverlay');
+  if(!ol)return;
+  var myShiftEl=document.getElementById('qs-myShift');
+  var dateEl=document.getElementById('qs-date');
+  if(myShiftEl)myShiftEl.textContent=shift||'—';
+  if(dateEl)dateEl.textContent=date||'';
+  // Populate swap-with dropdown filtered by date
+  var sel=document.getElementById('qs-swWith');
+  if(sel){
+    sel.innerHTML='<option value="">-- Select colleague --</option>';
+    var idx=DATES.indexOf(date);
+    AGENTS.filter(function(a){
+      if(!me||a.n===me.n)return false;
+      if(!['agent','maker','checker'].includes(a.r))return false;
+      if(idx>=0){var s=a.sch[idx]||'OFF';if(s==='OFF'||s==='Leave'||s==='Sick')return false;}
+      return true;
+    }).forEach(function(a){
+      var sched=idx>=0?(a.sch[idx]||'OFF'):'?';
+      sel.innerHTML+='<option value="'+a.id+'">'+a.n+' — '+sched+'</option>';
+    });
+  }
+  var reason=document.getElementById('qs-reason');if(reason)reason.value='';
+  ol.style.display='flex';
+}
+function closeQuickSwap(){
+  var ol=document.getElementById('quickSwapOverlay');if(ol)ol.style.display='none';
+}
+function submitQuickSwap(){
+  var wId=document.getElementById('qs-swWith').value;
+  if(!wId){if(typeof sp_showToast==='function')sp_showToast('Select a colleague','err');return;}
+  var ag=AGENTS.find(function(a){return a.id===wId;});
+  if(!ag)return;
+  var reason=document.getElementById('qs-reason').value||'Schedule swap';
+  var idx=DATES.indexOf(_qs_date);
+  var theirShift=idx>=0?(ag.sch[idx]||'OFF'):'?';
+  var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:_qs_date,sA:_qs_myShift,sB:theirShift,reason:reason,status:'pending_peer',ts:new Date().toISOString()};
+  SWAPS.push(entry);
+  fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',id:entry.id,from:entry.from,to:entry.to,date:entry.date,fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,ts:entry.ts}),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();}).then(function(res){if(res&&res.ok)setSy(true);else setSy(false);}).catch(function(){setSy(false);});
+  if(typeof logA==='function')logA('SWAP_REQUEST',me.n+' ↔ '+ag.n+' on '+_qs_date,'inf');
+  closeQuickSwap();
+  if(typeof sp_showToast==='function')sp_showToast('Swap request sent to '+ag.n,'ok');
+  else if(typeof showToast==='function')showToast('Swap request sent to '+ag.n,'ok');
+}
+
+<!-- ═══ QUICK SWAP MODAL (from schedule grid) ═══ -->
+<div id="quickSwapOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeQuickSwap()">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;box-shadow:0 -4px 30px rgba(0,0,0,.18);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:15px;font-weight:800;color:#0A2E5A;">🔄 Quick Swap</div>
+      <button onclick="closeQuickSwap()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#666;">✕</button>
+    </div>
+    <div style="background:rgba(13,92,166,.06);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;color:#8AAACF;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Your Shift</div>
+      <div id="qs-myShift" style="font-size:14px;font-weight:800;color:#0A2E5A;margin-top:3px;">—</div>
+      <div id="qs-date" style="font-size:11px;color:#8AAACF;margin-top:2px;"></div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:700;color:#8AAACF;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Swap With</label>
+      <select id="qs-swWith" class="fld" style="width:100%;"></select>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="font-size:11px;font-weight:700;color:#8AAACF;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Reason (optional)</label>
+      <textarea id="qs-reason" rows="2" class="fld" style="width:100%;" placeholder="Why do you need this swap?"></textarea>
+    </div>
+    <button onclick="submitQuickSwap()" style="background:#0D5CA6;color:#fff;border:none;border-radius:12px;padding:14px;width:100%;font-size:14px;font-weight:800;cursor:pointer;">📤 Submit Swap Request</button>
+  </div>
+</div>
 </body>
 </html>
