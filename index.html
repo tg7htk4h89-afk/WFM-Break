@@ -1345,37 +1345,13 @@ body{background:#0a3d7a;}
 .u-qcard-badge{position:absolute;top:6px;right:6px;background:#E53E3E;color:#fff;border-radius:10px;min-width:18px;height:18px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;}
 .u-qcard-alert{border:1.5px solid rgba(229,62,62,.3);background:rgba(229,62,62,.04);}
 /* Presence Feature ───────────────────────────────────── */
-.att-page-tabs{display:flex;gap:6px;margin-bottom:12px;}
-.att-ptab{flex:1;padding:9px 12px;border:1.5px solid var(--border);background:var(--white);border-radius:var(--r);font-size:12px;font-weight:700;color:var(--t2);cursor:pointer;transition:all .15s;}
-.att-ptab.on{background:var(--navy);color:#fff;border-color:var(--navy);}
-.att-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--white);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:10px;}
-.att-date-lbl{font-size:15px;font-weight:800;color:var(--navy);}
-.att-save-all-btn{padding:8px 14px;background:var(--teal);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
-.att-dept-tabs{margin-bottom:10px;}
-.att-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:10px;overflow:hidden;}
-.att-card-head{display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--border);}
-.att-av{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
-.att-name{font-size:13px;font-weight:800;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.att-shift-badge{font-size:10px;font-weight:700;color:var(--t2);background:var(--bg);padding:3px 7px;border-radius:6px;white-space:nowrap;}
-.att-saved-pill{font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;}
-.att-btns{display:flex;flex-wrap:wrap;gap:6px;padding:10px 13px;}
-.att-btn{padding:6px 11px;border:1.5px solid var(--border);background:var(--white);border-radius:20px;font-size:11px;font-weight:700;color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap;}
-.att-btn.sel-ontime{background:var(--gbg);color:var(--green);border-color:var(--green);}
-.att-btn.sel-late{background:var(--abg);color:var(--amber);border-color:var(--amber);}
-.att-btn.sel-sick{background:var(--rbg);color:var(--red);border-color:var(--red);}
-.att-btn.sel-leave{background:rgba(13,92,166,.08);color:var(--navy);border-color:var(--navy);}
-.att-btn.sel-change{background:var(--tealbg);color:var(--teal);border-color:var(--teal);}
-.att-btn.sel-absent{background:#fdf0f0;color:#8B0000;border-color:#c0392b;}
-.att-extra{padding:0 13px 11px;display:none;}
-.att-extra.show{display:block;}
-.att-extra-label{font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
-.att-time-inp{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--t1);background:var(--bg);outline:none;}
-.att-note-inp{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--t1);background:var(--bg);resize:none;min-height:50px;outline:none;}
-.att-save-row{padding:8px 13px 11px;display:flex;gap:7px;}
-.att-save-row button{flex:1;padding:8px;border:none;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;}
-.att-save-btn{background:var(--navy);color:#fff;}
-.att-clear-btn{background:var(--bg);color:var(--t2);}
-.att-saved-badge{background:var(--gbg);border:1px solid var(--green);border-radius:var(--r);padding:8px 12px;font-size:11px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:6px;margin:0 13px 11px;}
+
+/* ── ATTENDANCE v6 ─────────────────────────────────────────── */
+
+.att-time-inp{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#1e293b;background:#f8fafc;outline:none;box-sizing:border-box;margin-top:4px;}
+.att-time-inp:focus{border-color:var(--teal);}
+.att-note-inp{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;color:#1e293b;background:#f8fafc;resize:none;min-height:54px;outline:none;box-sizing:border-box;margin-top:4px;}
+.att-note-inp:focus{border-color:var(--teal);}
 
 .kpi-pane{display:none;}
 .kpi-pane.on{display:block;}
@@ -1950,21 +1926,13 @@ input,select,textarea,button{font-size:16px;}
   </div>
 
   <!-- ═══ MY SCHEDULE ═══ -->
-  <div class="pg" id="pg-attendance">
-    <div class="card">
-      <div class="cb">
-        <div class="att-header">
-          <div>
-            <div class="att-date-lbl" id="att-date-lbl-page">Loading…</div>
-            <div style="font-size:11px;color:var(--t2);margin-top:2px;">Today schedule with attendance actions</div>
-          </div>
-          <button class="att-save-all-btn" onclick="attSaveAll()">💾 Save All</button>
-        </div>
-        <div class="ftabs att-dept-tabs" id="att-dept-tabs-page"></div>
-        <div id="att-list-page"></div>
-        <div style="height:90px"></div>
-      </div>
+  <div class="pg" id="pg-attendance" style="padding:0;">
+    <div id="att-topbar-wrap"></div>
+    <div style="padding:0 13px;">
+      <div id="att-dept-tabs-page" style="display:flex;gap:6px;overflow-x:auto;padding:12px 0 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;"></div>
+      <div id="att-list-page"></div>
     </div>
+    <div style="height:90px"></div>
   </div>
 
   <div class="pg" id="pg-schedule">
@@ -2479,7 +2447,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbzi_yZk_GD3MaxaKMkBbE0y_AA26eXg4KwFmH4loikH_WGHh__vsDXjN0qvEIJ_DTaQLw/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxy-BLjjm31w3prYIxZ-20XcxT522b0SS-ZGS6u8qN0GYGiSvAdOB3lvt_81eDrEpoLLw/exec;
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -4595,29 +4563,24 @@ var ATT_STATUSES=[
 ];
 
 // ── Get agent list visible to current user ───────────────────
-var ATT_OFF_STATUSES=['OFF','Leave','P-Leave','Sick','Weekend'];
 function attGetAgents(){
-  // Only agents who are scheduled to work today
+  var OFF=['OFF','Leave','P-Leave','Sick','Weekend'];
   var list=AGENTS.filter(function(a){
     if(a.r==='admin'||a.r==='wfm') return false;
-    var shift=gTodayS(a)||'OFF';
-    return ATT_OFF_STATUSES.indexOf(shift)<0;  // exclude off/leave/sick/weekend
+    return OFF.indexOf(gTodayS(a)||'OFF')<0;
   });
-  var role=me&&(me.loginRole||me.access);
-  // TL/ATL: only their own team, no override
-  if(me&&(role==='atl'||role==='tl')){
+  if(me&&(me.loginRole==='atl'||me.loginRole==='tl')){
     var myDept=me.t||me.dept||'';
     list=list.filter(function(a){return a.t===myDept;});
     return list;
   }
-  // wfm/manager/admin: apply the user-selected dept filter ('' = all)
   if(_attDeptFilter&&_attDeptFilter!==''){
     list=list.filter(function(a){return a.t===_attDeptFilter;});
   }
   return list;
 }
 
-// ── Get today's ATT_LOG entry for an agent ───────────────────
+// ── Get today’s ATT_LOG entry for an agent ───────────────────
 function attGetEntry(agentName){
   var d=today();
   for(var i=ATT_LOG.length-1;i>=0;i--){
@@ -4632,134 +4595,274 @@ function renderAttendance(){
   var now=new Date(Date.now()+3*60*60*1000);
   var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var dateStr=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
 
   var activeList=document.getElementById('att-list-page') || document.getElementById('att-list');
-  var activeDate=document.getElementById('att-date-lbl-page') || document.getElementById('att-date-lbl');
   var activeTabs=document.getElementById('att-dept-tabs-page') || document.getElementById('att-dept-tabs');
+  var topbarWrap=document.getElementById('att-topbar-wrap');
   if(!activeList) return;
 
-  if(activeDate) activeDate.textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
+  // Get all agents
+  var allAgents=attGetAgents();
+  var total=allAgents.length;
+  var marked=allAgents.filter(function(a){return attGetEntry(a.n);}).length;
+  var issues=allAgents.filter(function(a){var e=attGetEntry(a.n);return e&&(e.status==='noshow'||e.status==='sick');}).length;
+  var pct=total>0?Math.round(marked/total*100):0;
 
+  // Build top bar (navy, full-bleed)
+  if(topbarWrap){
+    topbarWrap.innerHTML='<div style="background:#0d3c6e;padding:16px 16px 14px;margin-bottom:0;">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">'
+      +'<div>'
+      +'<div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-.3px;">'+dateStr+'</div>'
+      +'<div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:2px;">Attendance · Today\'s Schedule</div>'
+      +'</div>'
+      +'<button onclick="attSaveAll()" style="padding:9px 14px;background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.25);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">💾 Save All</button>'
+      +'</div>'
+      // Progress bar
+      +'<div style="height:4px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden;margin-bottom:7px;">'
+      +'<div style="height:100%;width:'+pct+'%;background:#22c55e;border-radius:3px;transition:width .4s;"></div>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:12px;">'
+      +'<span>'+marked+' of '+total+' marked</span><span>'+pct+'%</span>'
+      +'</div>'
+      // Stat chips
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">'
+      +_attStatChip(total,'Total','rgba(255,255,255,.9)')
+      +_attStatChip(marked,'Marked','#22c55e')
+      +_attStatChip(total-marked,'Pending','#fbbf24')
+      +_attStatChip(issues,'Issues','#f87171')
+      +'</div>'
+      +'</div>';
+  }
+
+  // Dept filter tabs
   if(activeTabs){
     var allDepts=[];
     AGENTS.forEach(function(a){if(a.r!=='admin'&&allDepts.indexOf(a.t)<0)allDepts.push(a.t);});
     if(me.loginRole==='atl'||me.loginRole==='tl'){
       allDepts=[me.t||me.dept||''];
       _attDeptFilter=allDepts[0];
-    } else {
-      // wfm/manager/admin: show all depts; only keep filter if user explicitly chose one
-      // (filter is reset to '' on navigation, so on first load they see everything)
     }
-    var dh='<button class="ftab'+((!_attDeptFilter||_attDeptFilter==='')?(' on'):'')+'" onclick="_attDeptFilter=\'\';renderAttendance()">All</button>';
+    var selS='flex-shrink:0;padding:6px 13px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;border:1.5px solid ';
+    var dh='<button onclick="_attDeptFilter=\'\';renderAttendance()" style="'+selS+((!_attDeptFilter||_attDeptFilter==='')
+      ?'#0d3c6e;background:#0d3c6e;color:#fff;':'#e2e8f0;background:#fff;color:#64748b;')+'">All</button>';
     allDepts.forEach(function(d){
-      dh+='<button class="ftab'+(_attDeptFilter===d?' on':'')+'" onclick="_attDeptFilter=\''+d+'\';renderAttendance()">'+d+'</button>';
+      var on=_attDeptFilter===d;
+      dh+='<button onclick="_attDeptFilter=\''+d+'\';renderAttendance()" style="'+selS+(on?'#0d3c6e;background:#0d3c6e;color:#fff;':'#e2e8f0;background:#fff;color:#64748b;')+'">'+d+'</button>';
     });
     activeTabs.innerHTML=dh;
+    activeTabs.style.cssText='display:flex;gap:6px;overflow-x:auto;padding:12px 0 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;';
   }
 
   var agents=attGetAgents();
   if(!agents.length){
-    activeList.innerHTML='<div style="text-align:center;padding:30px;color:var(--t2);font-size:13px;">No agents in your team</div>';
+    activeList.innerHTML='<div style="text-align:center;padding:40px 20px;color:#94a3b8;">No agents in your team</div>';
     return;
   }
 
   var deptMap={};
-  agents.forEach(function(a){
-    if(!deptMap[a.t]) deptMap[a.t]=[];
-    deptMap[a.t].push(a);
-  });
+  agents.forEach(function(a){if(!deptMap[a.t])deptMap[a.t]=[];deptMap[a.t].push(a);});
 
   var html='';
   Object.keys(deptMap).forEach(function(dept){
     var da=deptMap[dept];
-    html+='<div class="dept-hdr"><div class="dept-title">'+dept+'</div><div class="dept-count">'+da.length+'</div></div>'
-      +'<div class="dept-body" style="padding:6px;display:flex;flex-direction:column;gap:6px;">';
+    var doneCount=da.filter(function(a){return attGetEntry(a.n);}).length;
+    html+='<div style="margin-bottom:14px;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);">'
+      // Dept header
+      +'<div style="background:#0d3c6e;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">'
+      +'<span style="font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.7px;">'+dept+'</span>'
+      +'<div style="display:flex;align-items:center;gap:7px;">'
+      +(doneCount>0?'<span style="font-size:10px;font-weight:700;color:#22c55e;background:rgba(34,197,94,.15);padding:2px 8px;border-radius:10px;">'+doneCount+' done</span>':'')
+      +'<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);">'+da.length+'</span>'
+      +'</div></div>'
+      // Cards
+      +'<div style="background:#fff;border:1px solid #e8edf3;border-top:none;border-radius:0 0 12px 12px;">';
     da.forEach(function(agent){ html+=attBuildCard(agent); });
-    html+='</div>';
+    html+='</div></div>';
   });
   activeList.innerHTML=html;
 }
 
-// ── Build one agent attendance card ─────────────────────────
+function _attStatChip(n,lbl,color){
+  return '<div style="background:rgba(255,255,255,.08);border-radius:9px;padding:8px 4px;text-align:center;">'
+    +'<div style="font-size:18px;font-weight:800;color:'+color+';line-height:1;">'+n+'</div>'
+    +'<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.45);margin-top:2px;">'+lbl+'</div>'
+    +'</div>';
+}
+
+// ── ATT status buttons config ─────────────────────────────────
+var ATT_BTN_GRID=[
+  {k:'on_time',    icon:'✅', lbl:'On Time',    cls:'sel-ontime', pillLbl:'On Time',   pillColor:'#16a34a', pillBg:'#f0fdf4', pillBorder:'#4ade80'},
+  {k:'late',       icon:'🕐', lbl:'Late',       cls:'sel-late',   pillLbl:'Late',      pillColor:'#b45309', pillBg:'#fffbeb', pillBorder:'#fbbf24'},
+  {k:'sick',       icon:'🤒', lbl:'Sick',       cls:'sel-sick',   pillLbl:'Sick',      pillColor:'#be123c', pillBg:'#fff1f2', pillBorder:'#fb7185'},
+  {k:'permission', icon:'📝', lbl:'Permission', cls:'sel-leave',  pillLbl:'Permission',pillColor:'#1d4ed8', pillBg:'#eff6ff', pillBorder:'#60a5fa'},
+  {k:'change',     icon:'🔄', lbl:'Upd.Time',   cls:'sel-change', pillLbl:'Updated',   pillColor:'#0f766e', pillBg:'#f0fdfa', pillBorder:'#2dd4bf'},
+  {k:'noshow',     icon:'❌', lbl:'No Show',    cls:'sel-absent', pillLbl:'No Show',   pillColor:'#7f1d1d', pillBg:'#fff1f1', pillBorder:'#ef4444'},
+];
+
+// ── Build one agent card ──────────────────────────────────────
 function attBuildCard(agent){
   var saved=attGetEntry(agent.n);
   var sel=_attSelMap[agent.id];
   var shift=gTodayS(agent)||'—';
   var isOff=['OFF','Leave','P-Leave','Sick'].indexOf(shift)>=0;
-  var statusHtml='';
-  if(saved&&!sel){
-    var sc=ATT_STATUSES.find(function(s){return s.k===saved.status;})||{pillCls:'p-gray',pillLbl:saved.status};
-    statusHtml='<span class="pill '+sc.pillCls+'" style="font-size:11px;">'+sc.pillLbl+'</span>';
-    if(saved.newShift) statusHtml+=' <span style="font-size:10px;color:var(--teal);font-weight:700;">→ '+saved.newShift+'</span>';
-    if(saved.note) statusHtml+='<div style="font-size:10px;color:var(--t2);margin-top:1px;">📝 '+saved.note+'</div>';
-  }
-  var btnHtml='';
-  ATT_STATUSES.forEach(function(st){
-    var isSel=sel&&sel.status===st.k;
-    btnHtml+='<button class="att-btn'+(isSel?' '+st.cls:'')+'" onclick="attSelectStatus(\''+agent.id+'\',\''+st.k+'\')">'
-      +st.lbl+'</button>';
+  var isDone=!!(saved&&!sel);
+
+  // Avatar color + initials
+  var avBg=avc(agent.n);
+  var avIni=ini(agent.n);
+
+  // Status buttons — horizontal scrollable pills
+  var selStyles={'sel-ontime':'background:#f0fdf4;color:#16a34a;border-color:#4ade80;','sel-late':'background:#fffbeb;color:#b45309;border-color:#fbbf24;','sel-sick':'background:#fff1f2;color:#be123c;border-color:#fb7185;','sel-leave':'background:#eff6ff;color:#1d4ed8;border-color:#60a5fa;','sel-change':'background:#f0fdfa;color:#0f766e;border-color:#2dd4bf;','sel-absent':'background:#fff1f1;color:#7f1d1d;border-color:#ef4444;'};
+  var btnHtml='<div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;">';
+  ATT_BTN_GRID.forEach(function(st){
+    var isSel=(sel&&sel.status===st.k)||(saved&&!sel&&saved.status===st.k);
+    var base='flex-shrink:0;padding:7px 13px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
+    var extra=isSel?(selStyles[st.cls]||''):'';
+    btnHtml+='<button onclick="attSelectStatus(\''+agent.id+'\',\''+st.k+'\')" style="'+base+extra+'">'+st.icon+' '+st.lbl+'</button>';
   });
+  btnHtml+='</div>';
+
+  // Extra fields (late/change)
   var extraHtml='<div class="att-extra'+(sel&&(sel.status==='late'||sel.status==='change')?' show':'')+'" id="att-ex-'+agent.id+'">';
   if(sel&&sel.status==='late'){
-    extraHtml+='<div class="att-extra-label">Arrival time</div>'
+    extraHtml+='<div style="font-size:10px;font-weight:700;color:#64748b;margin-top:10px;text-transform:uppercase;letter-spacing:.5px;">Arrival time</div>'
       +'<input class="att-time-inp" type="time" id="att-time-'+agent.id+'" value="'+(sel.note||'')+'" '
       +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].note=this.value">'
-      +'<div class="att-extra-label" style="margin-top:8px;">Note (optional)</div>'
+      +'<div style="font-size:10px;font-weight:700;color:#64748b;margin-top:10px;text-transform:uppercase;letter-spacing:.5px;">Note (optional)</div>'
       +'<textarea class="att-note-inp" placeholder="e.g. Traffic…" '
-      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].extraNote=this.value">'
-      +(sel.extraNote||'')+'</textarea>';
+      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].extraNote=this.value">'+(sel.extraNote||'')+'</textarea>';
   } else if(sel&&sel.status==='change'){
-    extraHtml+='<div class="att-extra-label">New shift start time</div>'
+    extraHtml+='<div style="font-size:10px;font-weight:700;color:#64748b;margin-top:10px;text-transform:uppercase;letter-spacing:.5px;">New shift time</div>'
       +'<input class="att-time-inp" type="time" id="att-time-'+agent.id+'" value="'+(sel.newShift||'')+'" '
       +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].newShift=this.value">'
-      +'<div class="att-extra-label" style="margin-top:8px;">Note (optional)</div>'
+      +'<div style="font-size:10px;font-weight:700;color:#64748b;margin-top:10px;text-transform:uppercase;letter-spacing:.5px;">Note (optional)</div>'
       +'<textarea class="att-note-inp" placeholder="e.g. Manager approved…" '
-      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].note=this.value">'
-      +(sel.note||'')+'</textarea>';
+      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].note=this.value">'+(sel.note||'')+'</textarea>';
   }
   extraHtml+='</div>';
-  var isSaved=!!(saved&&!sel);
-  var markerName=saved&&saved.markedBy;
-  var isMyEntry=markerName===(me.n||me.name);
-  var canEdit=isAdminUser()||isMyEntry;
-  var isLocked=isSaved&&!canEdit;
 
-  // Lock status buttons if entry already saved by someone else
-  if(isLocked){
-    btnHtml='<div style="font-size:11px;color:#c0392b;padding:6px 0 4px;font-style:italic;">🔒 Locked — marked by <strong>'+markerName+'</strong>. Admin only to edit.</div>';
-    extraHtml='<div class="att-extra"></div>';
-  }
-
+  // Save/clear row
   var actionHtml='';
-  if(isSaved){
-    var editBtn='';
-    if(canEdit){
-      editBtn=' &nbsp;·&nbsp; <button style="background:none;border:none;color:var(--navy);font-size:11px;font-weight:700;cursor:pointer;padding:0;" onclick="attEdit(\''+agent.id+'\')">'+( isAdminUser()&&!isMyEntry?'⚙️ Admin Edit':'Edit')+'</button>';
-    }
-    var badgeStyle=isLocked
-      ?'background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,.2);color:#c0392b;'
-      :'background:var(--gbg);border:1px solid var(--green);color:var(--green);';
-    actionHtml='<div style="'+badgeStyle+'border-radius:var(--r);padding:8px 12px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;margin:0 13px 11px;">'
-      +(isLocked?'🔒':'✅')+' Saved by <strong>'+markerName+'</strong> at '+saved.ts.substring(11,16)+editBtn+'</div>';
+  if(saved&&!sel){
+    var stConf=ATT_BTN_GRID.find(function(s){return s.k===saved.status;})||{pillLbl:saved.status,pillColor:'#64748b',pillBg:'#f8fafc',pillBorder:'#e2e8f0'};
+    actionHtml='<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 13px 10px;background:#f8fafc;border-top:1px solid #edf2f7;">'
+      +'<div style="display:flex;align-items:center;gap:7px;">'
+      +'<span style="font-size:11px;font-weight:700;color:#16a34a;">✅</span>'
+      +'<span style="font-size:11px;color:#475569;font-weight:600;">'+saved.markedBy+' · '+saved.ts.substring(11,16)+'</span>'
+      +'<span style="font-size:10px;font-weight:800;color:'+stConf.pillColor+';background:'+stConf.pillBg+';border:1.5px solid '+stConf.pillBorder+';padding:2px 8px;border-radius:10px;">'+stConf.pillLbl+'</span>'
+      +(saved.newShift?'<span style="font-size:10px;color:#0f766e;font-weight:700;">→ '+saved.newShift+'</span>':'')
+      +'</div>'
+      +'<button onclick="attEdit(\''+agent.id+'\')" style="padding:5px 11px;background:none;border:1.5px solid #cbd5e1;border-radius:8px;font-size:10px;font-weight:700;color:#475569;cursor:pointer;">Edit</button>'
+      +'</div>';
   } else if(sel){
-    actionHtml='<div class="att-save-row">'
-      +'<button class="att-save-btn" onclick="attSaveOne(\''+agent.id+'\')">💾 Save</button>'
-      +'<button class="att-clear-btn" onclick="attClear(\''+agent.id+'\')">✕ Clear</button>'
+    actionHtml='<div style="display:flex;gap:7px;padding:10px 13px 12px;">'
+      +'<button onclick="attSaveOne(\''+agent.id+'\')" style="flex:1;padding:11px;background:#0d3c6e;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">💾 Save</button>'
+      +'<button onclick="attClear(\''+agent.id+'\')" style="padding:11px 15px;background:#f1f5f9;color:#64748b;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">✕</button>'
       +'</div>';
   }
-  return '<div class="att-card" id="attc-'+agent.id+'">'
-    +'<div class="att-card-head">'
-    +'<div class="att-av" style="background:'+avc(agent.n)+'">'+ini(agent.n)+'</div>'
-    +'<div style="flex:1;min-width:0;"><div class="att-name">'+agent.n+'</div>'
-    +(statusHtml?'<div style="margin-top:2px;">'+statusHtml+'</div>':'')+'</div>'
-    +'<div class="att-shift-badge">'+(isOff?'<span style="color:var(--t3);">'+shift+'</span>':shift)+'</div>'
+
+  // Card border bottom style
+  var cardBorderStyle='border-bottom:1px solid #f1f5f9;';
+
+  return '<div id="attc-'+agent.id+'" style="'+cardBorderStyle+'">'
+    // Agent header row
+    +'<div style="display:flex;align-items:center;gap:11px;padding:12px 13px 0;">'
+    +'<div style="width:40px;height:40px;border-radius:11px;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;position:relative;">'
+    +avIni
+    +(isDone?'<span style="position:absolute;bottom:-3px;right:-3px;width:15px;height:15px;background:#22c55e;border-radius:50%;font-size:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;border:2px solid #fff;">✓</span>':'')
     +'</div>'
-    +'<div class="att-btns">'+btnHtml+'</div>'
-    +extraHtml+actionHtml
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="font-size:13px;font-weight:800;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+agent.n+'</div>'
+    +'<div style="font-size:10px;color:#94a3b8;margin-top:1px;">'+agent.t+'</div>'
+    +'</div>'
+    +'<div style="font-size:11px;font-weight:700;color:'+(isOff?'#94a3b8':'#334155')+';background:#f1f5f9;padding:4px 9px;border-radius:7px;white-space:nowrap;border:1px solid #e2e8f0;">'+shift+'</div>'
+    +'</div>'
+    // Status buttons
+    +'<div style="padding:8px 13px 10px;">'
+    +btnHtml
+    +(sel?extraHtml:'')
+    +'</div>'
+    +actionHtml
     +'</div>';
 }
 
+
 // ── Select status for agent ──────────────────────────────────
+function attSelectStatus(agentId,status){
+  if(!_attSelMap[agentId]) _attSelMap[agentId]={};
+  _attSelMap[agentId].status=status;
+  if(status!=='late') delete _attSelMap[agentId].note;
+  if(status!=='change') delete _attSelMap[agentId].newShift;
+  var agent=AGENTS.find(function(a){return a.id===agentId;});
+  if(!agent) return;
+  var card=document.getElementById('attc-'+agentId);
+  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
+}
+
+// ── Edit a saved entry ───────────────────────────────────────
+function attEdit(agentId){
+  var agent=AGENTS.find(function(a){return a.id===agentId;});
+  if(!agent) return;
+  var saved=attGetEntry(agent.n);
+  if(saved) _attSelMap[agentId]={status:saved.status,note:saved.note||'',newShift:saved.newShift||'',fromTime:((saved.newShift||'').split(' - ')[0]||''),toTime:((saved.newShift||'').split(' - ')[1]||''),extraNote:saved.extraNote||''};
+  var card=document.getElementById('attc-'+agentId);
+  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
+}
+
+// ── Clear selection ───────────────────────────────────────────
+function attClear(agentId){
+  delete _attSelMap[agentId];
+  var agent=AGENTS.find(function(a){return a.id===agentId;});
+  if(!agent) return;
+  var card=document.getElementById('attc-'+agentId);
+  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
+}
+
+// ── Save one agent attendance ─────────────────────────────────
+function attSaveOne(agentId){
+  var agent=AGENTS.find(function(a){return a.id===agentId;});
+  if(!agent){sp_showToast('Agent not found','err');return;}
+  var sel=_attSelMap[agentId];
+  if(!sel||!sel.status){sp_showToast('Select a status first','err');return;}
+  var arrivalNote='';
+  if(sel.status==='late') arrivalNote=(sel.note?'Arrived '+sel.note:'')+(sel.extraNote?(' — '+sel.extraNote):'');
+  else if(sel.status==='change') arrivalNote=sel.note||'';
+  var entry={
+    id:'ATT'+(Date.now()%1000000),
+    agent:agent.n,
+    date:today(),
+    status:sel.status,
+    note:arrivalNote,
+    newShift:sel.status==='change'?(sel.newShift||''):'',
+    markedBy:me.n||me.name||'',
+    ts:new Date(Date.now()+3*60*60*1000).toISOString().replace('T',' ').substring(0,16)
+  };
+  // Update local ATT_LOG
+  ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===agent.n&&e.date===today());});
+  ATT_LOG.push(entry);
+  // Save to Sheets: Agent | Date | Status | Note | NewShift | MarkedBy | Timestamp
+  saveSheet('Attendance',[entry.agent,entry.date,entry.status,entry.note,entry.newShift,entry.markedBy,entry.ts]);
+  logA('ATTENDANCE',agent.n+' → '+entry.status.toUpperCase()+(entry.newShift?' (→'+entry.newShift+')':''),'inf');
+  delete _attSelMap[agentId];
+  sp_showToast(agent.n.split(' ')[0]+' → '+entry.status,'ok');
+  var card=document.getElementById('attc-'+agentId);
+  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
+  if(agent.n===(me.n||me.name)&&typeof renderMySchedule==='function') renderMySchedule();
+  if(agent.n===(me.n||me.name)&&typeof renderProfilePage==='function') renderProfilePage();
+}
+
+// ── Save all pending ──────────────────────────────────────────
+function attSaveAll(){
+  var keys=Object.keys(_attSelMap).filter(function(k){return _attSelMap[k]&&_attSelMap[k].status;});
+  if(!keys.length){sp_showToast('No changes to save','inf');return;}
+  keys.forEach(function(id){attSaveOne(id);});
+}
+
+// ── Get today's ATT_LOG entry (for schedule display) ─────────
+function attTodayStatus(agentName){return attGetEntry(agentName);}
+
 function attSelectStatus(agentId,status){
   // Block if already saved by someone else and current user can't edit
   var saved=attGetEntry((AGENTS.find(function(a){return a.id===agentId;})||{}).n);
