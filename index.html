@@ -1497,7 +1497,7 @@ input,select,textarea,button{font-size:16px;}
         <div class="u-hc-val" id="u-balance-num">&mdash;</div>
         <div class="u-hc-sub" id="u-balance-used">0 min used</div>
         <div class="u-hc-bar"><div class="u-hc-bar-fill" id="u-balance-fill" style="width:0%;"></div></div>
-        <div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:4px;" id="u-balance-total">45 min total</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:4px;" id="u-balance-total">60 min total</div>
       </div>
     </div>
   </div>
@@ -1622,10 +1622,10 @@ input,select,textarea,button{font-size:16px;}
     </div>
     <div class="balcard">
       <div class="bctop"><div class="bclbl">Break Balance</div><div class="bcshift" id="bcshift">Shift: --</div></div>
-      <div class="bcrow"><div class="bcnum" id="bcnum">45</div><div class="bcunit">min remaining</div></div>
-      <div class="bcsub" id="bcsub">0 of 45 minutes scheduled</div>
+      <div class="bcrow"><div class="bcnum" id="bcnum">60</div><div class="bcunit">min remaining</div></div>
+      <div class="bcsub" id="bcsub">0 of 60 minutes scheduled</div>
       <div class="bcpwrap"><div class="bcprog" id="bcprog" style="width:0%"></div></div>
-      <div class="bcprow"><span id="bcused">0 min used</span><span id="bctotal">45 min total</span></div>
+      <div class="bcprow"><span id="bcused">0 min used</span><span id="bctotal">60 min total</span></div>
     </div>
     <div class="card" id="bookedCard" style="display:none">
       <div class="ch"><div class="ctitle">⏰ Break Booked</div></div>
@@ -1751,9 +1751,9 @@ input,select,textarea,button{font-size:16px;}
     <div class="sh">Settings</div>
     <div class="card">
       <div class="cb" style="padding:2px 13px">
-        <div class="srow2"><div><div class="srl">Daily Break Allowance</div><div class="srs">Minutes per agent per shift</div></div><input type="number" class="si" id="smax" value="45" min="15" max="120"></div>
+        <div class="srow2"><div><div class="srl">Daily Break Allowance</div><div class="srs">Minutes per agent per shift</div></div><input type="number" class="si" id="smax" value="60" min="15" max="120"></div>
         <div class="srow2"><div><div class="srl">Max Concurrent</div><div class="srs">Agents on break at same time</div></div><input type="number" class="si" id="scon" value="2" min="1" max="10"></div>
-        <div class="srow2"><div><div class="srl">Max Single Break (min)</div><div class="srs">Maximum per booking</div></div><input type="number" class="si" id="smaxb" value="30" min="5" max="90"></div>
+        <div class="srow2"><div><div class="srl">Max Single Break (min)</div><div class="srs">Maximum per booking</div></div><input type="number" class="si" id="smaxb" value="60" min="5" max="120"></div>
       </div>
       <div class="cb" style="padding:11px 13px;border-top:1px solid var(--border)">
         <button class="btn btn-navy" onclick="saveSett()">💾&nbsp; Save Settings</button>
@@ -2514,7 +2514,7 @@ var _retryTO = null;         // retry timer for failed writes
 
 // Default empty structure
 function defD(){
-  return {breaks:{},logins:{},dailyKpi:{extra:[],meeting:[],permission:[],issue:[]},settings:{dailyMin:45,maxCon:2,maxBreak:30,announce:''},ts:0};
+  return {breaks:{},logins:{},dailyKpi:{extra:[],meeting:[],permission:[],issue:[]},settings:{dailyMin:60,maxCon:2,maxBreak:60,announce:''},ts:0};
 }
 
 // ── READ: always from cache (cache is kept fresh by continuous pull) ──
@@ -2896,7 +2896,7 @@ function renderStrip(){
   var _asn=document.getElementById('asname');if(_asn)_asn.textContent=me.name;
   var eL=me.shiftEndMin>=1440?fmt12(pad(me.shiftEndMin%1440/60|0)+':00')+' +1d':fmt12(me.shiftEnd);
   document.getElementById('asinfo').textContent=me.role+' · '+fmt12(me.shift)+' – '+eL+(me.handleVoicemail?' · Voicemail':'');
-  var d=gd();var daily=(d.settings&&d.settings.dailyMin)||45;
+  var d=gd();var daily=(d.settings&&d.settings.dailyMin)||60;
   var used=schedMins(me.name,d);document.getElementById('balchip').textContent=Math.max(daily-used,0)+' min left';
 }
 function tickTimer(){
@@ -2965,7 +2965,7 @@ function renderAll(){
 }
 
 function renderHome(){
-  var d=gd();var s=d.settings||{};var daily=s.dailyMin||45;
+  var d=gd();var s=d.settings||{};var daily=s.dailyMin||60;
   var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);var b=myBreak(d);
   var ann=s.announce||'';var ab=document.getElementById('annBanner');
   if(ann.trim()){ab.className='ann-banner on';document.getElementById('annTxt').textContent=ann;}else ab.className='ann-banner';
@@ -3032,7 +3032,7 @@ function renderHome(){
   // ── Full Team Status Panel ──────────────────────────
   var teamEl=document.getElementById('teamFullPanel');
   if(!teamEl) return;
-  var daily2=s.dailyMin||45;
+  var daily2=s.dailyMin||60;
   var logins2=(d.logins&&d.logins[today()])||{};
   var smap2={};
   EMPS.forEach(function(e){smap2[e.name]={st:'off',sched:0,used:0,brk:null};});
@@ -3175,15 +3175,15 @@ function pickSlot(m){
   buildDurBtns();setTimeout(function(){var dc=document.getElementById('durcard');if(dc)dc.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
 }
 function buildDurBtns(){
-  var d=gd();var s=d.settings||{};var daily=s.dailyMin||45;var maxB=s.maxBreak||30;
+  var d=gd();var s=d.settings||{};var daily=s.dailyMin||60;var maxB=s.maxBreak||60;
   var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);var maxDur=Math.min(maxB,rem);
   document.getElementById('durbal').textContent=rem+' min';
-  var h='';[15,20,30].forEach(function(v){var ok=v<=maxDur;h+='<button class="durbtn'+(selDur===v?' sel':'')+'" onclick="setDur('+v+')"'+(ok?'':' disabled')+'>'+v+' min</button>';});
+  var h='';[15,20,30,60].forEach(function(v){var ok=v<=maxDur;h+='<button class="durbtn'+(selDur===v?' sel':'')+'" onclick="setDur('+v+')"'+(ok?'':' disabled')+'>'+v+' min</button>';});
   document.getElementById('durrow').innerHTML=h;
 }
 function setDur(v){selDur=v;buildDurBtns();}
 function confirmBook(){
-  if(!selSlot)return;var d=gd();var s=d.settings||{};var daily=s.dailyMin||45;var mc=s.maxCon||2;
+  if(!selSlot)return;var d=gd();var s=d.settings||{};var daily=s.dailyMin||60;var mc=s.maxCon||2;
   var vmExtra=(me&&me.handleVoicemail)?1:0;var maxAllowed=mc+vmExtra;
   var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);
   if(selDur>rem){showToast('Not enough time remaining','err');return;}
@@ -3202,7 +3202,7 @@ function renderTeamMonitor(){
   var meterEl=document.getElementById('mon-meter');
   var filtersEl=document.getElementById('mon-filters');
   if(!el) return;
-  var d=gd();var s=d.settings||{};var mc=s.maxCon||2;var daily=s.dailyMin||45;
+  var d=gd();var s=d.settings||{};var mc=s.maxCon||2;var daily=s.dailyMin||60;
   var logins=(d.logins&&d.logins[today()])||{};var bs=tdb(d);
   var smap={};
   EMPS.forEach(function(e){smap[e.name]={st:'off',brk:null,sched:0,used:0};});
@@ -3277,7 +3277,7 @@ function renderTeamMonitor(){
   el.innerHTML=h||'<div class="empty" style="padding:30px 0;text-align:center;color:var(--t3);">No agents match this filter</div>';
 }
 function renderTeam(){
-  var d=gd();var s=d.settings||{};var mc=s.maxCon||2;var daily=s.dailyMin||45;
+  var d=gd();var s=d.settings||{};var mc=s.maxCon||2;var daily=s.dailyMin||60;
   var logins=(d.logins&&d.logins[today()])||{};var bs=tdb(d);
   var smap={};
   EMPS.forEach(function(e){smap[e.name]={st:'off',brk:null,sched:0,used:0};});
@@ -3473,7 +3473,7 @@ function renderHistory(){
 
 function renderAdmin(){
   var d=gd();var s=d.settings||{};
-  document.getElementById('smax').value=s.dailyMin||45;document.getElementById('scon').value=s.maxCon||2;document.getElementById('smaxb').value=s.maxBreak||30;document.getElementById('annInput').value=s.announce||'';
+  document.getElementById('smax').value=s.dailyMin||60;document.getElementById('scon').value=s.maxCon||2;document.getElementById('smaxb').value=s.maxBreak||60;document.getElementById('annInput').value=s.announce||'';
   var bs=tdb(d);var h='';
   if(!bs.length)h='<div class="empty" style="padding:12px"><div class="ep">No breaks today</div></div>';
   else bs.filter(function(b){return b.status!=='cancelled';}).forEach(function(b){h+='<div class="adrow"><div style="width:28px;height:28px;border-radius:7px;background:'+avc(b.agent)+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0">'+ini(b.agent)+'</div><div style="flex:1"><div style="font-size:13px;font-weight:700">'+b.agent+'</div><div style="font-size:11px;color:var(--t2)">'+fmt12(b.breakStart)+' · '+b.duration+' min</div></div><span class="pill '+(b.status==='active'?'p-amber':b.status==='done'?'p-green':'p-navy')+'">'+b.status+'</span></div>';});
@@ -6023,7 +6023,7 @@ function renderUnifiedHome(){
   var isMgr=isManagementUser(me);
   var balCard=document.getElementById('u-hero-break');
   if(balCard) balCard.style.display=isMgr?'none':'';
-  var daily = s.dailyMin||45;
+  var daily = s.dailyMin||60;
   var used  = typeof schedMins==='function' ? schedMins(me.name,d) : 0;
   var rem   = Math.max(daily-used,0);
   var pct   = Math.min(used/daily*100,100);
@@ -6339,7 +6339,7 @@ document.addEventListener('visibilitychange',function(){
 function renderProfilePage(){
   if(!me) return;
   initSpProfile();
-  var d=gd(); var s=d.settings||{}; var daily=s.dailyMin||45;
+  var d=gd(); var s=d.settings||{}; var daily=s.dailyMin||60;
   // -- Break usage today
   var used=schedMins(me.n||me.name,d); var rem=Math.max(daily-used,0);
   var pct=Math.min(used/daily*100,100);
