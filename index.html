@@ -2458,7 +2458,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxdxBf5WO9973zpklSOk6IVK4rnl6h5GGPP_KH2aVfQGCVK5A3yAMzTell3uB0c_jf31w/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbyJMt-tCwfVKEpZxrYa1VNg9LiU44Weh21nRCZrXHd1zkBY3XIq-thx_x-dK4WNuBk3yA/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2680,21 +2680,41 @@ function _applyRemote(remote){
   // ── Populate SP data arrays from Sheets ──
   if(Array.isArray(remote.swaps)){
     SWAPS=remote.swaps.map(function(s){
-      // Normalize legacy "pending" status from Sheets → "pending_peer"
       if(s.status==='pending') s.status='pending_peer';
       return s;
-    });
-    // Re-apply approved swaps to AGENTS schedule array
-    SWAPS.filter(function(s){return s.status==='approved';}).forEach(function(s){
-      _applySwapToSchedule&&_applySwapToSchedule(s);
     });
   }
   if(Array.isArray(remote.leaves)) { LEAVES=remote.leaves; }
   if(Array.isArray(remote.actlog)) { ACTLOG=remote.actlog; }
   if(Array.isArray(remote.attendance)) { ATT_LOG=remote.attendance; }
 
-  if((wasChanged||remote.swaps||remote.leaves||remote.attendance)&&me&&me.n) renderAll();
+  // ── Live schedule from Sheet — replaces hardcoded AGENTS ──
+  if(Array.isArray(remote.agents)&&remote.agents.length){
+    AGENTS.length=0;
+    remote.agents.forEach(function(a){ AGENTS.push(a); });
+    if(Array.isArray(remote.dates)&&remote.dates.length){
+      DATES.length=0;
+      remote.dates.forEach(function(d){ DATES.push(d); });
+      remote.dates.forEach(function(d,i){
+        var dt=new Date(d+'T00:00:00Z');
+        var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        DL[i]=days[dt.getUTCDay()]+' '+d.slice(8);
+      });
+      DL.length=remote.dates.length;
+    }
+    if(Array.isArray(remote.wknd)){
+      WKND.length=0;
+      remote.wknd.forEach(function(i){ WKND.push(i); });
+    }
+    if(me&&me.n){
+      var myAg=AGENTS.find(function(a){return a.n===me.n;});
+      if(myAg){ me.sch=myAg.sch; me.t=myAg.t; me.id=myAg.id; }
+    }
+  }
+
+  if((wasChanged||remote.swaps||remote.leaves||remote.attendance||remote.agents)&&me&&me.n) renderAll();
 }
+
 
 // ── Sync indicator dot ──
 function setSy(ok){
@@ -3638,12 +3658,12 @@ function patchBsTopbar(){
 // ════════════════════════════════════════════════
 // DATA
 // ════════════════════════════════════════════════
-const DATES=['2026-03-02','2026-03-03','2026-03-04','2026-03-05','2026-03-06','2026-03-07','2026-03-08','2026-03-09','2026-03-10','2026-03-11','2026-03-12','2026-03-13','2026-03-14'];
-const DL=['Mon 02','Tue 03','Wed 04','Thu 05','Fri 06','Sat 07','Sun 08','Mon 09','Tue 10','Wed 11','Thu 12','Fri 13','Sat 14'];
+let DATES=['2026-03-02','2026-03-03','2026-03-04','2026-03-05','2026-03-06','2026-03-07','2026-03-08','2026-03-09','2026-03-10','2026-03-11','2026-03-12','2026-03-13','2026-03-14'];
+let DL=['Mon 02','Tue 03','Wed 04','Thu 05','Fri 06','Sat 07','Sun 08','Mon 09','Tue 10','Wed 11','Thu 12','Fri 13','Sat 14'];
 const TODAY=(function(){var d=new Date(Date.now()+3*60*60*1000);return d.toISOString().split('T')[0];})();
-const WKND=[4,5,11,12];
+let WKND=[4,5,11,12];
 
-const AGENTS=[
+let AGENTS=[
   // ── INBOUND (Image 4 rows 34-60) ─────────────────────────────────
   {id:'I01',n:'Sarah Alqattan',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
   {id:'I27',n:'Fouzeyah Erzouqi I',t:'Inbound',r:'agent',sch:['OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF']},
@@ -5206,15 +5226,8 @@ function openApprovals(){
   },150);
 }
 function _applySwapToSchedule(s){
-  // Swap the sch[] entries for both agents on the swap date
-  var idx=DATES.indexOf(s.date);
-  if(idx<0)return;
-  var agA=AGENTS.find(function(a){return a.n===s.from;});
-  var agB=AGENTS.find(function(a){return a.n===s.to;});
-  if(!agA||!agB)return;
-  var tmp=agA.sch[idx];
-  agA.sch[idx]=agB.sch[idx];
-  agB.sch[idx]=tmp;
+  // NO-OP: Schedule display is handled by getSwapOverride() in getDisplayShift().
+  // Mutating AGENTS[].sch[] caused all entries to show as OFF after approved swaps loaded.
 }
 
 function renderLeaveApproval(){
@@ -5293,38 +5306,43 @@ function sp_sp_renderAdmin(){
 }
 function renderUploadPanel(){
   document.getElementById('at-upload').innerHTML=
-    '<div class="sh">Upload Schedule</div>'
-    +'<div class="dropzone" id="dropZ" onclick="document.getElementById(\'fileIn\').click()" '
-    +'ondragover="event.preventDefault();this.classList.add(\'drag\')" '
-    +'ondragleave="this.classList.remove(\'drag\')" '
-    +'ondrop="handleDrop(event)">'
-    +'<div class="dz-ic">📂</div><h4>Click or Drag & Drop</h4>'
-    +'<p>CSV or Excel (.xlsx) — columns: Name, Team, Role, Shift per date</p></div>'
-    +'<input type="file" id="fileIn" accept=".csv,.xlsx" style="display:none" onchange="handleFile(event)">'
-    +'<div id="uploadFeedback" style="margin-top:10px;"></div>'
-    +'<div class="sh">Manual Entry</div>'
+    '<div class="sh">📋 Schedule Source — Google Sheet</div>'
     +'<div class="card"><div class="cb">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">'
+    +'<div style="width:40px;height:40px;border-radius:10px;background:rgba(22,163,74,.1);display:flex;align-items:center;justify-content:center;font-size:20px;">📊</div>'
+    +'<div><div style="font-weight:700;font-size:13px;color:var(--navy);">Live Sync from Google Sheets</div>'
+    +'<div style="font-size:11px;color:var(--t2);">Schedule updates every 3 seconds automatically</div></div></div>'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px;">SHEET TAB NAME</div>'
+    +'<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:monospace;font-size:13px;color:var(--navy);margin-bottom:12px;">Schedule</div>'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px;">REQUIRED COLUMNS (Row 1 = header)</div>'
+    +'<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:monospace;font-size:11px;line-height:1.8;color:#334155;">'
+    +'<span style="background:#0D3C6E;color:#fff;padding:1px 6px;border-radius:3px;margin-right:4px;">A</span> ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ I01, O01, T01 …<br>'
+    +'<span style="background:#0D3C6E;color:#fff;padding:1px 6px;border-radius:3px;margin-right:4px;">B</span> Name &nbsp;&nbsp;&nbsp;→ Sarah Alqattan<br>'
+    +'<span style="background:#0D3C6E;color:#fff;padding:1px 6px;border-radius:3px;margin-right:4px;">C</span> Team &nbsp;&nbsp;&nbsp;→ Inbound, ITM, Wage …<br>'
+    +'<span style="background:#0D3C6E;color:#fff;padding:1px 6px;border-radius:3px;margin-right:4px;">D</span> Role &nbsp;&nbsp;&nbsp;→ agent, management<br>'
+    +'<span style="background:#0A7FAE;color:#fff;padding:1px 6px;border-radius:3px;margin-right:4px;">E+</span> Dates &nbsp;&nbsp;→ 2026-03-02, 2026-03-03 … (YYYY-MM-DD format)'
+    +'</div>'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t2);margin:12px 0 6px;">SHIFT VALUES</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:5px;">'
+    +['09:00-16:00','10:00-17:00','17:00-00:00','19:00-02:00','20:00-03:00','M 02:00-09:00','C 02:00-09:00','OFF','Leave','Sick','P-Leave']
+      .map(function(v){return'<span style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:11px;font-family:monospace;">'+v+'</span>';}).join('')
+    +'</div>'
+    +'</div></div>'
+    +'<div class="sh">✏️ Quick Shift Edit</div>'
+    +'<div class="card"><div class="cb">'
+    +'<div style="font-size:11px;color:var(--t2);margin-bottom:10px;">Edit one shift → saves directly to the Schedule sheet → all users see it on next sync</div>'
     +'<div class="fg"><label class="lbl">Agent</label>'
     +'<select class="fld" id="manA">'+AGENTS.map(function(a){return'<option value="'+a.id+'">'+a.n+' ('+a.t+')</option>';}).join('')+'</select></div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" class="fg">'
-    +'<div><label class="lbl">Date</label><input type="date" class="fld" id="manD" value="2026-03-04"></div>'
-    +'<div><label class="lbl">Shift</label><select class="fld" id="manS">'
+    +'<div><label class="lbl">Date</label><input type="date" class="fld" id="manD" value="'+today()+'"></div>'
+    +'<div><label class="lbl">New Shift</label><select class="fld" id="manS">'
     +'<option>09:00-16:00</option><option>10:00-17:00</option><option>12:00-19:00</option>'
-    +'<option>17:00-00:00</option><option>19:00-02:00</option><option>20:00-03:00</option>'
+    +'<option>15:00-00:00</option><option>17:00-00:00</option><option>19:00-02:00</option><option>20:00-03:00</option>'
     +'<option>M 02:00-09:00</option><option>C 02:00-09:00</option>'
     +'<option>OFF</option><option>Leave</option><option>Sick</option><option>P-Leave</option>'
     +'</select></div></div>'
-    +'<button class="btn btn-navy" onclick="saveManual()">💾 Save Change</button></div></div>'
-    +'<div class="sh">CSV Format</div>'
-    +'<div class="card"><div class="cb">'
-    +'<div class="code-blk">Name,Team,Role,02/03/2026,...,14/03/2026\nSarah Alqattan,Inbound,Agent,10:00-17:00,...,OFF\nNahla Ibrahim,Wage,Agent,P-Leave,...,P-Leave</div>'
-    +'</div></div>'
-    +'<div class="sh">Upload History</div><div class="card"><div class="cb" id="uploadHist">'
-    +ACTLOG.filter(function(e){return e.action.includes('UPLOAD');}).map(function(e){
-      return '<div class="histrow"><div class="hicon" style="background:var(--gbg);">📤</div>'
-        +'<div class="hinfo"><div class="htitle">'+e.detail+'</div><div class="hmeta">'+fmtTS(e.ts)+' · '+e.user+'</div></div></div>';
-    }).join('')
-    +'<div id="emptyUpload">'+(ACTLOG.filter(function(e){return e.action.includes('UPLOAD');}).length?'':'<div class="empty"><div class="ep">No uploads yet</div></div>')+'</div>'
+    +'<button class="btn btn-navy" onclick="saveManual()">💾 Save to Sheet</button>'
+    +'<div id="uploadFeedback" style="margin-top:10px;"></div>'
     +'</div></div>';
 }
 function handleFile(ev){
@@ -5333,11 +5351,41 @@ function handleFile(ev){
   fb.innerHTML='<div style="background:rgba(13,92,166,.06);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;font-size:12px;color:var(--navy);">⏳ Reading '+f.name+'…</div>';
   var r=new FileReader();
   r.onload=function(e){
-    var rows=e.target.result.split('\n').filter(function(x){return x.trim();}).length-1;
-    logA('UPLOAD_SCHEDULE',f.name+' ('+rows+' rows)','inf');
-    saveSheet('ScheduleUploads',[new Date().toISOString(),me.n,f.name,rows,'uploaded']);
-    fb.innerHTML='<div style="background:var(--gbg);border:1px solid rgba(61,181,73,.3);border-radius:var(--r);padding:11px 13px;font-size:12px;color:var(--green);">✅ '+f.name+' uploaded — '+rows+' rows processed & saved to Google Sheets.</div>';
-    sp_showToast('Schedule uploaded: '+rows+' rows','ok');
+    try{
+      var lines=e.target.result.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+      if(lines.length<2){fb.innerHTML='<div style="color:var(--red);padding:10px;">❌ File too short</div>';return;}
+      var header=lines[0].split(',').map(function(h){return h.trim().replace(/"/g,'');});
+      // Expect: ID, Name, Team, Role, date1, date2, ...
+      var dateHeaders=header.slice(4);
+      var agents=[];
+      for(var i=1;i<lines.length;i++){
+        var cols=lines[i].split(',').map(function(c){return c.trim().replace(/"/g,'');});
+        if(!cols[1])continue;
+        agents.push({id:cols[0]||'',n:cols[1],t:cols[2]||'',r:(cols[3]||'agent').toLowerCase(),
+          sch:dateHeaders.map(function(_,j){return cols[4+j]||'OFF';})});
+      }
+      // Push to Sheet
+      fb.innerHTML='<div style="background:rgba(13,92,166,.06);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;font-size:12px;color:var(--navy);">⏳ Saving '+agents.length+' agents to Google Sheets…</div>';
+      fetch(API,{method:'POST',body:JSON.stringify({action:'saveSchedule',agents:agents,dates:dateHeaders}),headers:{'Content-Type':'text/plain'}})
+        .then(function(r){return r.json();})
+        .then(function(res){
+          if(res&&res.ok){
+            // Update local AGENTS array immediately
+            AGENTS.length=0; agents.forEach(function(a){AGENTS.push(a);});
+            DATES.length=0; dateHeaders.forEach(function(d){DATES.push(d);});
+            logA('UPLOAD_SCHEDULE',f.name+' ('+agents.length+' agents, '+dateHeaders.length+' dates)','inf');
+            fb.innerHTML='<div style="background:var(--gbg);border:1px solid rgba(61,181,73,.3);border-radius:var(--r);padding:11px 13px;font-size:12px;color:var(--green);">✅ '+agents.length+' agents, '+dateHeaders.length+' dates saved to Google Sheets — all users will get the new schedule on next sync.</div>';
+            sp_showToast('Schedule uploaded ✓','ok');
+            if(typeof buildSchGrid==='function') buildSchGrid();
+          } else {
+            fb.innerHTML='<div style="color:var(--red);padding:10px;">❌ Sheet error: '+(res.error||'unknown')+'</div>';
+          }
+        }).catch(function(err){
+          fb.innerHTML='<div style="color:var(--red);padding:10px;">❌ Network error — schedule saved locally only</div>';
+        });
+    }catch(err){
+      fb.innerHTML='<div style="color:var(--red);padding:10px;">❌ Parse error: '+err.message+'</div>';
+    }
   };
   r.readAsText(f);
 }
@@ -5346,16 +5394,43 @@ function handleDrop(ev){
   var f=ev.dataTransfer.files[0];
   if(f){document.getElementById('fileIn').files=ev.dataTransfer.files;handleFile({target:{files:[f]}});}
 }
+// Seed the Schedule sheet from current hardcoded AGENTS (run once after deployment)
+function seedScheduleToSheet(){
+  if(!confirm('Push current hardcoded schedule to Google Sheet? This will overwrite the Schedule tab.')) return;
+  var fb=document.getElementById('uploadFeedback');
+  if(fb) fb.innerHTML='<div style="padding:10px;color:var(--navy);">⏳ Seeding schedule to Sheet…</div>';
+  fetch(API,{method:'POST',body:JSON.stringify({action:'saveSchedule',agents:AGENTS,dates:DATES}),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res&&res.ok){
+        sp_showToast('Schedule seeded to Sheet ✓ ('+AGENTS.length+' agents)','ok');
+        if(fb) fb.innerHTML='<div style="background:var(--gbg);padding:11px 13px;border-radius:var(--r);font-size:12px;color:var(--green);">✅ '+AGENTS.length+' agents seeded to Google Sheets successfully.</div>';
+      } else {
+        sp_showToast('Sheet error: '+(res&&res.error),'err');
+      }
+    }).catch(function(){ sp_showToast('Network error','err'); });
+}
 function saveManual(){
   var agId=document.getElementById('manA').value;
   var d=document.getElementById('manD').value;
   var s=document.getElementById('manS').value;
   var ag=AGENTS.find(function(a){return a.id===agId;});
+  if(!ag){sp_showToast('Agent not found','err');return;}
   var di=DATES.indexOf(d);
-  if(di>=0&&ag) ag.sch[di]=s;
+  var fb=document.getElementById('uploadFeedback');
+  if(fb) fb.innerHTML='<div style="color:var(--navy);font-size:12px;padding:8px 0;">⏳ Saving to Sheet…</div>';
+  if(di>=0) ag.sch[di]=s;
   logA('MANUAL_EDIT',ag.n+' on '+d+' → '+s,'inf');
-  saveSheet('ScheduleChanges',[d,ag.n,s,me.n,new Date().toISOString()]);
-  showToast(ag.n+' → '+s+' on '+d,'ok');
+  fetch(API,{method:'POST',body:JSON.stringify({action:'updateShift',agent:ag.n,date:d,shift:s,changedBy:me.n}),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      var ok=res&&res.ok;
+      if(fb) fb.innerHTML='<div style="background:'+(ok?'var(--gbg)':'var(--rbg)')+';border:1px solid '+(ok?'rgba(61,181,73,.3)':'rgba(192,57,43,.2)')+';border-radius:8px;padding:10px 13px;font-size:12px;color:'+(ok?'var(--green)':'var(--red)')+';">'+(ok?'✅ '+ag.n+' → '+s+' on '+d+' saved to Sheet':'❌ Sheet error: '+(res.error||'unknown'))+'</div>';
+      if(ok&&typeof buildSchGrid==='function') buildSchGrid();
+    })
+    .catch(function(){
+      if(fb) fb.innerHTML='<div style="background:var(--abg);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--amber);">⚠️ Network error — change applied locally only</div>';
+    });
 }
 
 function renderBuildPanel(){
