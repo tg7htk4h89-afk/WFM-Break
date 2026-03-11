@@ -1353,11 +1353,8 @@ body{background:#0a3d7a;}
 .att-note-inp{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;color:#1e293b;background:#f8fafc;resize:none;min-height:54px;outline:none;box-sizing:border-box;margin-top:4px;}
 .att-note-inp:focus{border-color:var(--teal);}
 
-.kpi-pane{display:none;}
-.kpi-pane.on{display:block;}
-.kpi-grid{display:grid;gap:10px;}
-.kpi-grid-2{grid-template-columns:1fr;}
-@media (min-width:520px){.kpi-grid-2{grid-template-columns:repeat(2,1fr);}}
+.kpi-pane{display:none!important;}
+.kpi-pane.on{display:block!important;}
 
 
 /* --- mobile + role UX patch --- */
@@ -2152,7 +2149,17 @@ input,select,textarea,button{font-size:16px;}
         <div class="card">
           <div class="ch"><div class="ctitle">🔄 New Swap Request</div></div>
           <div class="cb">
-            <div class="fg"><label class="lbl">Swap Date</label><input type="date" class="fld" id="swDate" value="2026-03-09" onchange="buildSwapWith(this.value)"></div>
+            <div class="fg"><label class="lbl">Swap Date</label>
+              <input type="date" class="fld" id="swDate" onchange="buildSwapWith(this.value)">
+            </div>
+            <div class="fg">
+              <label class="lbl">Swap Type</label>
+              <div style="display:flex;gap:8px;margin-top:4px;">
+                <button id="swTypeShift" onclick="setSwapType('shift')" style="flex:1;padding:9px;border-radius:var(--r);border:1.5px solid var(--navy);background:var(--navy);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">🔄 Shift Swap</button>
+                <button id="swTypeOff" onclick="setSwapType('off')" style="flex:1;padding:9px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--t2);font-size:12px;font-weight:700;cursor:pointer;">📅 OFF Day Swap</button>
+              </div>
+              <div id="swTypeHint" style="font-size:10px;color:var(--t2);margin-top:5px;">Shows colleagues working the same shift as you</div>
+            </div>
             <div class="fg"><label class="lbl">Swap With</label>
               <select class="fld" id="swWith"><option value="">-- Select colleague --</option></select>
             </div>
@@ -2281,13 +2288,17 @@ input,select,textarea,button{font-size:16px;}
       </div>
       <div class="cb">
         <div class="ftabs" id="kpiTabs">
-          <button class="ftab on" type="button" data-kpi-tab="extra">Extra Break</button>
+          <button class="ftab" type="button" data-kpi-tab="extra">Extra Break</button>
           <button class="ftab" type="button" data-kpi-tab="meeting">Meeting</button>
           <button class="ftab" type="button" data-kpi-tab="permission">Permission</button>
           <button class="ftab" type="button" data-kpi-tab="issue">System Issue</button>
         </div>
+        <div id="kpiPlaceholder" style="text-align:center;padding:28px 16px;color:var(--t2);">
+          <div style="font-size:32px;margin-bottom:8px;">📋</div>
+          <div style="font-size:13px;font-weight:600;">Select a form type above to get started</div>
+        </div>
 
-        <form class="kpi-pane on" id="kpiPaneExtra" onsubmit="return false;">
+        <form class="kpi-pane" id="kpiPaneExtra" style="display:none" onsubmit="return false;">
           <div class="kpi-grid kpi-grid-2">
             <div class="fg"><label class="lbl">Date</label><input class="fld" type="date" id="kpiExtraDate"></div>
             <div class="fg"><label class="lbl">Time</label><input class="fld" type="time" id="kpiExtraTime"></div>
@@ -2304,7 +2315,7 @@ input,select,textarea,button{font-size:16px;}
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('extra')">Submit Extra Break</button>
         </form>
 
-        <form class="kpi-pane" id="kpiPaneMeeting" onsubmit="return false;">
+        <form class="kpi-pane" id="kpiPaneMeeting" style="display:none" onsubmit="return false;">
           <div class="kpi-grid kpi-grid-2">
             <div class="fg"><label class="lbl">Date</label><input class="fld" type="date" id="kpiMeetingDate"></div>
             <div class="fg"><label class="lbl">Time</label><input class="fld" type="time" id="kpiMeetingTime"></div>
@@ -2321,7 +2332,7 @@ input,select,textarea,button{font-size:16px;}
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('meeting')">Submit Meeting</button>
         </form>
 
-        <form class="kpi-pane" id="kpiPanePermission" onsubmit="return false;">
+        <form class="kpi-pane" id="kpiPanePermission" style="display:none" onsubmit="return false;">
           <div class="kpi-grid kpi-grid-2">
             <div class="fg"><label class="lbl">Date</label><input class="fld" type="date" id="kpiPermissionDate"></div>
             <div class="fg"><label class="lbl">Time</label><input class="fld" type="time" id="kpiPermissionTime"></div>
@@ -2343,7 +2354,7 @@ input,select,textarea,button{font-size:16px;}
           <button class="btn btn-navy" type="button" onclick="submitDailyKPI('permission')">Submit Permission</button>
         </form>
 
-        <form class="kpi-pane" id="kpiPaneIssue" onsubmit="return false;">
+        <form class="kpi-pane" id="kpiPaneIssue" style="display:none" onsubmit="return false;">
           <div class="kpi-grid kpi-grid-2">
             <div class="fg"><label class="lbl">Date</label><input class="fld" type="date" id="kpiIssueDate"></div>
             <div class="fg"><label class="lbl">Time</label><input class="fld" type="time" id="kpiIssueTime"></div>
@@ -2447,7 +2458,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxy-BLjjm31w3prYIxZ-20XcxT522b0SS-ZGS6u8qN0GYGiSvAdOB3lvt_81eDrEpoLLw/exec;
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxdxBf5WO9973zpklSOk6IVK4rnl6h5GGPP_KH2aVfQGCVK5A3yAMzTell3uB0c_jf31w/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2712,11 +2723,13 @@ function forceSync(){
 
 function isAgentUser(user){
   if(!user) return false;
-  var a=String(user.access||'').toLowerCase();
-  return a==='agent'||a==='atl'; // agents + ATLs both use shift picker
+  var a=String(user.access||user.loginRole||'').toLowerCase();
+  return a==='agent';
 }
 function isManagementUser(user){
-  return !!user && !isAgentUser(user);
+  if(!user) return false;
+  var a=String(user.access||user.loginRole||'').toLowerCase();
+  return a==='management'||a==='wfm'||a==='admin';
 }
 function getTodaySchedLabelFor(emp){
   try{
@@ -2843,7 +2856,7 @@ function doSignOut(){
 function bs_originalStartApp(){
   var _sLogin=document.getElementById('sLogin');if(_sLogin)_sLogin.style.display='none';
   document.getElementById('sApp').className='on'; // inside #bs-app
-  if(me.access==='admin'||me.access==='readonly')document.getElementById('nav-admin').style.display='';
+  if(canAdmin())document.getElementById('nav-admin').style.display='';
   renderStrip();renderAll();gp('home');
   clkInt=setInterval(renderClock,1000);syncInt=setInterval(function(){apiPull();},3000);tmrInt=setInterval(tickTimer,1000);
   apiPull();renderClock();
@@ -3343,7 +3356,7 @@ function renderSwap(){
 
   // My outgoing requests
   var myTakeovers=bs.filter(function(x){return x.status==='takeover_req'&&x.agent===me.name;});
-  var canReq=me.access==='agent'||me.access==='atl';
+  var canReq=isAgentUser(me);
 
   if(!canReq){
     // Supervisors: see all pending swaps
@@ -3430,7 +3443,7 @@ function renderHistory(){
   if(!mine.length){hEl.innerHTML='<div class="empty" style="padding:16px"><div class="ep">No breaks today</div></div>';}
   else{var h='';mine.forEach(function(b){var ico=b.status==='done'?'✅':b.status==='active'?'☕':b.status==='booked'?'📅':'❌';var ibg=b.status==='done'?'var(--gbg)':b.status==='active'?'var(--abg)':'var(--tealbg)';h+='<div class="histrow"><div class="hicon" style="background:'+ibg+'">'+ico+'</div><div class="hinfo"><div class="htitle">'+fmt12(b.breakStart)+'</div><div class="hmeta">'+b.status.charAt(0).toUpperCase()+b.status.slice(1)+'</div></div><div style="text-align:right"><div class="hdur">'+b.duration+' min</div></div></div>';});hEl.innerHTML=h;}
   var allSec=document.getElementById('allAgentHist');
-  if(me.access==='readonly'||me.access==='admin'||me.access==='atl'){
+  if(isManagementUser(me)||isAgentUser(me)){
     allSec.style.display='block';var allEl=document.getElementById('allHistPanel');
     var others=bs.filter(function(b){return b.agent!==me.name&&b.status!=='cancelled';});
     if(!others.length){allEl.innerHTML='<div class="empty" style="padding:12px"><div class="ep">No other breaks today</div></div>';return;}
@@ -3570,7 +3583,7 @@ function startApp(){
   // Setup BS app silently in background
   var sApp=document.getElementById('sApp');
   if(sApp) sApp.className='on';
-  if(me.access==='admin'||me.access==='readonly'){
+  if(isManagementUser(me)){
     var na=document.getElementById('nav-admin');if(na)na.style.display='';
   }
   renderStrip();
@@ -3643,7 +3656,7 @@ const AGENTS=[
   {id:'I08',n:'Abdulrahman Abdullah',t:'Inbound',r:'agent',sch:['19:00-02:00','19:00-02:00','19:00-02:00','19:00-02:00','OFF','OFF','18:30-01:30','18:30-01:30','18:30-01:30','18:30-01:30','OFF','OFF','OFF']},
   {id:'I09',n:'Abdullah W Mohammad',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF']},
   {id:'I10',n:'Abdollah Shaverdi',t:'Inbound',r:'agent',sch:['20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','15:00-02:00','15:00-02:00','15:00-02:00','OFF','OFF','C 02:00-10:00','C 02:00-10:00']},
-  {id:'I11',n:'Abdulaziz Alzuabi',t:'Inbound',r:'checker',sch:['19:00-02:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','15:30-02:30','15:30-02:30','OFF','OFF','OFF','C 02:00-10:00','15:30-02:30']},
+  {id:'I11',n:'Abdulaziz Alzuabi',t:'Inbound',r:'agent',sch:['19:00-02:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','15:30-02:30','15:30-02:30','OFF','OFF','OFF','C 02:00-10:00','15:30-02:30']},
   {id:'I26',n:'Abdulrahman Alfassam',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','OFF']},
   {id:'I12',n:'Abdulwahab Alsaber',t:'Inbound',r:'agent',sch:['19:00-02:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','OFF']},
   {id:'I13',n:'Ali Alwayel',t:'Inbound',r:'agent',sch:['OFF','OFF','19:00-02:00','19:00-02:00','19:00-02:00','19:00-02:00','OFF','OFF','19:00-02:00','19:00-02:00','15:00-02:00','19:00-02:00','OFF']},
@@ -3656,9 +3669,9 @@ const AGENTS=[
   {id:'I19',n:'Mohammad Alshakhs',t:'Inbound',r:'agent',sch:['10:00-17:00','08:00-15:00','08:00-15:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF']},
   {id:'I20',n:'Omar Almutairi',t:'Inbound',r:'agent',sch:['OFF','18:30-01:30','18:30-01:30','18:30-01:30','OFF','OFF','19:00-00:00','19:00-00:00','19:00-00:00','19:00-00:00','OFF','OFF','OFF']},
   {id:'I21',n:'Omar Alsaeed',t:'Inbound',r:'agent',sch:['10:00-17:00','10:00-17:00','09:00-16:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF']},
-  {id:'I22',n:'Omar Mohammad',t:'Inbound',r:'checker',sch:['19:00-02:00','19:00-02:00','OFF','OFF','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF']},
-  {id:'I23',n:'Saad Alharbi',t:'Inbound',r:'maker',sch:['M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','OFF','OFF','OFF','OFF','OFF','09:00-16:00','10:00-17:00','OFF','OFF']},
-  {id:'I25',n:'Sulaiman Alkhalaf',t:'Inbound',r:'maker',sch:['Leave','Leave','OFF','OFF','17:00-00:00','17:00-00:00','M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','OFF','OFF','OFF']},
+  {id:'I22',n:'Omar Mohammad',t:'Inbound',r:'agent',sch:['19:00-02:00','19:00-02:00','OFF','OFF','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF']},
+  {id:'I23',n:'Saad Alharbi',t:'Inbound',r:'agent',sch:['M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','OFF','OFF','OFF','OFF','OFF','09:00-16:00','10:00-17:00','OFF','OFF']},
+  {id:'I25',n:'Sulaiman Alkhalaf',t:'Inbound',r:'agent',sch:['Leave','Leave','OFF','OFF','17:00-00:00','17:00-00:00','M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','M 02:00-09:00','OFF','OFF','OFF']},
   // ── OUTBOUND (Image 3 rows 62-64) ────────────────────────────────
   {id:'O01',n:'Asrar Alattar',t:'Outbound',r:'agent',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
   {id:'O02',n:'Abdulrahman Alfassam',t:'Outbound',r:'agent',sch:['19:30-02:30','19:30-02:30','15:30-02:30','15:30-02:30','OFF','OFF','15:30-02:30','15:30-02:30','19:30-02:30','19:30-02:30','OFF','OFF','OFF']},
@@ -3668,8 +3681,8 @@ const AGENTS=[
   {id:'T02',n:'Abdullah Rajab',t:'ITM',r:'agent',sch:['09:00-16:00','OFF','10:00-17:00','10:00-17:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','OFF']},
   {id:'T03',n:'Ahmad Alenezi',t:'ITM',r:'agent',sch:['OFF','OFF','16:00-23:00','16:00-23:00','15:00-02:00','15:00-02:00','OFF','OFF','15:00-02:00','15:00-02:00','15:00-02:00','OFF','OFF']},
   {id:'T08',n:'Salman Albaqshi',t:'ITM',r:'agent',sch:['OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF','OFF']},
-  {id:'T04',n:'Dhari Alshammari',t:'ITM',r:'checker',sch:['19:00-02:00','09:00-16:00','OFF','OFF','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF','OFF']},
-  {id:'T05',n:'Badreyah Alruwayeh',t:'ITM',r:'checker',sch:['OFF','OFF','09:00-16:00','09:00-16:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF','OFF','OFF']},
+  {id:'T04',n:'Dhari Alshammari',t:'ITM',r:'agent',sch:['19:00-02:00','09:00-16:00','OFF','OFF','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF','OFF']},
+  {id:'T05',n:'Badreyah Alruwayeh',t:'ITM',r:'agent',sch:['OFF','OFF','09:00-16:00','09:00-16:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF','OFF','OFF']},
   {id:'T06',n:'Mariam Almutairi',t:'ITM',r:'agent',sch:['09:00-16:00','09:00-16:00','OFF','OFF','12:00-19:00','12:00-19:00','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','OFF']},
   {id:'T07',n:'Athoub Alnoufal',t:'ITM',r:'agent',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','OFF']},
   // ── WAGE (Image 2+3 rows 75-78) ──────────────────────────────────
@@ -3681,7 +3694,7 @@ const AGENTS=[
   {id:'R01',n:'Fouzeyah Erzouqi',t:'Retention',r:'agent',sch:['09:00-16:00','09:00-16:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','09:00-16:00','09:00-15:00','09:00-16:00','09:00-16:00','OFF','OFF']},
   // ── ASSIST TL (Image 1+2 rows 82-83) ─────────────────────────────
   {id:'A01',n:'Naser Bandar',t:'Assist TL',r:'atl',sch:['OFF','20:00-03:00','20:00-03:00','20:00-03:00','18:30-01:30','18:30-01:30','OFF','OFF','17:00-00:00','17:00-00:00','17:00-00:00','18:30-01:30','18:30-01:30']},
-  {id:'A02',n:'Hasan Alajmi',t:'Assist TL',r:'checker',sch:['C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF','20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','OFF']},
+  {id:'A02',n:'Hasan Alajmi',t:'Assist TL',r:'atl',sch:['C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','C 02:00-09:00','OFF','OFF','20:00-03:00','20:00-03:00','20:00-03:00','20:00-03:00','OFF','OFF','OFF']},
   // ── TEAM LEADERS (Image 1+2 rows 85-87) ──────────────────────────
   {id:'L01',n:'Shouq Alkandari',t:'Leadership',r:'tl',sch:['10:00-17:00','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF','OFF','OFF','10:00-17:00','10:00-17:00','10:00-17:00','OFF','OFF']},
   {id:'L02',n:'Alanoud Alotaibi',t:'Leadership',r:'tl',sch:['09:00-16:00','09:00-16:00','OFF','OFF','10:00-17:00','10:00-17:00','09:00-16:00','09:00-16:00','OFF','OFF','09:00-16:00','OFF','OFF']},
@@ -3743,18 +3756,18 @@ var EMPS=[
   {pw:'bil@4539',name:'Bilal Faisal',role:'Wage Agent',dept:'Wage',access:'agent'},
   {pw:'fat@4540',name:'Fatemeh Mayahi',role:'Wage Agent',dept:'Wage',access:'agent'},
   {pw:'nah@4541',name:'Nahla Ibrahim',role:'Wage Agent',dept:'Wage',access:'agent'},
-  {pw:'nas@3001',name:'Naser Bandar',role:'Assist TL',dept:'Supervisors',access:'atl'},
-  {pw:'haj@3002',name:'Hasan Alajmi',role:'Assist TL',dept:'Supervisors',access:'atl'},
-  {pw:'ath@3003',name:'Athoub Alnoufal',role:'Assist TL',dept:'Supervisors',access:'atl'},
-  {pw:'shq@2001',name:'Shouq Alkandari',role:'Team Leader',dept:'Supervisors',access:'tl'},
-  {pw:'ano@2002',name:'Alanoud Alotaibi',role:'Team Leader',dept:'Supervisors',access:'tl'},
-  {pw:'mot@2003',name:'Mohammad Alothman',role:'Team Leader',dept:'Supervisors',access:'tl'},
-  {pw:'ara@4536',name:'Abdulrahman Alahmad',role:'Back Office',dept:'Back Office',access:'readonly'},
-  {pw:'nhr@4537',name:'Nourah Alhazzani',role:'Back Office',dept:'Back Office',access:'readonly'},
-  {pw:'ftm@4542',name:'Fatmah Alhamar',role:'QA',dept:'Quality',access:'readonly'},
-  {pw:'brb@4543',name:'Badreyah BoRubayea',role:'QA',dept:'Quality',access:'readonly'},
-  {pw:'mqr@1001',name:'Mohammad Abdulraheem',role:'QA Supervisor',dept:'Quality',access:'readonly'},
-  {pw:'tal@0001',name:'Talal Al Jarki',role:'Head of CC',dept:'Management',access:'readonly'},
+  {pw:'nas@3001',name:'Naser Bandar',role:'Assist TL',dept:'Supervisors',access:'management'},
+  {pw:'haj@3002',name:'Hasan Alajmi',role:'Assist TL',dept:'Supervisors',access:'management'},
+  {pw:'ath@3003',name:'Athoub Alnoufal',role:'Assist TL',dept:'Supervisors',access:'management'},
+  {pw:'shq@2001',name:'Shouq Alkandari',role:'Team Leader',dept:'Supervisors',access:'management'},
+  {pw:'ano@2002',name:'Alanoud Alotaibi',role:'Team Leader',dept:'Supervisors',access:'management'},
+  {pw:'mot@2003',name:'Mohammad Alothman',role:'Team Leader',dept:'Supervisors',access:'management'},
+  {pw:'ara@4536',name:'Abdulrahman Alahmad',role:'Back Office',dept:'Back Office',access:'management'},
+  {pw:'nhr@4537',name:'Nourah Alhazzani',role:'Back Office',dept:'Back Office',access:'management'},
+  {pw:'ftm@4542',name:'Fatmah Alhamar',role:'QA',dept:'Quality',access:'management'},
+  {pw:'brb@4543',name:'Badreyah BoRubayea',role:'QA',dept:'Quality',access:'management'},
+  {pw:'mqr@1001',name:'Mohammad Abdulraheem',role:'QA Supervisor',dept:'Quality',access:'management'},
+  {pw:'tal@0001',name:'Talal Al Jarki',role:'Head of CC',dept:'Management',access:'management'},
   {pw:'ham@4601',name:'Hamad AlEidan',role:'ITM Agent',dept:'ITM',access:'agent'},
   {pw:'wae@4701',name:'Wael Anwar',role:'OP Agent',dept:'OP',access:'agent'},
   {pw:'tah@wfm01',name:'Taher Al Baghli',role:'WFM Manager',dept:'Management',access:'wfm'},
@@ -3846,10 +3859,10 @@ function scShort(s){
 }
 function pill(txt,cls){return'<span class="pill '+cls+'">'+txt+'</span>';}
 function fmtTS(ts){return new Date(ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
-function canDash(){var r=String((me&&me.loginRole)||'').toLowerCase(); var a=String((me&&me.access)||'').toLowerCase(); return ['tl','atl','manager','wfm','admin','readonly','management'].includes(r)||['tl','wfm','manager','admin','readonly','management'].includes(a);}
-function canTeam(){var r=String((me&&me.loginRole)||'').toLowerCase(); var a=String((me&&me.access)||'').toLowerCase(); return ['tl','atl','manager','wfm','admin','readonly','management'].includes(r)||['manager','admin','readonly','management'].includes(a);}
-function canAdmin(){return['admin','manager','wfm','tl'].includes(me&&(me.loginRole||me.access));}
-function isAdminUser(){var r=me&&(me.loginRole||me.access);return r==='admin'||r==='wfm';}
+function canDash(){var a=String((me&&(me.access||me.loginRole))||'').toLowerCase(); return a==='management'||a==='wfm'||a==='admin';}
+function canTeam(){var a=String((me&&(me.access||me.loginRole))||'').toLowerCase(); return a==='management'||a==='wfm'||a==='admin';}
+function canAdmin(){var a=String((me&&(me.access||me.loginRole))||'').toLowerCase(); return a==='management'||a==='wfm'||a==='admin';}
+function isAdminUser(){var a=String((me&&(me.access||me.loginRole))||'').toLowerCase(); return a==='management'||a==='wfm'||a==='admin';}
 
 // ════════════════════════════════════════════════
 // LOGIN
@@ -3892,7 +3905,7 @@ function doLogin(){
   if(pin!=='1234'){document.getElementById('err2').classList.add('on');return;}
   document.getElementById('err2').classList.remove('on');
   var ag=AGENTS.find(function(a){return a.id===selAgentId;});
-  me={...ag,loginRole:selRoleVal};
+  me={...ag,loginRole:isAgentUser(ag)?'agent':'management'};
   logA('LOGIN',ag.n+' signed in as '+selRoleVal,'inf');
   initApp();
 }
@@ -3934,6 +3947,9 @@ function initApp(){
   document.getElementById('setShift').innerHTML='<span class="sc '+scCls(gTodayS(me))+'">'+gTodayS(me)+'</span>';
   startClock();
   buildNav();
+  var swDateEl=document.getElementById('swDate');
+  if(swDateEl&&!swDateEl.value) swDateEl.value=today();
+  window._swapType=window._swapType||'shift';
   buildSwapWith();
   sp_renderNotifs();
   document.getElementById('sp2-bdot').classList.add('on');
@@ -4217,11 +4233,26 @@ function buildSchGrid(){
       var cells='<td class="name-c">'+a.n+mc+'</td>';
       var isMe=(me&&a.n===me.n);
       a.sch.forEach(function(s,i){
-        var disp=getDisplayShift(a,DATES[i],i);
-        var note=(DATES[i]===TODAY&&disp&&disp.shift!==s)?' title="Attendance updated by TL: '+disp.shift+'"':'';
+        var dateStr=DATES[i];
+        var disp=getDisplayShift(a,dateStr,i);
+        var note=(dateStr===TODAY&&disp&&disp.shift!==s)?' title="Attendance updated by TL: '+disp.shift+'"':'';
         var notOff=disp.shift!=='OFF'&&disp.shift!=='Leave'&&disp.shift!=='Sick';
-        var swapBtn=isMe&&notOff?'<button onclick="openQuickSwap(\''+DATES[i]+'\',' +'\''+disp.shift+'\')" style="display:block;margin-top:3px;font-size:9px;background:#0D5CA6;color:#fff;border:none;border-radius:4px;padding:2px 5px;cursor:pointer;width:100%;">Swap</button>':'';
-        cells+='<td class="'+(DATES[i]===TODAY?'today-c':'')+'" style="'+(WKND.includes(i)?'opacity:.5;':'')+'"'+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span>'+swapBtn+'</td>';
+        var swapBtn=isMe&&notOff?'<button onclick="openQuickSwap(\''+dateStr+'\',' +'\''+disp.shift+'\')" style="display:block;margin-top:3px;font-size:9px;background:#0D5CA6;color:#fff;border:none;border-radius:4px;padding:2px 5px;cursor:pointer;width:100%;">Swap</button>':'';
+        // Swap badges
+        var approvedSw=SWAPS.find(function(sw){return sw.status==='approved'&&sw.date===dateStr&&(sw.from===a.n||sw.to===a.n);});
+        var pendingSw=!approvedSw&&SWAPS.find(function(sw){return (sw.status==='pending_peer'||sw.status==='pending_mgmt')&&sw.date===dateStr&&(sw.from===a.n||sw.to===a.n);});
+        var swBadge='';
+        if(approvedSw){
+          var origShift=approvedSw.from===a.n?approvedSw.sA:approvedSw.sB;
+          var withName=approvedSw.from===a.n?approvedSw.to:approvedSw.from;
+          swBadge='<div title="Swapped with '+withName+' · was: '+origShift+'" style="font-size:8px;background:rgba(22,163,74,.13);color:#15803d;border-radius:3px;padding:1px 4px;margin-top:2px;font-weight:700;line-height:1.4;">🔄 Swapped</div>';
+        } else if(pendingSw){
+          var withNameP=pendingSw.from===a.n?pendingSw.to:pendingSw.from;
+          var statusLbl=pendingSw.status==='pending_peer'?'⏳ Awaiting peer':'🔄 Awaiting mgmt';
+          swBadge='<div title="'+statusLbl+' · with '+withNameP+'" style="font-size:8px;background:rgba(202,138,4,.13);color:#b45309;border-radius:3px;padding:1px 4px;margin-top:2px;font-weight:700;line-height:1.4;">'+statusLbl+'</div>';
+        }
+        var cellBg=approvedSw?'background:rgba(22,163,74,.04);':pendingSw?'background:rgba(202,138,4,.04);':'';
+        cells+='<td class="'+(dateStr===TODAY?'today-c':'')+'" style="'+(WKND.includes(i)?'opacity:.5;':'')+cellBg+'"'+note+'><span class="sc '+disp.cls+'">'+disp.short+'</span>'+swBadge+swapBtn+'</td>';
       });
       rows+='<tr>'+cells+'</tr>';
     });
@@ -4235,21 +4266,110 @@ function buildSchGrid(){
 // ════════════════════════════════════════════════
 function buildSwapWith(dateStr){
   var sel=document.getElementById('swWith');
-  if(!sel)return;
-  sel.innerHTML='<option value="">-- Select colleague --</option>';
+  if(!sel) return;
+  sel.innerHTML='<option value="">-- Loading... --</option>';
+
   var d=dateStr||document.getElementById('swDate').value||today();
   var idx=DATES.indexOf(d);
+  var swType=window._swapType||'shift';
+
+  // My shift on selected date
+  var myAgent=AGENTS.find(function(a){return a.n===me.n;});
+  var myShift=idx>=0&&myAgent?(myAgent.sch[idx]||'OFF'):gTodayS(me)||'OFF';
+  var iAmOff=(myShift==='OFF'||myShift==='Leave'||myShift==='Sick'||myShift==='Weekend');
+
+  var hint=document.getElementById('swTypeHint');
+
+  // Validate: can't do shift swap if I'm OFF that day
+  if(swType==='shift'&&iAmOff){
+    sel.innerHTML='<option value="">-- You are OFF on this date --</option>';
+    if(hint) hint.textContent='You are OFF on '+d+'. Use "OFF Day Swap" to swap with someone who is working.';
+    return;
+  }
+
+  var eligible=[];
+
   AGENTS.filter(function(a){
-    if(a.id===(me&&me.id))return false;
-    if(!['agent','maker','checker'].includes(a.r))return false;
-    // Only show agents working on the selected date (not OFF)
-    if(idx>=0){var s=a.sch[idx]||'OFF';if(s==='OFF'||s==='Leave'||s==='Sick')return false;}
-    return true;
+    if(a.id===(me&&me.id)) return false;         // not self
+    if(isManagementUser(a)) return false;         // not management accounts
+    if(a.t!==me.t) return false;                 // same team only
+    var theirShift=idx>=0?(a.sch[idx]||'OFF'):'OFF';
+    var theyOff=(theirShift==='OFF'||theirShift==='Leave'||theirShift==='P-Leave'||theirShift==='Sick'||theirShift==='Weekend');
+
+    if(swType==='shift'){
+      // Shift swap: I am working + they are working on same date
+      // (we exchange our respective shifts — any combo is valid)
+      return !theyOff;
+    } else {
+      // OFF day swap
+      if(iAmOff){
+        // I have OFF — find someone working (they give me their workday)
+        return !theyOff;
+      } else {
+        // I'm working — find someone with pure OFF (they cover my shift, I take their day off)
+        return theirShift==='OFF';
+      }
+    }
   }).forEach(function(a){
-    var sched=idx>=0?(a.sch[idx]||'OFF'):'?';
-    sel.innerHTML+='<option value="'+a.id+'">'+a.n+' — '+sched+'</option>';
+    var theirShift=idx>=0?(a.sch[idx]||'OFF'):'OFF';
+    eligible.push({a:a, shift:theirShift});
   });
+
+  // Sort: same-shift first for shift swaps, then alphabetical
+  if(swType==='shift'){
+    eligible.sort(function(a,b){
+      var aSame=(a.shift===myShift)?0:1;
+      var bSame=(b.shift===myShift)?0:1;
+      if(aSame!==bSame) return aSame-bSame;
+      return a.a.n.localeCompare(b.a.n);
+    });
+  } else {
+    eligible.sort(function(a,b){return a.a.n.localeCompare(b.a.n);});
+  }
+
+  if(!eligible.length){
+    var msg=swType==='shift'
+      ?'No colleagues working on this date to swap with'
+      :(iAmOff?'No colleagues working on this date':'No colleagues with OFF on this date');
+    sel.innerHTML='<option value="">-- '+msg+' --</option>';
+    if(hint) hint.textContent=msg;
+    return;
+  }
+
+  sel.innerHTML='<option value="">-- Select colleague ('+eligible.length+' eligible) --</option>';
+  eligible.forEach(function(item){
+    var sameTag=(swType==='shift'&&item.shift===myShift)?' ★':'';
+    sel.innerHTML+='<option value="'+item.a.id+'">'+item.a.n+' · '+item.shift+sameTag+'</option>';
+  });
+
+  if(hint){
+    var tm=me.t||'your team';
+    if(swType==='shift')
+      hint.textContent=eligible.length+' '+tm+' colleague(s) working on '+d+' · ★ = same shift as you ('+myShift+')';
+    else if(iAmOff)
+      hint.textContent=eligible.length+' '+tm+' colleague(s) working on '+d+' — they cover your absence, you lose your OFF';
+    else
+      hint.textContent=eligible.length+' '+tm+' colleague(s) with OFF on '+d+' — you take their day off, they cover your shift';
+  }
 }
+
+function setSwapType(type){
+  window._swapType=type;
+  var btnShift=document.getElementById('swTypeShift');
+  var btnOff=document.getElementById('swTypeOff');
+  if(btnShift&&btnOff){
+    if(type==='shift'){
+      btnShift.style.cssText='flex:1;padding:9px;border-radius:var(--r);border:1.5px solid var(--navy);background:var(--navy);color:#fff;font-size:12px;font-weight:700;cursor:pointer;';
+      btnOff.style.cssText='flex:1;padding:9px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--t2);font-size:12px;font-weight:700;cursor:pointer;';
+    } else {
+      btnShift.style.cssText='flex:1;padding:9px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--t2);font-size:12px;font-weight:700;cursor:pointer;';
+      btnOff.style.cssText='flex:1;padding:9px;border-radius:var(--r);border:1.5px solid var(--teal);background:var(--tealbg);color:var(--teal);font-size:12px;font-weight:700;cursor:pointer;';
+    }
+  }
+  buildSwapWith(document.getElementById('swDate')&&document.getElementById('swDate').value);
+}
+
+
 function renderRequests(){
   renderSwapInbox();
   renderMySwapHist();
@@ -4260,10 +4380,17 @@ function renderRequests(){
 function submitSwap(){
   var w=document.getElementById('swWith').value;
   var r=document.getElementById('swReason').value;
-  var d=document.getElementById('swDate').value;
+  var d=document.getElementById('swDate').value||today();
   if(!w){sp_showToast('Select a colleague','err');return;}
+  if(!d){sp_showToast('Select a date','err');return;}
   var ag=AGENTS.find(function(a){return a.id===w;});
-  var idx_=DATES.indexOf(d);var sA_=idx_>=0?(me&&AGENTS.find(function(a){return a.n===me.n;})&&AGENTS.find(function(a){return a.n===me.n;}).sch[idx_])||gTodayS(me):gTodayS(me);var sB_=idx_>=0?(ag.sch[idx_]||'OFF'):gTodayS(ag);  var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:d,sA:sA_,sB:sB_,reason:r,status:'pending_peer',ts:new Date().toISOString()};
+  if(!ag){sp_showToast('Colleague not found','err');return;}
+  var idx_=DATES.indexOf(d);
+  var myAg=AGENTS.find(function(a){return a.n===me.n;});
+  var sA_=idx_>=0&&myAg?(myAg.sch[idx_]||'OFF'):(gTodayS(me)||'OFF');
+  var sB_=idx_>=0?(ag.sch[idx_]||'OFF'):(gTodayS(ag)||'OFF');
+  var swType=window._swapType||'shift';
+  var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:d,sA:sA_,sB:sB_,reason:r,type:swType,status:'pending_peer',ts:new Date().toISOString()};
   SWAPS.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',
     id:entry.id,from:entry.from,to:entry.to,date:entry.date,
@@ -4569,7 +4696,7 @@ function attGetAgents(){
     if(a.r==='admin'||a.r==='wfm') return false;
     return OFF.indexOf(gTodayS(a)||'OFF')<0;
   });
-  if(me&&(me.loginRole==='atl'||me.loginRole==='tl')){
+  if(me&&isAgentUser(me)){
     var myDept=me.t||me.dept||'';
     list=list.filter(function(a){return a.t===myDept;});
     return list;
@@ -4640,7 +4767,7 @@ function renderAttendance(){
   if(activeTabs){
     var allDepts=[];
     AGENTS.forEach(function(a){if(a.r!=='admin'&&allDepts.indexOf(a.t)<0)allDepts.push(a.t);});
-    if(me.loginRole==='atl'||me.loginRole==='tl'){
+    if(me&&isAgentUser(me)){
       allDepts=[me.t||me.dept||''];
       _attDeptFilter=allDepts[0];
     }
@@ -5732,7 +5859,7 @@ function uNav(section, subPage){
     _uSpTabOn(pg);
     if(pg==='attendance'){
       // Reset dept filter for wfm/manager/admin so they see ALL agents
-      if(me && !['tl','atl'].includes(me.loginRole||me.access)) _attDeptFilter='';
+      if(me && !isAgentUser(me)) _attDeptFilter='';
       setTimeout(function(){ if(typeof renderAttendance==='function') renderAttendance(); }, 50);
     }
   }
@@ -6026,8 +6153,8 @@ function initUnified(){
   if(av){av.textContent=ini(me.name);av.style.background=avc(me.name);}
 
   // Show Team / WFM nav buttons based on role
-  var isManager = me.access==='admin'||me.access==='manager'||me.access==='readonly';
-  var isTL = me.role==='Team Leader'||me.access==='admin'||me.access==='manager'||me.access==='readonly'||me.loginRole==='tl';
+  var isManager = isManagementUser(me);
+  var isTL = isManagementUser(me);
   var teamBtn = document.getElementById('unb-team');
   var wfmBtn  = document.getElementById('unb-wfm');
   if(teamBtn) teamBtn.style.display = isTL?'':'none';
@@ -6043,7 +6170,7 @@ function initUnified(){
   if(spApp) spApp.style.display='none';
 
   // Init BS internals silently
-  if(me.access==='admin'||me.access==='readonly'){
+  if(isManagementUser(me)){
     var na=document.getElementById('nav-admin');if(na)na.style.display='';
   }
   if(typeof renderStrip==='function') renderStrip();
@@ -6343,19 +6470,25 @@ function setKpiTab(key){
   var map={extra:'kpiPaneExtra',meeting:'kpiPaneMeeting',permission:'kpiPanePermission',issue:'kpiPaneIssue'};
   var nameMap={extra:'Extra Break',meeting:'Meeting',permission:'Permission',issue:'System Issue'};
   document.querySelectorAll('#kpiTabs .ftab').forEach(function(t){t.classList.toggle('on',t.getAttribute('data-kpi-tab')===key);});
-  document.querySelectorAll('#pg-kpi .kpi-pane').forEach(function(p){p.classList.remove('on');});
-  var pane=document.getElementById(map[key]); if(pane) pane.classList.add('on');
+  document.querySelectorAll('#pg-kpi .kpi-pane').forEach(function(p){p.classList.remove('on');p.style.display='none';});
+  var pane=document.getElementById(map[key]);
+  if(pane){pane.classList.add('on');pane.style.display='block';}
   var n=document.getElementById('kpiFormName'); if(n) n.textContent=nameMap[key]||'Daily KPI';
+  var ph=document.getElementById('kpiPlaceholder'); if(ph) ph.style.display='none';
 }
 function initDailyKPIPage(){
   kpiSetTodayDefaults();
   renderDailyKPIStats();  // also calls renderKpiHistory internally
+  // Always reset: hide all panes and show placeholder
+  document.querySelectorAll('#pg-kpi .kpi-pane').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('#kpiTabs .ftab').forEach(function(t){t.classList.remove('on');});
+  var ph=document.getElementById('kpiPlaceholder'); if(ph) ph.style.display='';
+  var n=document.getElementById('kpiFormName'); if(n) n.textContent='Select Form';
   if(_kpiInit) return;
   _kpiInit=true;
   document.querySelectorAll('#kpiTabs .ftab').forEach(function(tab){
     tab.addEventListener('click',function(){ setKpiTab(tab.getAttribute('data-kpi-tab')); });
   });
-  setKpiTab('extra');
 }
 function kpiResetForm(type){
   if(type==='extra'){
