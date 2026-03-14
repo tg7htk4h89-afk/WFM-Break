@@ -2204,7 +2204,7 @@ input,select,textarea,button{font-size:16px;}
         <div class="sh">My Attendance — March 2026</div>
         <div class="team-summary" style="grid-template-columns:repeat(2,1fr);">
           <div class="tscard c-green"><div class="tsnum" id="attPresent">3</div><div class="tslbl">Present Days</div></div>
-          <div class="tscard c-navy"><div class="tsnum">100%</div><div class="tslbl">Rate</div></div>
+          <div class="tscard c-navy"><div class="tsnum" id="attRate">—</div><div class="tslbl">Rate</div></div>
         </div>
         <div class="card"><div class="cb" style="padding:0;" id="myAttTable"></div></div>
       </div>
@@ -2458,7 +2458,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbzH2lNiY9Qg-8GVBdh1bSOt_i65QtB6tAyzGMMSCyETG8hYIVe__uK7oXxpKTzahy0O9Q/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbz2h8ZCu4qdjXETnDrO1YV0ztxTu1YYhofqtji_Z13N2jGTjIwE7FLkHFsXGzOvBs96gA/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2713,6 +2713,11 @@ function _applyRemote(remote){
   }
 
   if((wasChanged||remote.swaps||remote.leaves||remote.attendance||remote.agents)&&me&&me.n) renderAll();
+  // ★ If agent is viewing their own attendance tab, refresh it immediately
+  if(remote.attendance&&me&&me.n){
+    var attTab=document.getElementById('rt-att');
+    if(attTab&&attTab.style.display!=='none'&&typeof renderMyAttTab==='function') renderMyAttTab();
+  }
 }
 
 
@@ -4563,20 +4568,62 @@ function renderMyLeaveHist(){
 }
 function renderLeaveTab(){renderLeaveBalPanel();renderMyLeaveHist();}
 function renderMyAttTab(){
+  var myName=me&&(me.n||me.name);
+  var statusCfg={
+    present:{lbl:'Present',cls:'p-green'},
+    late:{lbl:'Late',cls:'p-amber'},
+    sick:{lbl:'Sick',cls:'p-red'},
+    noshow:{lbl:'No Show',cls:'p-red'},
+    change:{lbl:'Shift Change',cls:'p-navy'},
+    leave:{lbl:'On Leave',cls:'p-amber'},
+    wfh:{lbl:'WFH',cls:'p-teal'}
+  };
+  var presentCount=0,workDays=0;
   var h='<table style="width:100%;border-collapse:collapse;">'
-    +'<thead><tr style="background:var(--bg)"><th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">Date</th>'
+    +'<thead><tr style="background:var(--bg)">'
+    +'<th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">Date</th>'
     +'<th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">Shift</th>'
-    +'<th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">Status</th></tr></thead><tbody>';
-  DATES.slice(0,3).forEach(function(d,i){
-    var s=me.sch[i];
-    var work=!['OFF','P-Leave','Leave','Sick'].includes(s);
-    h+='<tr style="border-bottom:1px solid var(--border);">'
-      +'<td style="padding:9px 12px;font-size:12px;">'+(d===TODAY?'<span style="font-size:9px;background:rgba(13,92,166,.1);color:var(--navy);border-radius:3px;padding:1px 4px;margin-right:3px;">TODAY</span>':'')+d+'</td>'
-      +'<td style="padding:9px 12px;"><span class="sc '+scCls(s)+'">'+s+'</span></td>'
-      +'<td style="padding:9px 12px;">'+pill(work?'PRESENT':'OFF',work?'p-green':'p-gray')+'</td></tr>';
+    +'<th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">Status</th>'
+    +'<th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">By</th>'
+    +'</tr></thead><tbody>';
+  DATES.forEach(function(d,i){
+    if(d>TODAY) return;
+    var sched=me.sch[i]||'OFF';
+    var isOff=['OFF','P-Leave','Leave','Sick'].includes(sched);
+    if(!isOff) workDays++;
+    var attEntry=null;
+    for(var j=ATT_LOG.length-1;j>=0;j--){
+      if(ATT_LOG[j].agent===myName&&ATT_LOG[j].date===d){attEntry=ATT_LOG[j];break;}
+    }
+    var statusPill='',markedBy='',displayShift=sched;
+    if(attEntry){
+      var cfg=statusCfg[attEntry.status]||{lbl:attEntry.status.toUpperCase(),cls:'p-navy'};
+      statusPill=pill(cfg.lbl,cfg.cls);
+      markedBy='<span style="font-size:10px;color:var(--t3);">'+( attEntry.markedBy?attEntry.markedBy.split(' ')[0]:'')+'</span>';
+      if(attEntry.newShift) displayShift=attEntry.newShift;
+      if(attEntry.note) markedBy+='<br><span style="font-size:10px;color:var(--t2);">'+attEntry.note+'</span>';
+      if(['present','late','change','wfh'].includes(attEntry.status)) presentCount++;
+    } else if(isOff){
+      statusPill=pill('Day Off','p-gray');
+    } else if(d===TODAY){
+      statusPill='<span style="font-size:10px;color:var(--t3);">Pending...</span>';
+    } else {
+      statusPill=pill('Not Marked','p-amber');
+    }
+    var isToday=d===TODAY;
+    h+='<tr style="border-bottom:1px solid var(--border);'+( isToday?'background:rgba(13,92,166,.03);':'')+'">';
+    h+='<td style="padding:9px 12px;font-size:12px;">'+( isToday?'<span style="font-size:9px;background:rgba(13,92,166,.1);color:var(--navy);border-radius:3px;padding:1px 4px;margin-right:3px;">TODAY</span>':'')+d+'</td>';
+    h+='<td style="padding:9px 12px;"><span class="sc '+scCls(displayShift)+'">'+displayShift+'</span></td>';
+    h+='<td style="padding:9px 12px;">'+statusPill+'</td>';
+    h+='<td style="padding:9px 12px;">'+markedBy+'</td>';
+    h+='</tr>';
   });
   h+='</tbody></table>';
   document.getElementById('myAttTable').innerHTML=h;
+  var presentEl=document.getElementById('attPresent');
+  if(presentEl) presentEl.textContent=presentCount;
+  var rateEl=document.getElementById('attRate');
+  if(rateEl) rateEl.textContent=(workDays>0?Math.round(presentCount/workDays*100):100)+'%';
 }
 
 // ════════════════════════════════════════════════
@@ -4936,80 +4983,6 @@ function attBuildCard(agent){
 }
 
 
-// ── Select status for agent ──────────────────────────────────
-function attSelectStatus(agentId,status){
-  if(!_attSelMap[agentId]) _attSelMap[agentId]={};
-  _attSelMap[agentId].status=status;
-  if(status!=='late') delete _attSelMap[agentId].note;
-  if(status!=='change') delete _attSelMap[agentId].newShift;
-  var agent=AGENTS.find(function(a){return a.id===agentId;});
-  if(!agent) return;
-  var card=document.getElementById('attc-'+agentId);
-  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
-}
-
-// ── Edit a saved entry ───────────────────────────────────────
-function attEdit(agentId){
-  var agent=AGENTS.find(function(a){return a.id===agentId;});
-  if(!agent) return;
-  var saved=attGetEntry(agent.n);
-  if(saved) _attSelMap[agentId]={status:saved.status,note:saved.note||'',newShift:saved.newShift||'',fromTime:((saved.newShift||'').split(' - ')[0]||''),toTime:((saved.newShift||'').split(' - ')[1]||''),extraNote:saved.extraNote||''};
-  var card=document.getElementById('attc-'+agentId);
-  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
-}
-
-// ── Clear selection ───────────────────────────────────────────
-function attClear(agentId){
-  delete _attSelMap[agentId];
-  var agent=AGENTS.find(function(a){return a.id===agentId;});
-  if(!agent) return;
-  var card=document.getElementById('attc-'+agentId);
-  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
-}
-
-// ── Save one agent attendance ─────────────────────────────────
-function attSaveOne(agentId){
-  var agent=AGENTS.find(function(a){return a.id===agentId;});
-  if(!agent){sp_showToast('Agent not found','err');return;}
-  var sel=_attSelMap[agentId];
-  if(!sel||!sel.status){sp_showToast('Select a status first','err');return;}
-  var arrivalNote='';
-  if(sel.status==='late') arrivalNote=(sel.note?'Arrived '+sel.note:'')+(sel.extraNote?(' — '+sel.extraNote):'');
-  else if(sel.status==='change') arrivalNote=sel.note||'';
-  var entry={
-    id:'ATT'+(Date.now()%1000000),
-    agent:agent.n,
-    date:today(),
-    status:sel.status,
-    note:arrivalNote,
-    newShift:sel.status==='change'?(sel.newShift||''):'',
-    markedBy:me.n||me.name||'',
-    ts:new Date(Date.now()+3*60*60*1000).toISOString().replace('T',' ').substring(0,16)
-  };
-  // Update local ATT_LOG
-  ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===agent.n&&e.date===today());});
-  ATT_LOG.push(entry);
-  // Save to Sheets: Agent | Date | Status | Note | NewShift | MarkedBy | Timestamp
-  saveSheet('Attendance',[entry.agent,entry.date,entry.status,entry.note,entry.newShift,entry.markedBy,entry.ts]);
-  logA('ATTENDANCE',agent.n+' → '+entry.status.toUpperCase()+(entry.newShift?' (→'+entry.newShift+')':''),'inf');
-  delete _attSelMap[agentId];
-  sp_showToast(agent.n.split(' ')[0]+' → '+entry.status,'ok');
-  var card=document.getElementById('attc-'+agentId);
-  if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
-  if(agent.n===(me.n||me.name)&&typeof renderMySchedule==='function') renderMySchedule();
-  if(agent.n===(me.n||me.name)&&typeof renderProfilePage==='function') renderProfilePage();
-}
-
-// ── Save all pending ──────────────────────────────────────────
-function attSaveAll(){
-  var keys=Object.keys(_attSelMap).filter(function(k){return _attSelMap[k]&&_attSelMap[k].status;});
-  if(!keys.length){sp_showToast('No changes to save','inf');return;}
-  keys.forEach(function(id){attSaveOne(id);});
-}
-
-// ── Get today's ATT_LOG entry (for schedule display) ─────────
-function attTodayStatus(agentName){return attGetEntry(agentName);}
-
 function attSelectStatus(agentId,status){
   // Block if already saved by someone else and current user can't edit
   var saved=attGetEntry((AGENTS.find(function(a){return a.id===agentId;})||{}).n);
@@ -5108,7 +5081,7 @@ function saveAllAtt(){
   e.forEach(function(p){
     var a=AGENTS.find(function(x){return x.id===p[0];});
     logA('ATTENDANCE',a.n+' → '+p[1].toUpperCase(),'inf');
-    saveSheet('Attendance',[a.n,'2026-03-04',p[1],me.n,new Date().toISOString()]);
+    saveSheet('Attendance',[a.n,today(),p[1],me.n,new Date().toISOString()]);
   });
   sp_showToast('Attendance saved for '+e.length+' agents ✓','ok');
 }
@@ -5274,7 +5247,7 @@ function rejectLeave(id){
 
 function renderReportsPanel(){
   var working=AGENTS.filter(function(a){return!['OFF','P-Leave','Leave','Sick'].includes(gTodayS(a));}).length;
-  var h='<div class="sh">Today\'s Summary — 04/03/2026</div>'
+  var h='<div class="sh">Today\'s Summary — '+new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})+'</div>'
     +'<div class="team-summary"><div class="tscard c-green"><div class="tsnum">'+working+'</div><div class="tslbl">Present</div></div>'
     +'<div class="tscard c-red"><div class="tsnum">'+AGENTS.filter(function(a){return gTodayS(a)==='Sick';}).length+'</div><div class="tslbl">Sick</div></div>'
     +'<div class="tscard c-amber"><div class="tsnum">'+AGENTS.filter(function(a){return['P-Leave','Leave'].includes(gTodayS(a));}).length+'</div><div class="tslbl">On Leave</div></div>'
@@ -6733,6 +6706,7 @@ function initSpProfile(){
 }
 </script>
 
+<script>
 // ── Toggle announcement bar ────────────────────────────────────────
 function toggleAnnBar(){
   var bar=document.getElementById('u-ann-bar');
@@ -6791,6 +6765,8 @@ function submitQuickSwap(){
   if(typeof sp_showToast==='function')sp_showToast('Swap request sent to '+ag.n,'ok');
   else if(typeof showToast==='function')showToast('Swap request sent to '+ag.n,'ok');
 }
+
+</script>
 
 <!-- ═══ QUICK SWAP MODAL (from schedule grid) ═══ -->
 <div id="quickSwapOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeQuickSwap()">
