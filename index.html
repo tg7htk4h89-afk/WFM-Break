@@ -3635,9 +3635,9 @@ function startApp(){
   tmrInt=tmrInt||setInterval(function(){try{tickTimer();}catch(e){}},1000);
   apiPull(); uRenderClock();
 
-  // Show home
+  // Show home — setTimeout gives DOM time to settle before first render
   _spUiInit();
-  uNav('home');
+  setTimeout(function(){ uNav('home'); }, 80);
 }
 
 // Add "← Hub" to break system topbar
@@ -5984,10 +5984,10 @@ function renderUnifiedHome(){
   var scEl  = document.getElementById('u-hero-shift');
   if(stEl){
     stEl.textContent = ts;
-    sbEl.textContent = isOff?'No shift today':'Your working hours today';
-    icEl.textContent = ts==='Sick'?'🏥':ts==='Leave'||ts==='P-Leave'?'🌴':isOff?'😴':'💼';
-    ssEl.textContent = ts==='Sick'?'Sick':ts==='Leave'||ts==='P-Leave'?'On Leave':isOff?'Day Off':'Working';
-    scEl.style.background = isOff
+    if(sbEl) sbEl.textContent = isOff?'No shift today':'Your working hours today';
+    if(icEl) icEl.textContent = ts==='Sick'?'🏥':ts==='Leave'||ts==='P-Leave'?'🌴':isOff?'😴':'💼';
+    if(ssEl) ssEl.textContent = ts==='Sick'?'Sick':ts==='Leave'||ts==='P-Leave'?'On Leave':isOff?'Day Off':'Working';
+    if(scEl) scEl.style.background = isOff
       ? 'rgba(100,100,100,.15)'
       : 'rgba(255,255,255,.1)';
   }
