@@ -2770,7 +2770,7 @@ function isManagementUser(user){
 }
 function getTodaySchedLabelFor(emp){
   try{
-    var ag=AGENTS.find(function(a){return a.n===emp.name;});
+    var ag=AGENTS.find(function(a){return a.n===(emp.name||emp.n);});
     if(!ag) return '';
     return gTodayS(ag)||'';
   }catch(e){return '';}
@@ -2926,6 +2926,11 @@ function renderClock(){
 function renderStrip(){
   if(!me)return;
   var myName=me.name||me.n||'';
+  // ── Re-derive shift live so topbar is never stale ──
+  var _ls=buildAutoShiftFor(me);
+  if(_ls&&_ls.label&&_ls.label!=='Management'){
+    me.shift=_ls.start;me.shiftEnd=_ls.end;me.shiftLabel=_ls.label;me.shiftEndMin=_ls.endMinRaw;
+  }
   var av=document.getElementById('asav');if(av){av.textContent=ini(myName);av.style.background=avc(myName);}
   var _uav=document.getElementById('uav');if(_uav)_uav.textContent=ini(myName);
   var _asn=document.getElementById('asname');if(_asn)_asn.textContent=myName;
@@ -3115,6 +3120,18 @@ function buildSlotGrid(){
   var d=gd();var s=d.settings||{};var mc=s.maxCon||2;
   var vmExtra=(me&&me.handleVoicemail)?1:0;
   var maxAllowed=mc+vmExtra;
+
+  // ── Always re-derive shift live from AGENTS so stale me.shift never blocks booking ──
+  var liveShift=buildAutoShiftFor(me);
+  if(liveShift&&liveShift.label&&liveShift.label!=='Management'&&liveShift.start!=='09:00'){
+    me.shift=liveShift.start; me.shiftEnd=liveShift.end;
+    me.shiftLabel=liveShift.label; me.shiftEndMin=liveShift.endMinRaw;
+  } else if(liveShift&&liveShift.label&&liveShift.label!=='Management'){
+    // Even 09:00 is valid if that's genuinely the scheduled shift
+    me.shift=liveShift.start; me.shiftEnd=liveShift.end;
+    me.shiftLabel=liveShift.label; me.shiftEndMin=liveShift.endMinRaw;
+  }
+
   var sm=toMin(me.shift);var em=me.shiftEndMin;var nm=toMin(nowHH());
   // For overnight shifts (crosses midnight): if it's early morning, add 1440 to current time
   var adjNm=(sm>=720&&nm<sm&&nm<480)?nm+1440:nm;
@@ -3830,6 +3847,7 @@ var EMPS=[
   {pw:'tah@wfm01',name:'Taher Al Baghli',role:'WFM Manager',dept:'Management',access:'wfm'},
   {pw:'KIB@admin2026',name:'Admin',role:'System Admin',dept:'Management',access:'admin'},
 ];
+var SHEETS={apiKey:"",sheetId:""};
 var LEAVES=[]; // populated from Sheets via apiPull
 
 var ACTLOG=[]; // populated from Sheets via apiPull
@@ -3855,7 +3873,7 @@ var sp_teamFilter='All';
 // ini shared from BS
 const COLORS=['#0A4A8A','#00A89A','#3DB549','#E08C00','#6B3FA0','#C0392B','#0A7FAE','#2E86C1'];
 // avc shared from BS
-function gTodayS(a){return a.sch[DATES.indexOf(TODAY)]||'OFF';}
+function gTodayS(a){return (a&&a.sch&&a.sch[DATES.indexOf(TODAY)])||'OFF';}
 function getAttScheduleOverride(agentName, baseShift, dateStr){
   if(typeof attGetEntry!=='function' || dateStr!==TODAY) return null;
   var att=attGetEntry(agentName);
@@ -6308,7 +6326,7 @@ function uUpdateBadges(){
   var d = gd();
   // Swap badge (pending swap requests for me)
   var pendSwap = (typeof tdb==='function'?tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===(me.name||me.n);}).length:0)
-              + SWAPS.filter(function(s){return s.to===me.name&&s.status==='pending_peer';}).length;
+              + SWAPS.filter(function(s){return s.to===(me.name||me.n)&&s.status==='pending_peer';}).length;
   if(swpBadge){swpBadge.textContent=pendSwap;swpBadge.className='unbadge'+(pendSwap?' on':'');}
   // Request badge (pending leaves/swaps I submitted)
   var myPend = SWAPS.filter(function(s){return (s.from===(me.name||me.n)||s.to===(me.name||me.n))&&['pending_peer','pending_mgmt'].includes(s.status);}).length
