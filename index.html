@@ -2855,6 +2855,20 @@ function _startSession(){
   var backBtn=document.querySelector('.btn-back');
   if(btn){btn.textContent='Confirm & Start →';btn.disabled=false;}
   if(backBtn) backBtn.disabled=false;
+
+  // ── Re-detect shift from fresh Sheets data (DATES/AGENTS now updated by _applyRemote) ──
+  // Fixes: buildAutoShiftFor ran before Sheets loaded, today was missing from DATES,
+  // shift fell back to 09:00-16:00 → all break slots showed "Past" for evening agents.
+  if(!isManagementUser(me)){
+    var freshShift=buildAutoShiftFor(me);
+    if(freshShift && freshShift.label && freshShift.label!=='Management'){
+      me.shift=freshShift.start;
+      me.shiftEnd=freshShift.end;
+      me.shiftLabel=freshShift.label;
+      me.shiftEndMin=freshShift.endMinRaw;
+    }
+  }
+
   // Record login in local cache
   var d=gd();
   if(!d.logins[today()])d.logins[today()]={};
@@ -4918,8 +4932,8 @@ function attBuildCard(agent){
   });
   btnHtml+='</div>';
 
-  // Extra fields (late/change)
-  var extraHtml='<div class="att-extra'+(sel&&(sel.status==='late'||sel.status==='change')?' show':'')+'" id="att-ex-'+agent.id+'">';
+  // Extra fields (late/change/permission)
+  var extraHtml='<div class="att-extra'+(sel&&(sel.status==='late'||sel.status==='change'||sel.status==='permission')?' show':'')+'" id="att-ex-'+agent.id+'">';
   if(sel&&sel.status==='late'){
     extraHtml+='<div style="font-size:10px;font-weight:700;color:#64748b;margin-top:10px;text-transform:uppercase;letter-spacing:.5px;">Arrival time</div>'
       +'<input class="att-time-inp" type="time" id="att-time-'+agent.id+'" value="'+(sel.note||'')+'" '
@@ -4934,6 +4948,20 @@ function attBuildCard(agent){
       +'<div style="font-size:10px;font-weight:700;color:#64748b;margin-top:10px;text-transform:uppercase;letter-spacing:.5px;">Note (optional)</div>'
       +'<textarea class="att-note-inp" placeholder="e.g. Manager approved…" '
       +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].note=this.value">'+(sel.note||'')+'</textarea>';
+  } else if(sel&&sel.status==='permission'){
+    extraHtml+='<div style="font-size:10px;font-weight:700;color:#1d4ed8;margin-top:10px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">📝 Permission Time</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+      +'<div>'
+      +'<div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">From</div>'
+      +'<input class="att-time-inp" type="time" value="'+(sel.fromTime||'')+'" '
+      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].fromTime=this.value">'
+      +'</div>'
+      +'<div>'
+      +'<div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">To</div>'
+      +'<input class="att-time-inp" type="time" value="'+(sel.toTime||'')+'" '
+      +'oninput="if(!_attSelMap[\''+agent.id+'\'])_attSelMap[\''+agent.id+'\']={}; _attSelMap[\''+agent.id+'\'].toTime=this.value">'
+      +'</div>'
+      +'</div>';
   }
   extraHtml+='</div>';
 
@@ -4946,7 +4974,8 @@ function attBuildCard(agent){
       +'<span style="font-size:11px;font-weight:700;color:#16a34a;">✅</span>'
       +'<span style="font-size:11px;color:#475569;font-weight:600;">'+saved.markedBy+' · '+saved.ts.substring(11,16)+'</span>'
       +'<span style="font-size:10px;font-weight:800;color:'+stConf.pillColor+';background:'+stConf.pillBg+';border:1.5px solid '+stConf.pillBorder+';padding:2px 8px;border-radius:10px;">'+stConf.pillLbl+'</span>'
-      +(saved.newShift?'<span style="font-size:10px;color:#0f766e;font-weight:700;">→ '+saved.newShift+'</span>':'')
+      +(saved.newShift&&saved.status==='change'?'<span style="font-size:10px;color:#0f766e;font-weight:700;">→ '+saved.newShift+'</span>':'')
+      +(saved.newShift&&saved.status==='permission'?'<span style="font-size:10px;color:#1d4ed8;font-weight:700;">📝 '+saved.newShift+'</span>':'')
       +'</div>'
       +'<button onclick="attEdit(\''+agent.id+'\')" style="padding:5px 11px;background:none;border:1.5px solid #cbd5e1;border-radius:8px;font-size:10px;font-weight:700;color:#475569;cursor:pointer;">Edit</button>'
       +'</div>';
@@ -4994,6 +5023,7 @@ function attSelectStatus(agentId,status){
   _attSelMap[agentId].status=status;
   if(status!=='late') delete _attSelMap[agentId].note;
   if(status!=='change') delete _attSelMap[agentId].newShift;
+  if(status!=='permission'){ delete _attSelMap[agentId].fromTime; delete _attSelMap[agentId].toTime; }
   var agent=AGENTS.find(function(a){return a.id===agentId;});
   if(!agent) return;
   var card=document.getElementById('attc-'+agentId);
@@ -5042,13 +5072,14 @@ function attSaveOne(agentId){
   var arrivalNote='';
   if(sel.status==='late') arrivalNote=(sel.note?'Arrived '+sel.note:'')+(sel.extraNote?(' — '+sel.extraNote):'');
   else if(sel.status==='change') arrivalNote=sel.note||'';
+  else if(sel.status==='permission') arrivalNote=(sel.fromTime||'')+(sel.toTime?' – '+sel.toTime:'');
   var entry={
     id:'ATT'+(Date.now()%1000000),
     agent:agent.n,
     date:today(),
     status:sel.status,
     note:arrivalNote,
-    newShift:sel.status==='change'?(sel.newShift||''):'',
+    newShift:sel.status==='change'?(sel.newShift||''):sel.status==='permission'?((sel.fromTime||'')+(sel.toTime?' - '+sel.toTime:'')):'',
     markedBy:me.n||me.name||'',
     ts:new Date(Date.now()+3*60*60*1000).toISOString().replace('T',' ').substring(0,16)
   };
