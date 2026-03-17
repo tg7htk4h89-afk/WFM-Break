@@ -2511,6 +2511,7 @@ var _cache = null;           // in-memory cache (fastest)
 var _writeQueue = [];        // pending writes when offline
 var _syncing = false;        // prevent overlapping syncs
 var _retryTO = null;         // retry timer for failed writes
+var _lastPushedBreaksJSON = ''; // dedup guard: only push when breaks actually changed
 
 // Default empty structure
 function defD(){
@@ -2544,13 +2545,15 @@ function schedMins(name,d){
 // ── active/booked break for current user ──
 function myBreak(d){
   var f=null;
+  var myName=me.name||me.n||'';
   tdb(d).forEach(function(b){
-    if(!f&&b.agent===me.name&&(b.status==='booked'||b.status==='active'))f=b;
+    if(!f&&b.agent===myName&&(b.status==='booked'||b.status==='active'))f=b;
   });
   return f;
 }
 function myBreaks(d){
-  return tdb(d).filter(function(b){return b.agent===me.name&&(b.status==='booked'||b.status==='active');});
+  var myName=me.name||me.n||'';
+  return tdb(d).filter(function(b){return b.agent===myName&&(b.status==='booked'||b.status==='active');});
 }
 
 // ── WRITE: update cache immediately → push to Sheets ──
@@ -2559,6 +2562,10 @@ function sv(d){
   _cache=d;
   // Update localStorage cache instantly
   try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){}
+  // ── Dedup guard: only push to Sheets if breaks/settings actually changed ──
+  var currentBreaksJSON=JSON.stringify(d.breaks);
+  if(currentBreaksJSON===_lastPushedBreaksJSON) return; // nothing changed — skip push
+  _lastPushedBreaksJSON=currentBreaksJSON;
   // Push to Sheets
   _pushToSheets(d);
 }
@@ -2674,6 +2681,11 @@ function _applyRemote(remote){
                   JSON.stringify(newD.dailyKpi)!==JSON.stringify(local.dailyKpi)||
                   JSON.stringify(newD.settings)!==JSON.stringify(local.settings);
 
+  var swapsChanged=Array.isArray(remote.swaps)&&JSON.stringify(remote.swaps)!==JSON.stringify(SWAPS);
+  var leavesChanged=Array.isArray(remote.leaves)&&JSON.stringify(remote.leaves)!==JSON.stringify(LEAVES);
+  var attChanged=Array.isArray(remote.attendance)&&JSON.stringify(remote.attendance)!==JSON.stringify(ATT_LOG);
+  var agentsChanged=Array.isArray(remote.agents)&&remote.agents.length>0;
+
   _cache=newD;
   try{localStorage.setItem(SK,JSON.stringify(newD));}catch(e){}
 
@@ -2712,7 +2724,7 @@ function _applyRemote(remote){
     }
   }
 
-  if((wasChanged||remote.swaps||remote.leaves||remote.attendance||remote.agents)&&me&&me.n) renderAll();
+  if((wasChanged||swapsChanged||leavesChanged||attChanged||agentsChanged)&&me&&me.n) renderAll();
   // ★ If agent is viewing their own attendance tab, refresh it immediately
   if(remote.attendance&&me&&me.n){
     var attTab=document.getElementById('rt-att');
@@ -2872,18 +2884,21 @@ function _startSession(){
   // Record login in local cache
   var d=gd();
   if(!d.logins[today()])d.logins[today()]={};
-  d.logins[today()][me.name]={time:nowHH(),shift:me.shiftLabel,voicemail:!!me.handleVoicemail};
+  d.logins[today()][(me.name||me.n)]={time:nowHH(),shift:me.shiftLabel,voicemail:!!me.handleVoicemail};
   sv(d);
   // Send login record to Sheets
   saveLoginAPI(me,{label:me.shiftLabel,voicemail:!!me.handleVoicemail});
   // Save shift selection for this device
   try{localStorage.setItem('kib_sh_'+me.name,JSON.stringify({start:me.shift,voicemail:!!me.handleVoicemail,date:today(),ts:Date.now()}));}catch(e){}
+  // ── Persist session so page refresh doesn't log out ──
+  try{localStorage.setItem('kib_session',JSON.stringify({me:me,date:today(),ts:Date.now()}));}catch(e){}
   startApp();
 }
 
 function doSignOut(){
   if(typeof doUnifiedSignOut==='function'){doUnifiedSignOut();return;}
   me=null;selSlot=null;selDur=15;tmFilter='';
+  try{localStorage.removeItem('kib_session');}catch(e){}
   [clkInt,syncInt,tmrInt].forEach(function(t){if(t)clearInterval(t);});clkInt=syncInt=tmrInt=null;
   document.getElementById('pwInput').value='';
   document.getElementById('step1').className='lstep on';document.getElementById('step2').className='lstep';
@@ -2910,13 +2925,14 @@ function renderClock(){
 }
 function renderStrip(){
   if(!me)return;
-  var av=document.getElementById('asav');if(av){av.textContent=ini(me.name);av.style.background=avc(me.name);}
-  var _uav=document.getElementById('uav');if(_uav)_uav.textContent=ini(me.name);
-  var _asn=document.getElementById('asname');if(_asn)_asn.textContent=me.name;
-  var eL=me.shiftEndMin>=1440?fmt12(pad(me.shiftEndMin%1440/60|0)+':00')+' +1d':fmt12(me.shiftEnd);
-  document.getElementById('asinfo').textContent=me.role+' · '+fmt12(me.shift)+' – '+eL+(me.handleVoicemail?' · Voicemail':'');
+  var myName=me.name||me.n||'';
+  var av=document.getElementById('asav');if(av){av.textContent=ini(myName);av.style.background=avc(myName);}
+  var _uav=document.getElementById('uav');if(_uav)_uav.textContent=ini(myName);
+  var _asn=document.getElementById('asname');if(_asn)_asn.textContent=myName;
+  var eL=me.shiftEndMin>=1440?fmt12(pad(me.shiftEndMin%1440/60|0)+':00')+' +1d':fmt12(me.shiftEnd||'');
+  var asinfo=document.getElementById('asinfo');if(asinfo)asinfo.textContent=(me.role||me.loginRole||'')+' · '+fmt12(me.shift||'')+' – '+eL+(me.handleVoicemail?' · Voicemail':'');
   var d=gd();var daily=(d.settings&&d.settings.dailyMin)||60;
-  var used=schedMins(me.name,d);document.getElementById('balchip').textContent=Math.max(daily-used,0)+' min left';
+  var used=schedMins(myName,d);var bc=document.getElementById('balchip');if(bc)bc.textContent=Math.max(daily-used,0)+' min left';
 }
 function tickTimer(){
   if(!me) return;
@@ -2967,14 +2983,14 @@ function gp(p){
   window.scrollTo(0,0);
 }
 function renderAll(){
-  if(!me||!me.n)return;renderStrip();
+  if(!me||(!(me.n)&&!(me.name)))return;renderStrip();
   var bsApp=document.getElementById('bs-app');
   var ac=bsApp?bsApp.querySelector('.pg.on'):document.querySelector('.pg.on');
   if(ac){var id=ac.id.replace('pg-','');if(id==='home')renderHome();else if(id==='book')buildSlotGrid();else if(id==='team')renderTeam();else if(id==='swap')renderSwap();else if(id==='hist')renderHistory();else if(id==='admin')renderAdmin();}
   // Refresh team monitor if open
   var ttMon=document.getElementById('tt-monitor');
   if(ttMon&&ttMon.style.display!=='none'&&typeof renderTeamMonitor==='function') renderTeamMonitor();
-  var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;});
+  var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===(me.name||me.n);});
   var badge=document.getElementById('swbadge');if(badge){badge.className='nbadge'+(pend.length?' on':'');if(pend.length)badge.textContent=pend.length;}
   var _bd=document.getElementById('bdot');if(_bd)_bd.className='bdot'+(pend.length?' on':'');
   if(typeof uUpdateBadges==='function') uUpdateBadges();
@@ -2985,7 +3001,7 @@ function renderAll(){
 
 function renderHome(){
   var d=gd();var s=d.settings||{};var daily=s.dailyMin||60;
-  var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);var b=myBreak(d);
+  var used=schedMins(me.name||me.n,d);var rem=Math.max(daily-used,0);var b=myBreak(d);
   var ann=s.announce||'';var ab=document.getElementById('annBanner');
   if(ann.trim()){ab.className='ann-banner on';document.getElementById('annTxt').textContent=ann;}else ab.className='ann-banner';
   var abbanner=document.getElementById('abbanner');var bookedCard=document.getElementById('bookedCard');
@@ -3023,7 +3039,7 @@ function renderHome(){
     });nowEl.innerHTML=h;
   }
   // Show today's actual shift from schedule
-  var agEnt=AGENTS.find(function(a){return a.n===me.name;});
+  var agEnt=AGENTS.find(function(a){return a.n===(me.name||me.n);});
   var todayShift=agEnt?gTodayS(agEnt):'Unknown';
   var shiftCard=document.getElementById('todayShiftCard');
   var shiftLabel=document.getElementById('todayShiftLabel');
@@ -3034,7 +3050,7 @@ function renderHome(){
     shiftCard.style.background=isOff?'linear-gradient(135deg,#555,#333)':'linear-gradient(135deg,var(--navy2),var(--navy))';
     shiftSub.textContent=isOff?'No shift today':'Your working hours today';
   }
-  var myBrks=tdb(d).filter(function(x){return x.agent===me.name&&x.status!=='cancelled';});
+  var myBrks=tdb(d).filter(function(x){return x.agent===(me.name||me.n)&&x.status!=='cancelled';});
   var schedEl=document.getElementById('schedPanel');
   if(!myBrks.length){schedEl.innerHTML='<div class="empty"><div class="ei">☕</div><div class="ep">No breaks booked yet — head to <strong>Book</strong> tab.</div></div>';}
   else{
@@ -3056,7 +3072,7 @@ function renderHome(){
   var smap2={};
   EMPS.forEach(function(e){smap2[e.name]={st:'off',sched:0,used:0,brk:null};});
   Object.keys(logins2).forEach(function(n){if(smap2[n])smap2[n].st='on';});
-  if(me&&smap2[me.name])smap2[me.name].st='on';
+  if(me&&smap2[(me.name||me.n)])smap2[(me.name||me.n)].st='on';
   tdb(d).forEach(function(b){
     if(!smap2[b.agent]||b.status==='cancelled')return;
     smap2[b.agent].sched+=b.duration;
@@ -3070,7 +3086,7 @@ function renderHome(){
     th+='<div style="font-size:10px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;padding:10px 13px 5px;background:var(--bg);border-bottom:1px solid var(--border);">'+dept.label+'</div>';
     list.forEach(function(e){
       var st=smap2[e.name]||{st:'off',sched:0,used:0};
-      var isMe=e.name===me.name;
+      var isMe=e.name===(me.name||me.n);
       var balLeft=Math.max(daily2-st.sched,0);
       var pct=Math.min(st.sched/daily2*100,100);
       var balcol=st.sched>=daily2?'var(--red)':st.sched>daily2*.7?'var(--amber)':'var(--green)';
@@ -3114,7 +3130,7 @@ function buildSlotGrid(){
       var bs=toMin(b.breakStart);
       // Overnight: break at e.g. 00:30 for a 9PM+ shift needs +1440
       var bsAdj=(bs<480&&sm>=720)?bs+1440:bs;
-      if(bsAdj<=m&&bsAdj+b.duration>m){at.push(b);if(b.agent===me.name)myHere=b;}
+      if(bsAdj<=m&&bsAdj+b.duration>m){at.push(b);if(b.agent===(me.name||me.n))myHere=b;}
     });
     var full=at.length>=maxAllowed;var isSel=selSlot&&selSlot.min===m;
     var baseFull=at.length>=mc;
@@ -3159,7 +3175,7 @@ function buildSlotGrid(){
 function showOccupants(m){
   var d=gd();var sm=toMin(me.shift);var at=[];
   tdb(d).forEach(function(b){
-    if(b.status==='cancelled'||b.agent===me.name)return;
+    if(b.status==='cancelled'||b.agent===(me.name||me.n))return;
     var bs=toMin(b.breakStart);var bsAdj=(bs<480&&sm>=720)?bs+1440:bs;
     if(bsAdj<=m&&bsAdj+b.duration>m)at.push(b);
   });
@@ -3169,7 +3185,7 @@ function showOccupants(m){
   var myB=myBreak(d);
   var inner='<strong>'+fmt12(fromMin(m%1440))+' is full</strong> — booked by:<br>';
   at.forEach(function(b){
-    var alreadyReq=tdb(d).find(function(x){return x.status==='takeover_req'&&x.agent===me.name&&x.targetId===b.id;});
+    var alreadyReq=tdb(d).find(function(x){return x.status==='takeover_req'&&x.agent===(me.name||me.n)&&x.targetId===b.id;});
     inner+='<span style="font-weight:700">'+b.agent+'</span> ('+b.duration+' min) ';
     if(alreadyReq){inner+='<span style="font-size:10px;color:var(--amber);font-weight:700">⏳ Requested</span>';}
     else if(myB){inner+='<button onclick="requestTakeover(\''+b.id+'\')" style="margin-left:4px;padding:2px 9px;border-radius:20px;border:1.5px solid var(--navy);background:var(--bg);font-size:10px;font-weight:700;color:var(--navy);cursor:pointer">↔ Request Swap</button>';}
@@ -3183,9 +3199,9 @@ function requestTakeover(targetId){
   var d=gd();var bs=tdb(d);var myB=myBreak(d);
   var target=bs.find(function(b){return b.id===targetId;});
   if(!myB||!target){showToast('Book a slot first to request a swap','err');return;}
-  var already=bs.find(function(x){return x.status==='takeover_req'&&x.agent===me.name&&x.targetId===targetId;});
+  var already=bs.find(function(x){return x.status==='takeover_req'&&x.agent===(me.name||me.n)&&x.targetId===targetId;});
   if(already){showToast('Already sent a request','inf');return;}
-  tdb(d).push({id:uid(),agent:me.name,targetId:targetId,targetAgent:target.agent,targetSlot:target.breakStart,mySlot:myB.breakStart,myBreakId:myB.id,status:'takeover_req',createdAt:Date.now()});
+  tdb(d).push({id:uid(),agent:(me.name||me.n),targetId:targetId,targetAgent:target.agent,targetSlot:target.breakStart,mySlot:myB.breakStart,myBreakId:myB.id,status:'takeover_req',createdAt:Date.now()});
   sv(d);showToast('Swap request sent to '+target.agent+'!','ok');addNotif('🔄 Swap request sent to '+target.agent);buildSlotGrid();
 }
 function pickSlot(m){
@@ -3195,7 +3211,7 @@ function pickSlot(m){
 }
 function buildDurBtns(){
   var d=gd();var s=d.settings||{};var daily=s.dailyMin||60;var maxB=s.maxBreak||60;
-  var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);var maxDur=Math.min(maxB,rem);
+  var used=schedMins((me.name||me.n),d);var rem=Math.max(daily-used,0);var maxDur=Math.min(maxB,rem);
   document.getElementById('durbal').textContent=rem+' min';
   var h='';[15,20,30,60].forEach(function(v){var ok=v<=maxDur;h+='<button class="durbtn'+(selDur===v?' sel':'')+'" onclick="setDur('+v+')"'+(ok?'':' disabled')+'>'+v+' min</button>';});
   document.getElementById('durrow').innerHTML=h;
@@ -3204,12 +3220,13 @@ function setDur(v){selDur=v;buildDurBtns();}
 function confirmBook(){
   if(!selSlot)return;var d=gd();var s=d.settings||{};var daily=s.dailyMin||60;var mc=s.maxCon||2;
   var vmExtra=(me&&me.handleVoicemail)?1:0;var maxAllowed=mc+vmExtra;
-  var used=schedMins(me.name,d);var rem=Math.max(daily-used,0);
+  var myName=me.name||me.n||'';
+  var used=schedMins(myName,d);var rem=Math.max(daily-used,0);
   if(selDur>rem){showToast('Not enough time remaining','err');return;}
   var m=selSlot.min;var smCB=toMin(me.shift);var conf=tdb(d).filter(function(b){if(b.status==='cancelled')return false;var bs=toMin(b.breakStart);var bsA=(bs<480&&smCB>=720)?bs+1440:bs;return bsA<=m&&bsA+b.duration>m;});
   if(conf.length>=maxAllowed){showToast((me&&me.handleVoicemail)?'Voicemail extra slot already used here':'Slot is now full!','err');buildSlotGrid();return;}
   if(myBreaks(d).length>=2){showToast('You already have 2 breaks booked','err');return;}
-  var nb={id:uid(),agent:me.name,breakStart:selSlot.hhmm,duration:selDur,status:'booked',bookedAt:Date.now(),voicemailOverride:!!(me&&me.handleVoicemail&&conf.length>=mc)};
+  var nb={id:uid(),agent:myName,breakStart:selSlot.hhmm,duration:selDur,status:'booked',bookedAt:Date.now(),voicemailOverride:!!(me&&me.handleVoicemail&&conf.length>=mc)};
   tdb(d).push(nb);sv(d);var bt=fmt12(selSlot.hhmm);selSlot=null;selDur=15;
   showToast('Break booked for '+bt+((nb.voicemailOverride)?' · voicemail exception':''),'ok');addNotif('📅 Break booked for '+bt+((nb.voicemailOverride)?' (voicemail exception)':''));
   document.getElementById('durcard').style.display='none';document.getElementById('bookbtnwrap').style.display='none';buildSlotGrid();
@@ -3300,7 +3317,7 @@ function renderTeam(){
   var logins=(d.logins&&d.logins[today()])||{};var bs=tdb(d);
   var smap={};
   EMPS.forEach(function(e){smap[e.name]={st:'off',brk:null,sched:0,used:0};});
-  if(me)smap[me.name].st='on';
+  if(me)smap[(me.name||me.n)].st='on';
   Object.keys(logins).forEach(function(n){if(smap[n]&&smap[n].st==='off')smap[n].st='on';});
   bs.forEach(function(b){
     if(!smap[b.agent])return;
@@ -3336,7 +3353,7 @@ function renderTeam(){
     if(!list.length)return;
     h+='<div class="dept-hdr"><div class="dept-title">'+dept.label+'</div><div class="dept-count">'+list.length+'</div></div><div class="dept-body">';
     list.forEach(function(e){
-      var st=smap[e.name]||{st:'off',sched:0};var isMe=e.name===me.name;
+      var st=smap[e.name]||{st:'off',sched:0};var isMe=e.name===(me.name||me.n);
       var pct=Math.min(st.sched/daily*100,100);var balcol=st.sched>=daily?'var(--red)':st.sched>daily*.7?'var(--amber)':'var(--green)';
       var balLeft=Math.max(daily-st.sched,0);var dot=st.st==='brk'?'on':st.st==='on'?'ok':'off';
       var elstr='';if(st.brk&&st.brk.startedAt){var r2=st.brk.duration-elapseMin(st.brk.startedAt);elstr=r2>0?r2+' min left':'Overdue';}
@@ -3361,8 +3378,8 @@ function renderSwap(){
 
   // Incoming swap requests (both old swap_pending AND takeover_req directed at me)
   var incoming=bs.filter(function(x){
-    return (x.status==='swap_pending'&&x.swapWith===me.name)||
-           (x.status==='takeover_req'&&x.targetAgent===me.name);
+    return (x.status==='swap_pending'&&x.swapWith===(me.name||me.n))||
+           (x.status==='takeover_req'&&x.targetAgent===(me.name||me.n));
   });
   if(!incoming.length){
     inEl.innerHTML='<div class="empty"><div class="ei">🔄</div><div class="ep">No pending requests</div></div>';
@@ -3394,7 +3411,7 @@ function renderSwap(){
   }
 
   // My outgoing requests
-  var myTakeovers=bs.filter(function(x){return x.status==='takeover_req'&&x.agent===me.name;});
+  var myTakeovers=bs.filter(function(x){return x.status==='takeover_req'&&x.agent===(me.name||me.n);});
   var canReq=isAgentUser(me);
 
   if(!canReq){
@@ -3426,7 +3443,7 @@ function renderSwap(){
     var nm=toMin(nowHH());var smS=toMin(me.shift);
     var adjNmS=(smS>=720&&nm<smS&&nm<480)?nm+1440:nm;
     var others=bs.filter(function(x){
-      if(x.agent===me.name)return false;
+      if(x.agent===(me.name||me.n))return false;
       if(x.status!=='booked'&&x.status!=='active')return false;
       // Filter out past slots
       var bs2=toMin(x.breakStart);var bsA=(bs2<480&&smS>=720)?bs2+1440:bs2;
@@ -3435,7 +3452,7 @@ function renderSwap(){
     if(others.length){
       h2+='<div class="sh" style="margin-top:4px">Available to Swap</div>';
       others.forEach(function(oth){
-        var sent=bs.find(function(x){return x.status==='swap_pending'&&x.agent===me.name&&x.swapWith===oth.agent;});
+        var sent=bs.find(function(x){return x.status==='swap_pending'&&x.agent===(me.name||me.n)&&x.swapWith===oth.agent;});
         h2+='<div class="swcard"><div class="swfrom">'+oth.agent+'</div>'
           +'<div class="swtitle">'+fmt12(oth.breakStart)+' · '+oth.duration+' min</div>'
           +'<div class="swmeta">Your slot: '+fmt12(b.breakStart)+'</div>'
@@ -3451,7 +3468,7 @@ function doSwapReq(myId,theirId){
 }
 function respSwap(sid,accept){
   var d=gd();var bs=tdb(d);var req=bs.find(function(b){return b.id===sid;});if(!req)return;
-  if(accept){var myB=bs.find(function(b){return b.agent===me.name&&(b.status==='booked'||b.status==='active');});if(myB){var tmp=myB.breakStart;myB.breakStart=req.breakStart;req.breakStart=tmp;}req.status='booked';req.swapWith=null;req.swapOffer=null;showToast('Swap accepted!','ok');addNotif('🔄 Swap accepted with '+req.agent);}
+  if(accept){var myB=bs.find(function(b){return b.agent===(me.name||me.n)&&(b.status==='booked'||b.status==='active');});if(myB){var tmp=myB.breakStart;myB.breakStart=req.breakStart;req.breakStart=tmp;}req.status='booked';req.swapWith=null;req.swapOffer=null;showToast('Swap accepted!','ok');addNotif('🔄 Swap accepted with '+req.agent);}
   else{req.status='booked';req.swapWith=null;req.swapOffer=null;showToast('Swap declined');}
   sv(d);renderAll();
 }
@@ -3477,7 +3494,7 @@ function cancelTakeover(reqId){
 }
 
 function renderHistory(){
-  var d=gd();var bs=tdb(d);var mine=bs.filter(function(b){return b.agent===me.name;});
+  var d=gd();var bs=tdb(d);var mine=bs.filter(function(b){return b.agent===(me.name||me.n);});
   var hEl=document.getElementById('histpanel');
   if(!mine.length){hEl.innerHTML='<div class="empty" style="padding:16px"><div class="ep">No breaks today</div></div>';}
   else{var h='';mine.forEach(function(b){var ico=b.status==='done'?'✅':b.status==='active'?'☕':b.status==='booked'?'📅':'❌';var ibg=b.status==='done'?'var(--gbg)':b.status==='active'?'var(--abg)':'var(--tealbg)';h+='<div class="histrow"><div class="hicon" style="background:'+ibg+'">'+ico+'</div><div class="hinfo"><div class="htitle">'+fmt12(b.breakStart)+'</div><div class="hmeta">'+b.status.charAt(0).toUpperCase()+b.status.slice(1)+'</div></div><div style="text-align:right"><div class="hdur">'+b.duration+' min</div></div></div>';});hEl.innerHTML=h;}
@@ -3530,6 +3547,7 @@ document.addEventListener('click',function(e){var p=document.getElementById('npa
 // HUB CONTROLLER
 // ════════════════════════════════════════════════════════
 function hubSignOut(){
+  try{localStorage.removeItem('kib_session');}catch(e){}
   me=null;pendEmp=null;selShift=null;
   [clkInt,syncInt,tmrInt,sp_clkTO].forEach(function(t){if(t)clearInterval(t);});
   clkInt=syncInt=tmrInt=sp_clkTO=null;
@@ -3566,7 +3584,7 @@ function hubRefreshBadge(){
     // Refresh team monitor if open
   var ttMon=document.getElementById('tt-monitor');
   if(ttMon&&ttMon.style.display!=='none'&&typeof renderTeamMonitor==='function') renderTeamMonitor();
-  var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;});
+  var d=gd();var pend=tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===(me.name||me.n);});
     var badge=document.getElementById('break-badge');
     if(badge){if(pend.length){badge.style.display='';badge.textContent=pend.length;}else{badge.style.display='none';}}
     var ann=(d.settings&&d.settings.announce)||'';
@@ -3632,7 +3650,7 @@ function startApp(){
   var spSApp=document.getElementById('sp-sApp');
   if(spLogin){spLogin.style.display='none';}
   if(spSApp){spSApp.style.display='block';spSApp.classList.add('on');}
-  var spAgent=AGENTS.find(function(a){return a.n===me.name;});
+  var spAgent=AGENTS.find(function(a){return a.n===(me.name||me.n);});
   if(spAgent) me=Object.assign({},me,{n:me.name,t:spAgent.t,id:spAgent.id,sch:spAgent.sch||[],loginRole:spAgent.loginRole||me.access||'agent'});
   else me=Object.assign({},me,{n:me.name,t:me.dept,loginRole:me.access||'agent'});
   if(typeof buildNav==='function') buildNav();
@@ -3946,10 +3964,13 @@ function doLogin(){
   var ag=AGENTS.find(function(a){return a.id===selAgentId;});
   me={...ag,loginRole:isAgentUser(ag)?'agent':'management'};
   logA('LOGIN',ag.n+' signed in as '+selRoleVal,'inf');
+  // ── Persist session so page refresh doesn't log out ──
+  try{localStorage.setItem('kib_session',JSON.stringify({me:me,date:today(),ts:Date.now()}));}catch(e){}
   initApp();
 }
 function sp_goBack(){document.getElementById('sp-app').style.display='none';document.getElementById('hub-app').style.display='block';sp_currentPage='home';clearInterval(sp_clkTO);return;}
 function sp_doSignOut(){
+  try{localStorage.removeItem('kib_session');}catch(e){}
   logA('LOGOUT',me.n+' signed out','inf');
   me=null;clearInterval(sp_clkTO);
   document.getElementById('sp-sLogin').style.display='flex';
@@ -4112,7 +4133,7 @@ function swTab(groupId,targetId,el){
 // ════════════════════════════════════════════════
 function sp_renderHome(){
   if(!me) return;
-  var agEnt = AGENTS.find(function(a){return a.n===me.name;});
+  var agEnt = AGENTS.find(function(a){return a.n===(me.name||me.n);});
   var ts     = agEnt ? gTodayS(agEnt) : '—';
   var isOff  = ['OFF','P-Leave','Leave','Sick'].indexOf(ts)>=0;
   var isSick = ts==='Sick';
@@ -4189,7 +4210,7 @@ function sp_renderHome(){
 // MY SCHEDULE
 // ════════════════════════════════════════════════
 function renderMySchedule(){
-  if(!me||!me.n||!me.sch) return;
+  if(!me||!(me.n||me.name)) return; if(!me.sch){ var _fa=AGENTS.find(function(a){return a.n===(me.n||me.name);}); if(_fa)me.sch=_fa.sch||[]; else me.sch=[]; }
   var _el=document.getElementById('schAgentName');if(_el)_el.textContent=((me.n||me.name||'')+' · '+(me.t||me.dept||''));
   var h='<table style="width:100%;border-collapse:collapse;">'
     +'<thead><tr style="background:var(--bg);"><th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Date</th>'
@@ -4601,8 +4622,9 @@ function renderMyAttTab(){
     +'<th style="padding:8px 12px;font-size:10px;text-transform:uppercase;color:var(--t2);font-weight:700;text-align:left;">By</th>'
     +'</tr></thead><tbody>';
   DATES.forEach(function(d,i){
+    var agSch=me.sch||(AGENTS.find(function(a){return a.n===(me.n||me.name);})||{}).sch||[];
     if(d>TODAY) return;
-    var sched=me.sch[i]||'OFF';
+    var sched=agSch[i]||'OFF';
     var isOff=['OFF','P-Leave','Leave','Sick'].includes(sched);
     if(!isOff) workDays++;
     var attEntry=null;
@@ -5347,6 +5369,15 @@ function renderUploadPanel(){
     +'</select></div></div>'
     +'<button class="btn btn-navy" onclick="saveManual()">💾 Save to Sheet</button>'
     +'<div id="uploadFeedback" style="margin-top:10px;"></div>'
+    +'</div></div>'
+    +'<div class="sh">🧹 Break Log Maintenance</div>'
+    +'<div class="card"><div class="cb">'
+    +'<div style="font-size:12px;color:var(--t2);margin-bottom:12px;">The BreakLog sheet can accumulate duplicate rows when multiple users sync at the same time. Use this to clear all break data for today and rewrite it cleanly from the current portal state.</div>'
+    +'<div style="display:flex;gap:9px;flex-wrap:wrap;">'
+    +'<button class="btn btn-navy btn-sm" style="flex:1;" onclick="clearAndResyncBreaks()">🔄 Resync Today\'s Breaks</button>'
+    +'<button class="btn btn-red btn-sm" style="flex:1;" onclick="clearTodayBreaks()">🗑️ Clear Today\'s Breaks</button>'
+    +'</div>'
+    +'<div id="clearBreakFeedback" style="margin-top:10px;"></div>'
     +'</div></div>';
 }
 function handleFile(ev){
@@ -5480,6 +5511,73 @@ function renderLogPanel(){
 function syncLog(){
   ACTLOG.forEach(function(e){saveSheet('ActivityLog',[e.ts,e.user,e.role,e.action,e.detail,e.type]);});
   sp_showToast('Log synced to Google Sheets ✓','ok');
+}
+
+// ── Clear BreakLog duplicates and resync today's correct data ──
+function clearAndResyncBreaks(){
+  var fb=document.getElementById('clearBreakFeedback');
+  if(fb) fb.innerHTML='<div style="color:var(--navy);font-size:12px;padding:8px 0;">⏳ Resyncing today\'s breaks to Sheets…</div>';
+  // Reset dedup guard so sv() will push regardless
+  _lastPushedBreaksJSON='';
+  var d=gd();
+  // Deduplicate today's breaks by ID (keep last occurrence of each id)
+  var t=today();
+  var breaks=d.breaks[t]||[];
+  var seen={};
+  var deduped=[];
+  for(var i=breaks.length-1;i>=0;i--){
+    if(!seen[breaks[i].id]){seen[breaks[i].id]=true;deduped.unshift(breaks[i]);}
+  }
+  d.breaks[t]=deduped;
+  _cache=d;
+  try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){}
+  // Push deduplicated data with clearDay flag so GAS knows to replace not append
+  fetch(API,{method:'POST',body:JSON.stringify({action:'saveAll',clearDay:t,data:d}),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res&&res.ok){
+        setSy(true);
+        _lastPushedBreaksJSON=JSON.stringify(d.breaks);
+        if(fb) fb.innerHTML='<div style="color:var(--green);font-size:12px;padding:8px 0;">✅ Resynced '+deduped.length+' unique breaks to Sheets. Duplicates removed.</div>';
+        sp_showToast('Break log resynced ✓','ok');
+        logA('BREAK_RESYNC','Admin cleared duplicate BreakLog rows for '+t,'inf');
+        renderAll();
+      } else {
+        if(fb) fb.innerHTML='<div style="color:var(--red);font-size:12px;padding:8px 0;">❌ Sync failed. Try again.</div>';
+      }
+    }).catch(function(){
+      setSy(false);
+      if(fb) fb.innerHTML='<div style="color:var(--red);font-size:12px;padding:8px 0;">❌ Connection error.</div>';
+    });
+}
+
+// ── Clear ALL break data for today (emergency reset) ──
+function clearTodayBreaks(){
+  if(!confirm('⚠️ This will delete ALL break bookings for today ('+today()+') from the portal and Sheets. Are you sure?')) return;
+  var fb=document.getElementById('clearBreakFeedback');
+  if(fb) fb.innerHTML='<div style="color:var(--amber);font-size:12px;padding:8px 0;">⏳ Clearing today\'s breaks…</div>';
+  var d=gd();
+  d.breaks[today()]=[];
+  _lastPushedBreaksJSON='';
+  _cache=d;
+  try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){}
+  fetch(API,{method:'POST',body:JSON.stringify({action:'saveAll',clearDay:today(),data:d}),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res&&res.ok){
+        setSy(true);
+        _lastPushedBreaksJSON=JSON.stringify(d.breaks);
+        if(fb) fb.innerHTML='<div style="color:var(--green);font-size:12px;padding:8px 0;">✅ All breaks for today cleared successfully.</div>';
+        sp_showToast('Today\'s breaks cleared ✓','ok');
+        logA('BREAK_CLEAR','Admin cleared all breaks for '+today(),'inf');
+        renderAll();
+      } else {
+        if(fb) fb.innerHTML='<div style="color:var(--red);font-size:12px;padding:8px 0;">❌ Clear failed. Try again.</div>';
+      }
+    }).catch(function(){
+      setSy(false);
+      if(fb) fb.innerHTML='<div style="color:var(--red);font-size:12px;padding:8px 0;">❌ Connection error.</div>';
+    });
 }
 
 function renderSheetsPanel(){
@@ -5798,7 +5896,7 @@ function sp_init(){
   // SP expects: {n, t, loginRole, shift(date based)}
   
   // Find the agent in SP's AGENTS array by name
-  var spAgent=AGENTS.find(function(a){return a.n===me.name;});
+  var spAgent=AGENTS.find(function(a){return a.n===(me.name||me.n);});
   if(!spAgent){
     // Not in schedule portal agents list — still show portal as readonly
     spAgent={n:me.name,t:me.dept,loginRole:me.access==="admin"?"admin":"agent",id:"X00"};
@@ -6005,7 +6103,7 @@ function renderUnifiedHome(){
   if(dtEl) dtEl.textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
 
   // ── Today's shift ────────────────────────────────────────────────
-  var agEnt = AGENTS.find(function(a){return a.n===me.name;});
+  var agEnt = AGENTS.find(function(a){return a.n===(me.name||me.n);});
   var ts    = agEnt ? gTodayS(agEnt) : '—';
   var isOff = ['OFF','P-Leave','Leave','Sick'].indexOf(ts)>=0;
   var stEl  = document.getElementById('u-hero-shift-time');
@@ -6028,7 +6126,7 @@ function renderUnifiedHome(){
   var balCard=document.getElementById('u-hero-break');
   if(balCard) balCard.style.display=isMgr?'none':'';
   var daily = s.dailyMin||60;
-  var used  = typeof schedMins==='function' ? schedMins(me.name,d) : 0;
+  var used  = typeof schedMins==='function' ? schedMins(me.name||me.n,d) : 0;
   var rem   = Math.max(daily-used,0);
   var pct   = Math.min(used/daily*100,100);
   var el    = function(id){return document.getElementById(id);};
@@ -6209,12 +6307,12 @@ function uUpdateBadges(){
   var reqBadge = document.getElementById('u-req-badge');
   var d = gd();
   // Swap badge (pending swap requests for me)
-  var pendSwap = (typeof tdb==='function'?tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===me.name;}).length:0)
+  var pendSwap = (typeof tdb==='function'?tdb(d).filter(function(b){return b.status==='swap_pending'&&b.swapWith===(me.name||me.n);}).length:0)
               + SWAPS.filter(function(s){return s.to===me.name&&s.status==='pending_peer';}).length;
   if(swpBadge){swpBadge.textContent=pendSwap;swpBadge.className='unbadge'+(pendSwap?' on':'');}
   // Request badge (pending leaves/swaps I submitted)
-  var myPend = SWAPS.filter(function(s){return (s.from===me.name||s.to===me.name)&&['pending_peer','pending_mgmt'].includes(s.status);}).length
-             + LEAVES.filter(function(l){return l.agent===me.name&&l.status==='pending';}).length;
+  var myPend = SWAPS.filter(function(s){return (s.from===(me.name||me.n)||s.to===(me.name||me.n))&&['pending_peer','pending_mgmt'].includes(s.status);}).length
+             + LEAVES.filter(function(l){return l.agent===(me.name||me.n)&&l.status==='pending';}).length;
   if(reqBadge){reqBadge.textContent=myPend;reqBadge.className='unbadge'+(myPend?' on':'');}
 }
 
@@ -6266,6 +6364,8 @@ function doUnifiedSignOut(){
   me=null;pendEmp=null;selShift=null;selSlot=null;selDur=15;
   [clkInt,syncInt,tmrInt,sp_clkTO].forEach(function(t){if(t)clearInterval(t);});
   clkInt=syncInt=tmrInt=sp_clkTO=null;
+  // ── Clear persisted session ──
+  try{localStorage.removeItem('kib_session');}catch(e){}
 
   // Remove unified class
   document.body.classList.remove('unified');
@@ -6347,8 +6447,7 @@ function renderProfilePage(){
   // -- Break usage today
   var used=schedMins(me.n||me.name,d); var rem=Math.max(daily-used,0);
   var pct=Math.min(used/daily*100,100);
-  var myBrks=tdb(d).filter(function(b){return b.agent===(me.n||me.name)&&b.status!=='cancelled';});
-  var bEl=document.getElementById('prof-break-body');
+  var myBrks=tdb(d).filter(function(b){return b.agent===(me.n||me.name)&&b.status!=='cancelled';});  var bEl=document.getElementById('prof-break-body');
   if(bEl){
     var bh='<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;">'      +'<div><div style="font-size:22px;font-weight:900;color:var(--navy);">'+rem+' min</div><div style="font-size:11px;color:var(--t2);">remaining today</div></div>'      +'<div style="text-align:right;font-size:12px;color:var(--t2);">'+used+' used / '+daily+' total</div></div>'      +'<div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:10px;">'      +'<div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--teal),var(--navy));border-radius:4px;transition:width .5s;"></div></div>';
     if(myBrks.length){
@@ -6425,7 +6524,7 @@ function kpiStore(){
 }
 function kpiVal(id){var e=document.getElementById(id);return e?(e.value||'').trim():'';}
 function kpiSetVal(id,v){var e=document.getElementById(id);if(e)e.value=v;}
-function kpiTodayIso(){var n=new Date();return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());}
+function kpiTodayIso(){var n=new Date(Date.now()+3*60*60*1000);return n.getUTCFullYear()+'-'+pad(n.getUTCMonth()+1)+'-'+pad(n.getUTCDate());}
 function kpiNowHm(){var n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes());}
 function kpiShowMsg(msg,type){
   if(typeof sp_showToast==='function') return sp_showToast(msg,type||'ok');
@@ -6738,6 +6837,62 @@ function initSpProfile(){
 </script>
 
 <script>
+// ════════════════════════════════════════════════════════
+// SESSION RESTORE — stay logged in after page refresh
+// ════════════════════════════════════════════════════════
+(function(){
+  try{
+    var raw=localStorage.getItem('kib_session');
+    if(!raw) return;
+    var sess=JSON.parse(raw);
+    // Only restore if session is from today and less than 20 hours old
+    if(!sess||!sess.me||!sess.date) return;
+    if(sess.date!==today()) { localStorage.removeItem('kib_session'); return; }
+    if(Date.now()-sess.ts > 20*60*60*1000) { localStorage.removeItem('kib_session'); return; }
+    // Restore me — normalize both me.name and me.n regardless of login path used
+    me=sess.me;
+    me.name = me.name || me.n || '';   // BS path uses me.name
+    me.n    = me.n    || me.name || ''; // SP path uses me.n
+    me.dept = me.dept || me.t || '';
+    me.t    = me.t    || me.dept || '';
+    me.access = me.access || me.loginRole || 'agent';
+    me.loginRole = me.loginRole || me.access || 'agent';
+    // Pull fresh data from Sheets then launch app
+    var done=false;
+    var fallback=setTimeout(function(){
+      if(!done){ done=true; startApp(); }
+    }, 4000);
+    fetch(API+'?action=getAll&_='+Date.now())
+      .then(function(r){return r.json();})
+      .then(function(remote){
+        if(done) return; done=true; clearTimeout(fallback);
+        if(remote&&remote.ok) _applyRemote(remote);
+        // Re-detect shift from fresh Sheets data (fixes stale shift after date rollover)
+        if(me&&!isManagementUser(me)){
+          var freshShift=buildAutoShiftFor(me);
+          if(freshShift&&freshShift.label&&freshShift.label!=='Management'){
+            me.shift=freshShift.start;
+            me.shiftEnd=freshShift.end;
+            me.shiftLabel=freshShift.label;
+            me.shiftEndMin=freshShift.endMinRaw;
+          }
+        }
+        // Re-sync me.sch from freshly loaded AGENTS
+        var freshAgent=AGENTS.find(function(a){return a.n===me.n||a.n===me.name;});
+        if(freshAgent){
+          me.sch=freshAgent.sch||[];
+          me.t=freshAgent.t; me.dept=freshAgent.t;
+          me.id=freshAgent.id;
+          me.loginRole=freshAgent.loginRole||me.loginRole||'agent';
+        }
+        startApp();
+      })
+      .catch(function(){
+        if(!done){ done=true; clearTimeout(fallback); startApp(); }
+      });
+  }catch(e){ me=null; } // if anything fails, fall through to login screen
+})();
+
 // ── Toggle announcement bar ────────────────────────────────────────
 function toggleAnnBar(){
   var bar=document.getElementById('u-ann-bar');
