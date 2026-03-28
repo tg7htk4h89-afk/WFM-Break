@@ -2458,7 +2458,7 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbz2h8ZCu4qdjXETnDrO1YV0ztxTu1YYhofqtji_Z13N2jGTjIwE7FLkHFsXGzOvBs96gA/exec';
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxXLfDliuKqw-RgsGMuo7Smiefk7ivUW-6NL122YjIsDEx6b9pkXdwkmSrqABTWkT-8fg/exec';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2501,6 +2501,17 @@ function ini(n){var p=n.trim().split(' ');return(p.length>=2?p[0][0]+p[1][0]:p[0
 function greet(){var h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening';}
 function elapse(ts){var s=Math.floor((Date.now()-ts)/1000);var m=Math.floor(s/60);s=s%60;return pad(m)+':'+pad(s);}
 function elapseMin(ts){return Math.floor((Date.now()-ts)/60000);}
+// ── Kuwait time helpers (UTC+3) ──────────────────────────────────────
+// Use these for ALL timestamps written to Google Sheets
+function kuwaitISO(){
+  // Returns "YYYY-MM-DD HH:MM:SS" in Kuwait local time — human-readable in Sheets
+  var d=new Date(Date.now()+3*60*60*1000);
+  return d.toISOString().replace('T',' ').substring(0,19);
+}
+function kuwaitISOFull(){
+  // Returns "YYYY-MM-DDTHH:MM:SS+03:00" — ISO with Kuwait offset
+  return new Date(Date.now()+3*60*60*1000).toISOString().replace('Z','+03:00').substring(0,22)+':00';
+}
 
 
 // ══════════════════════════════════════════════════════════
@@ -2572,13 +2583,15 @@ function sv(d){
 
 // ── Push data to Sheets with retry on failure ──
 function _pushToSheets(d){
+  // Send raw data — GAS is responsible for timestamp formatting in Sheets.
+  // Do NOT convert ms timestamps to strings here: doing so breaks the 30s
+  // pending-break merge check in _applyRemote and crashes mirrorBreaksToSheet_.
   var payload=JSON.stringify({action:'saveAll',data:d});
   fetch(API,{method:'POST',body:payload,headers:{'Content-Type':'text/plain'}})
   .then(function(r){return r.json();})
   .then(function(res){
     if(res&&res.ok){
       setSy(true);
-      // Clear any queued retries
       if(_retryTO){clearTimeout(_retryTO);_retryTO=null;}
     } else {
       setSy(false);
@@ -2642,7 +2655,8 @@ function _applyRemote(remote){
     newBreaks[date]=rBreaks.slice();
     // Add local breaks that Sheets doesn't have yet (just written, not synced)
     lBreaks.forEach(function(lb){
-      if(!rMap[lb.id]&&lb.bookedAt&&(Date.now()-lb.bookedAt<30000)){
+      var bookedMs=typeof lb.bookedAt==='number'?lb.bookedAt:0;
+      if(!rMap[lb.id]&&bookedMs&&(Date.now()-bookedMs<30000)){
         // Written in last 30s — keep it locally until next push confirms
         newBreaks[date].push(lb);
         changed=true;
@@ -2744,7 +2758,7 @@ function saveLoginAPI(emp,shift){
   try{
     fetch(API,{method:'POST',
       body:JSON.stringify({action:'saveLogin',agent:emp.name,shift:shift.label,
-        time:nowHH(),dept:emp.dept||'',role:emp.role||'',date:today()}),
+        time:nowHH(),dept:emp.dept||'',role:emp.role||'',date:today(),ts:kuwaitISO()}),
       headers:{'Content-Type':'text/plain'}
     }).catch(function(){});
   }catch(e){}
@@ -2803,7 +2817,26 @@ function checkPw(){
     finishLogin(emp,buildAutoShiftFor(emp),{voicemail:false});
     return;
   }
-  showStep2(emp);
+  // ── For agents: pull Sheets first so DATES is populated before showStep2 reads shift ──
+  // Without this, DATES still has the hardcoded range (ends Mar 14) so today is not found
+  // and gTodayS returns 'OFF' even for agents who have a shift today.
+  var btn=document.querySelector('#step1 .btn-main');
+  if(btn){btn.textContent='⏳ Loading…';btn.disabled=true;}
+  var done=false;
+  var fallback=setTimeout(function(){
+    if(!done){done=true;if(btn){btn.textContent='Enter Portal →';btn.disabled=false;}showStep2(emp);}
+  },4000);
+  fetch(API+'?action=getAll&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(remote){
+      if(done)return;done=true;clearTimeout(fallback);
+      if(remote&&remote.ok)_applyRemote(remote);
+      if(btn){btn.textContent='Enter Portal →';btn.disabled=false;}
+      showStep2(emp);
+    })
+    .catch(function(){
+      if(!done){done=true;clearTimeout(fallback);if(btn){btn.textContent='Enter Portal →';btn.disabled=false;}showStep2(emp);}
+    });
 }
 function showStep2(emp){
   if(isManagementUser(emp)){
@@ -3714,7 +3747,9 @@ function patchBsTopbar(){
 // ════════════════════════════════════════════════
 let DATES=['2026-03-02','2026-03-03','2026-03-04','2026-03-05','2026-03-06','2026-03-07','2026-03-08','2026-03-09','2026-03-10','2026-03-11','2026-03-12','2026-03-13','2026-03-14'];
 let DL=['Mon 02','Tue 03','Wed 04','Thu 05','Fri 06','Sat 07','Sun 08','Mon 09','Tue 10','Wed 11','Thu 12','Fri 13','Sat 14'];
-const TODAY=(function(){var d=new Date(Date.now()+3*60*60*1000);return d.toISOString().split('T')[0];})();
+// TODAY is computed fresh each time it's needed via the today() function
+// The line below keeps backward compatibility for code that reads TODAY directly
+var TODAY=(function(){var d=new Date(Date.now()+3*60*60*1000);return d.toISOString().split('T')[0];})();
 let WKND=[4,5,11,12];
 
 let AGENTS=[
@@ -3873,7 +3908,7 @@ var sp_teamFilter='All';
 // ini shared from BS
 const COLORS=['#0A4A8A','#00A89A','#3DB549','#E08C00','#6B3FA0','#C0392B','#0A7FAE','#2E86C1'];
 // avc shared from BS
-function gTodayS(a){return (a&&a.sch&&a.sch[DATES.indexOf(TODAY)])||'OFF';}
+function gTodayS(a){return (a&&a.sch&&a.sch[DATES.indexOf(today())])||'OFF';}
 function getAttScheduleOverride(agentName, baseShift, dateStr){
   if(typeof attGetEntry!=='function' || dateStr!==TODAY) return null;
   var att=attGetEntry(agentName);
@@ -4468,7 +4503,7 @@ function submitSwap(){
   var sA_=idx_>=0&&myAg?(myAg.sch[idx_]||'OFF'):(gTodayS(me)||'OFF');
   var sB_=idx_>=0?(ag.sch[idx_]||'OFF'):(gTodayS(ag)||'OFF');
   var swType=window._swapType||'shift';
-  var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:d,sA:sA_,sB:sB_,reason:r,type:swType,status:'pending_peer',ts:new Date().toISOString()};
+  var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:d,sA:sA_,sB:sB_,reason:r,type:swType,status:'pending_peer',ts:kuwaitISO()};
   SWAPS.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',
     id:entry.id,from:entry.from,to:entry.to,date:entry.date,
@@ -4539,7 +4574,7 @@ function respondSwap(id, accept){
   if(!s)return;
   s.status=accept?'pending_mgmt':'peer_declined';
   s.peerActionBy=me.n;
-  s.peerActionAt=new Date().toISOString();
+  s.peerActionAt=kuwaitISO();
   fetch(API,{method:'POST',body:JSON.stringify({
     action:'updateSwapStatus',id:id,
     status:s.status,peerActionBy:me.n,peerActionAt:s.peerActionAt
@@ -4583,7 +4618,7 @@ function submitLeave(){
     sp_showToast('Leave end date cannot be before start date','err');
     return;
   }
-  var entry={id:'L'+(Date.now()%10000),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:new Date().toISOString()};
+  var entry={id:'L'+(Date.now()%10000),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:kuwaitISO()};
   LEAVES.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveLeaveRequest',
     id:entry.id,agent:entry.agent,type:entry.type,from:entry.from,
@@ -5121,7 +5156,7 @@ function attSaveOne(agentId){
     note:arrivalNote,
     newShift:sel.status==='change'?(sel.newShift||''):sel.status==='permission'?((sel.fromTime||'')+(sel.toTime?' - '+sel.toTime:'')):'',
     markedBy:me.n||me.name||'',
-    ts:new Date(Date.now()+3*60*60*1000).toISOString().replace('T',' ').substring(0,16)
+    ts:kuwaitISO()
   };
   // Update local ATT_LOG
   ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===agent.n&&e.date===today());});
@@ -5152,7 +5187,7 @@ function saveAllAtt(){
   e.forEach(function(p){
     var a=AGENTS.find(function(x){return x.id===p[0];});
     logA('ATTENDANCE',a.n+' → '+p[1].toUpperCase(),'inf');
-    saveSheet('Attendance',[a.n,today(),p[1],me.n,new Date().toISOString()]);
+    saveSheet('Attendance',[a.n,today(),p[1],me.n,kuwaitISO()]);
   });
   sp_showToast('Attendance saved for '+e.length+' agents ✓','ok');
 }
@@ -5215,10 +5250,10 @@ function approveSwap(id){
   if(!s)return;
   s.status='approved';
   s.actionedBy=me.n;
-  s.actionedAt=new Date().toISOString();
+  s.actionedAt=kuwaitISO();
   // Apply schedule override: swap shifts for both agents on the swap date
   _applySwapToSchedule(s);
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'approved',actionedBy:me.n}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'approved',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   logA&&logA('SWAP_APPROVED',id+' approved by '+me.n,'ok');
   sp_showToast('Swap approved ✓ — schedule updated','ok');
   renderSwapApproval();
@@ -5230,8 +5265,8 @@ function rejectSwap(id){
   if(!s)return;
   s.status='rejected';
   s.actionedBy=me.n;
-  s.actionedAt=new Date().toISOString();
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'rejected',actionedBy:me.n}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  s.actionedAt=kuwaitISO();
+  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'rejected',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   logA&&logA('SWAP_REJECTED',id+' rejected by '+me.n,'inf');
   sp_showToast('Swap rejected','inf');
   renderSwapApproval();
@@ -5302,7 +5337,7 @@ function renderLeaveApproval(){
 function approveLeave(id){
   var l=LEAVES.find(function(x){return x.id===id;});
   if(l) l.status='approved';
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveLeave',id:id,status:'approved',actionedBy:me.n}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  fetch(API,{method:'POST',body:JSON.stringify({action:'approveLeave',id:id,status:'approved',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   logA('LEAVE_APPROVED',id+' approved by '+me.n,'inf');
   sp_showToast('Leave approved ✓','ok');
   renderLeaveApproval();
@@ -5310,7 +5345,7 @@ function approveLeave(id){
 function rejectLeave(id){
   var l=LEAVES.find(function(x){return x.id===id;});
   if(l) l.status='rejected';
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveLeave',id:id,status:'rejected',actionedBy:me.n}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  fetch(API,{method:'POST',body:JSON.stringify({action:'approveLeave',id:id,status:'rejected',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   logA('LEAVE_REJECTED',id+' rejected by '+me.n,'inf');
   sp_showToast('Leave rejected','inf');
   renderLeaveApproval();
@@ -5474,7 +5509,7 @@ function saveManual(){
   if(fb) fb.innerHTML='<div style="color:var(--navy);font-size:12px;padding:8px 0;">⏳ Saving to Sheet…</div>';
   if(di>=0) ag.sch[di]=s;
   logA('MANUAL_EDIT',ag.n+' on '+d+' → '+s,'inf');
-  fetch(API,{method:'POST',body:JSON.stringify({action:'updateShift',agent:ag.n,date:d,shift:s,changedBy:me.n}),headers:{'Content-Type':'text/plain'}})
+  fetch(API,{method:'POST',body:JSON.stringify({action:'updateShift',agent:ag.n,date:d,shift:s,changedBy:me.n,changedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
     .then(function(res){
       var ok=res&&res.ok;
@@ -5661,7 +5696,7 @@ async function saveSheet(tab,vals){
 // ACTIVITY LOG
 // ════════════════════════════════════════════════
 function logA(action,detail,type){
-  var e={ts:new Date().toISOString(),user:me?me.n:'System',role:me?me.loginRole:'—',action:action,detail:detail,type:type||'inf'};
+  var e={ts:kuwaitISO(),user:me?me.n:'System',role:me?me.loginRole:'—',action:action,detail:detail,type:type||'inf'};
   if(typeof ACTLOG!=='undefined'){ACTLOG.unshift(e);if(ACTLOG.length>200)ACTLOG.pop();}
   // Send to Apps Script (via same API endpoint)
   try{
@@ -5855,7 +5890,7 @@ function srfSubmit(){
     offDayType:srfPicks.srfOffTypeRow||'—',
     specificOffDays:srfOffDays.join(', '),
     specialReq:document.getElementById('srfSpecial').value,
-    ts:new Date().toISOString()
+    ts:kuwaitISO()
   };
   logA('SCHEDULE_REQUEST',me.n+' submitted preference for '+window._srfFrom+' → '+window._srfTo,'inf');
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveScheduleReq',payload:payload}),headers:{'Content-Type':'text/plain'}})
@@ -6702,7 +6737,7 @@ function submitDailyKPI(type){
   var payload={
     id:'KPI-'+Date.now()+'-'+Math.random().toString(36).slice(2,7).toUpperCase(),
     type:type,
-    createdAt:new Date().toISOString(),
+    createdAt:kuwaitISO(),
     agent:(me&&(me.n||me.name))||'',
     dept:(me&&(me.t||me.dept))||'',
     team:(me&&(me.t||me.dept))||'',
@@ -6960,7 +6995,7 @@ function submitQuickSwap(){
   var reason=document.getElementById('qs-reason').value||'Schedule swap';
   var idx=DATES.indexOf(_qs_date);
   var theirShift=idx>=0?(ag.sch[idx]||'OFF'):'?';
-  var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:_qs_date,sA:_qs_myShift,sB:theirShift,reason:reason,status:'pending_peer',ts:new Date().toISOString()};
+  var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:_qs_date,sA:_qs_myShift,sB:theirShift,reason:reason,status:'pending_peer',ts:kuwaitISO()};
   SWAPS.push(entry);
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',id:entry.id,from:entry.from,to:entry.to,date:entry.date,fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,ts:entry.ts}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();}).then(function(res){if(res&&res.ok)setSy(true);else setSy(false);}).catch(function(){setSy(false);});
