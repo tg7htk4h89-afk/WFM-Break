@@ -2458,8 +2458,8 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxXLfDliuKqw-RgsGMuo7Smiefk7ivUW-6NL122YjIsDEx6b9pkXdwkmSrqABTWkT-8fg/exec';
-var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=15,tmFilter='',selVoicemail=false;
+var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxOOgJoT_F7xa9ib5bN6TZE2eS_e2g00zDzEmJr16ryixifHFhYcc1eQ0Set3t8RORhTA/exec';
+var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=30,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
 function today(){
@@ -2526,7 +2526,7 @@ var _lastPushedBreaksJSON = ''; // dedup guard: only push when breaks actually c
 
 // Default empty structure
 function defD(){
-  return {breaks:{},logins:{},dailyKpi:{extra:[],meeting:[],permission:[],issue:[]},settings:{dailyMin:60,maxCon:2,maxBreak:60,announce:''},ts:0};
+  return {breaks:{},logins:{},dailyKpi:{extra:[],meeting:[],permission:[],issue:[]},settings:{dailyMin:60,maxCon:2,maxBreak:30,announce:''},ts:0};
 }
 
 // ── READ: always from cache (cache is kept fresh by continuous pull) ──
@@ -2564,7 +2564,8 @@ function myBreak(d){
 }
 function myBreaks(d){
   var myName=me.name||me.n||'';
-  return tdb(d).filter(function(b){return b.agent===myName&&(b.status==='booked'||b.status==='active');});
+  // Count all non-cancelled breaks (booked, active, done) — agent gets one break per day total
+  return tdb(d).filter(function(b){return b.agent===myName&&b.status!=='cancelled';});
 }
 
 // ── WRITE: update cache immediately → push to Sheets ──
@@ -2653,15 +2654,26 @@ function _applyRemote(remote){
     rBreaks.forEach(function(b){rMap[b.id]=b;});
     // Start with all remote breaks
     newBreaks[date]=rBreaks.slice();
-    // Add local breaks that Sheets doesn't have yet (just written, not synced)
+    // Keep local breaks that aren't confirmed in Sheets yet
+    // Rule: keep ANY local break with status booked/active/done that isn't in remote
+    // (not just 30s window — if agent re-logged after a failed sync, break could be hours old)
+    var repushNeeded=false;
     lBreaks.forEach(function(lb){
-      var bookedMs=typeof lb.bookedAt==='number'?lb.bookedAt:0;
-      if(!rMap[lb.id]&&bookedMs&&(Date.now()-bookedMs<30000)){
-        // Written in last 30s — keep it locally until next push confirms
-        newBreaks[date].push(lb);
-        changed=true;
-      }
+      if(rMap[lb.id]) return; // already in Sheets — remote wins (already included above)
+      if(lb.status==='cancelled') return; // don't resurrect cancelled breaks
+      // This break exists locally but not in Sheets — keep it and re-push
+      newBreaks[date].push(lb);
+      changed=true;
+      repushNeeded=true;
     });
+    if(repushNeeded){
+      // Schedule a re-push so Sheets gets these missing breaks
+      setTimeout(function(){
+        var latest=gd();
+        _lastPushedBreaksJSON=''; // force push regardless of dedup guard
+        _pushToSheets(latest);
+      },500);
+    }
   });
 
   // Merge logins: union of both
@@ -2697,11 +2709,15 @@ function _applyRemote(remote){
 
   var swapsChanged=Array.isArray(remote.swaps)&&JSON.stringify(remote.swaps)!==JSON.stringify(SWAPS);
   var leavesChanged=Array.isArray(remote.leaves)&&JSON.stringify(remote.leaves)!==JSON.stringify(LEAVES);
-  var attChanged=Array.isArray(remote.attendance)&&JSON.stringify(remote.attendance)!==JSON.stringify(ATT_LOG);
+  // Capture old ATT_LOG length before merge for change detection
+  var oldAttLen=ATT_LOG.length;
   var agentsChanged=Array.isArray(remote.agents)&&remote.agents.length>0;
 
   _cache=newD;
   try{localStorage.setItem(SK,JSON.stringify(newD));}catch(e){}
+  // Update dedup guard to reflect what Sheets actually has
+  // (only update if we didn't add local-only breaks, otherwise the re-push needs to fire)
+  if(!changed) _lastPushedBreaksJSON=JSON.stringify(newD.breaks);
 
   // ── Populate SP data arrays from Sheets ──
   if(Array.isArray(remote.swaps)){
@@ -2712,7 +2728,16 @@ function _applyRemote(remote){
   }
   if(Array.isArray(remote.leaves)) { LEAVES=remote.leaves; }
   if(Array.isArray(remote.actlog)) { ACTLOG=remote.actlog; }
-  if(Array.isArray(remote.attendance)) { ATT_LOG=remote.attendance; }
+  if(Array.isArray(remote.attendance)){
+    // Merge: remote is source of truth, but keep any local entries not yet in remote
+    // (written in last 30s — GAS upsert may not have propagated yet)
+    var remoteAttMap={};
+    remote.attendance.forEach(function(a){remoteAttMap[a.agent+'|'+a.date]=true;});
+    var localNew=ATT_LOG.filter(function(a){
+      return !remoteAttMap[a.agent+'|'+a.date]&&a.ts&&(Date.now()-new Date(a.ts.replace(' ','T')).getTime()<30000);
+    });
+    ATT_LOG=remote.attendance.concat(localNew);
+  }
 
   // ── Live schedule from Sheet — replaces hardcoded AGENTS ──
   if(Array.isArray(remote.agents)&&remote.agents.length){
@@ -2738,11 +2763,19 @@ function _applyRemote(remote){
     }
   }
 
+  var attChanged=ATT_LOG.length!==oldAttLen||
+    (Array.isArray(remote.attendance)&&remote.attendance.length!==oldAttLen);
+
   if((wasChanged||swapsChanged||leavesChanged||attChanged||agentsChanged)&&me&&me.n) renderAll();
-  // ★ If agent is viewing their own attendance tab, refresh it immediately
-  if(remote.attendance&&me&&me.n){
+  // Refresh attendance panel immediately when data changes
+  if(attChanged&&me&&me.n){
     var attTab=document.getElementById('rt-att');
     if(attTab&&attTab.style.display!=='none'&&typeof renderMyAttTab==='function') renderMyAttTab();
+    // Also refresh management attendance page if open
+    if(typeof renderAttendance==='function'){
+      var attPg=document.getElementById('pg-attendance');
+      if(attPg&&attPg.classList.contains('on')) renderAttendance();
+    }
   }
 }
 
@@ -2930,7 +2963,7 @@ function _startSession(){
 
 function doSignOut(){
   if(typeof doUnifiedSignOut==='function'){doUnifiedSignOut();return;}
-  me=null;selSlot=null;selDur=15;tmFilter='';
+  me=null;selSlot=null;selDur=30;tmFilter='';
   try{localStorage.removeItem('kib_session');}catch(e){}
   [clkInt,syncInt,tmrInt].forEach(function(t){if(t)clearInterval(t);});clkInt=syncInt=tmrInt=null;
   document.getElementById('pwInput').value='';
@@ -3011,7 +3044,7 @@ function gp(p){
   document.querySelectorAll('.nb').forEach(function(x){x.classList.remove('on');});
   var pg=document.getElementById('pg-'+p);var nb=document.getElementById('nav-'+p);
   if(pg)pg.classList.add('on');if(nb)nb.classList.add('on');
-  if(p!=='book'){selSlot=null;selDur=15;var dc=document.getElementById('durcard');if(dc)dc.style.display='none';var bw=document.getElementById('bookbtnwrap');if(bw)bw.style.display='none';}
+  if(p!=='book'){selSlot=null;selDur=30;var dc=document.getElementById('durcard');if(dc)dc.style.display='none';var bw=document.getElementById('bookbtnwrap');if(bw)bw.style.display='none';}
   if(p==='book')buildSlotGrid();
   if(p==='team')renderTeam();
   if(p==='swap')renderSwap();
@@ -3255,15 +3288,27 @@ function requestTakeover(targetId){
   sv(d);showToast('Swap request sent to '+target.agent+'!','ok');addNotif('🔄 Swap request sent to '+target.agent);buildSlotGrid();
 }
 function pickSlot(m){
-  selSlot={min:m,hhmm:fromMin(m)};selDur=15;buildSlotGrid();
+  selSlot={min:m,hhmm:fromMin(m)};selDur=30;buildSlotGrid();
   document.getElementById('durcard').style.display='block';document.getElementById('bookbtnwrap').style.display='block';
   buildDurBtns();setTimeout(function(){var dc=document.getElementById('durcard');if(dc)dc.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
 }
 function buildDurBtns(){
-  var d=gd();var s=d.settings||{};var daily=s.dailyMin||60;var maxB=s.maxBreak||60;
-  var used=schedMins((me.name||me.n),d);var rem=Math.max(daily-used,0);var maxDur=Math.min(maxB,rem);
+  var d=gd();var s=d.settings||{};var daily=s.dailyMin||60;var maxB=s.maxBreak||30;
+  var myName=me.name||me.n||'';
+  var used=schedMins(myName,d);var rem=Math.max(daily-used,0);var maxDur=Math.min(maxB,rem);
+  // Check if agent already has a 30-min break today (only one allowed)
+  var has30=tdb(d).some(function(b){
+    return b.agent===myName&&b.duration===30&&b.status!=='cancelled';
+  });
   document.getElementById('durbal').textContent=rem+' min';
-  var h='';[15,20,30,60].forEach(function(v){var ok=v<=maxDur;h+='<button class="durbtn'+(selDur===v?' sel':'')+'" onclick="setDur('+v+')"'+(ok?'':' disabled')+'>'+v+' min</button>';});
+  var h='';
+  [15,20,30].forEach(function(v){
+    var ok=v<=maxDur;
+    // Disable 30 if already has one, show tooltip
+    var blocked=(v===30&&has30);
+    var label=v+' min'+(blocked?' (used)':'');
+    h+='<button class="durbtn'+(selDur===v?' sel':'')+'" onclick="setDur('+v+')"'+((ok&&!blocked)?'':' disabled')+'>'+label+'</button>';
+  });
   document.getElementById('durrow').innerHTML=h;
 }
 function setDur(v){selDur=v;buildDurBtns();}
@@ -3272,13 +3317,19 @@ function confirmBook(){
   var vmExtra=(me&&me.handleVoicemail)?1:0;var maxAllowed=mc+vmExtra;
   var myName=me.name||me.n||'';
   var used=schedMins(myName,d);var rem=Math.max(daily-used,0);
-  if(selDur>rem){showToast('Not enough time remaining','err');return;}
+  if(selDur>rem){showToast('Not enough break time remaining','err');return;}
+  // Rule: only ONE 30-min break allowed per agent per day
+  if(selDur===30){
+    var has30=tdb(d).some(function(b){
+      return b.agent===myName&&b.duration===30&&b.status!=='cancelled';
+    });
+    if(has30){showToast('You already have a 30 min break today — only one allowed','err');return;}
+  }
   var m=selSlot.min;var smCB=toMin(me.shift);var conf=tdb(d).filter(function(b){if(b.status==='cancelled')return false;var bs=toMin(b.breakStart);var bsA=(bs<480&&smCB>=720)?bs+1440:bs;return bsA<=m&&bsA+b.duration>m;});
   if(conf.length>=maxAllowed){showToast((me&&me.handleVoicemail)?'Voicemail extra slot already used here':'Slot is now full!','err');buildSlotGrid();return;}
-  if(myBreaks(d).length>=2){showToast('You already have 2 breaks booked','err');return;}
   var nb={id:uid(),agent:myName,breakStart:selSlot.hhmm,duration:selDur,status:'booked',bookedAt:Date.now(),voicemailOverride:!!(me&&me.handleVoicemail&&conf.length>=mc)};
-  tdb(d).push(nb);sv(d);var bt=fmt12(selSlot.hhmm);selSlot=null;selDur=15;
-  showToast('Break booked for '+bt+((nb.voicemailOverride)?' · voicemail exception':''),'ok');addNotif('📅 Break booked for '+bt+((nb.voicemailOverride)?' (voicemail exception)':''));
+  tdb(d).push(nb);sv(d);var bt=fmt12(selSlot.hhmm);selSlot=null;selDur=30;
+  showToast('Break booked for '+bt+' ('+nb.duration+' min)'+((nb.voicemailOverride)?' · voicemail exception':''),'ok');addNotif('📅 Break booked for '+bt);
   document.getElementById('durcard').style.display='none';document.getElementById('bookbtnwrap').style.display='none';buildSlotGrid();
 }
 
@@ -3559,7 +3610,7 @@ function renderHistory(){
 
 function renderAdmin(){
   var d=gd();var s=d.settings||{};
-  document.getElementById('smax').value=s.dailyMin||60;document.getElementById('scon').value=s.maxCon||2;document.getElementById('smaxb').value=s.maxBreak||60;document.getElementById('annInput').value=s.announce||'';
+  document.getElementById('smax').value=s.dailyMin||60;document.getElementById('scon').value=s.maxCon||2;document.getElementById('smaxb').value=s.maxBreak||30;document.getElementById('annInput').value=s.announce||'';
   var bs=tdb(d);var h='';
   if(!bs.length)h='<div class="empty" style="padding:12px"><div class="ep">No breaks today</div></div>';
   else bs.filter(function(b){return b.status!=='cancelled';}).forEach(function(b){h+='<div class="adrow"><div style="width:28px;height:28px;border-radius:7px;background:'+avc(b.agent)+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0">'+ini(b.agent)+'</div><div style="flex:1"><div style="font-size:13px;font-weight:700">'+b.agent+'</div><div style="font-size:11px;color:var(--t2)">'+fmt12(b.breakStart)+' · '+b.duration+' min</div></div><span class="pill '+(b.status==='active'?'p-amber':b.status==='done'?'p-green':'p-navy')+'">'+b.status+'</span></div>';});
@@ -5158,11 +5209,28 @@ function attSaveOne(agentId){
     markedBy:me.n||me.name||'',
     ts:kuwaitISO()
   };
-  // Update local ATT_LOG
+  // Update local ATT_LOG immediately (upsert by agent+date)
   ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===agent.n&&e.date===today());});
   ATT_LOG.push(entry);
-  // Save to Sheets: Agent | Date | Status | Note | NewShift | MarkedBy | Timestamp
-  saveSheet('Attendance',[entry.agent,entry.date,entry.status,entry.note,entry.newShift,entry.markedBy,entry.ts]);
+
+  // ── Send to GAS via dedicated saveAttendance action (proper upsert by agent+date) ──
+  // Do NOT use saveSheet/appendRow — that path duplicates rows on re-mark
+  fetch(API,{method:'POST',body:JSON.stringify({
+    action:'saveAttendance',
+    agent:entry.agent,
+    date:entry.date,
+    status:entry.status,
+    note:entry.note,
+    newShift:entry.newShift,
+    markedBy:entry.markedBy,
+    ts:entry.ts
+  }),headers:{'Content-Type':'text/plain'}})
+  .then(function(r){return r.json();})
+  .then(function(res){
+    if(res&&res.ok){setSy(true);}
+    else{setSy(false);console.warn('[Att]',res&&res.error);}
+  })
+  .catch(function(){setSy(false);});
   logA('ATTENDANCE',agent.n+' → '+entry.status.toUpperCase()+(entry.newShift?' (→'+entry.newShift+')':''),'inf');
   delete _attSelMap[agentId];
   sp_showToast(agent.n.split(' ')[0]+' → '+entry.status,'ok');
@@ -6414,7 +6482,7 @@ function initUnified(){
 
 // ── Unified sign out ──────────────────────────────────────────────
 function doUnifiedSignOut(){
-  me=null;pendEmp=null;selShift=null;selSlot=null;selDur=15;
+  me=null;pendEmp=null;selShift=null;selSlot=null;selDur=30;
   [clkInt,syncInt,tmrInt,sp_clkTO].forEach(function(t){if(t)clearInterval(t);});
   clkInt=syncInt=tmrInt=sp_clkTO=null;
   // ── Clear persisted session ──
