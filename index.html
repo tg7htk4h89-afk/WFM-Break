@@ -3203,9 +3203,9 @@ function buildSlotGrid(){
   var adjNm=(sm>=720&&nm<sm&&nm<480)?nm+1440:nm;
   var started=adjNm>=sm;
   var h='';
-  for(var m=sm;m<em;m+=30){
+  for(var m=sm;m<em;m+=15){
     var displayM=m%1440;
-    var valid=(m>=sm+15)&&(m+30<=em-15);
+    var valid=(m>=sm+15)&&(m+15<=em-15);
     var isPast=m<adjNm;
     var at=[];var myHere=null;
     tdb(d).forEach(function(b){
