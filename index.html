@@ -2389,6 +2389,40 @@ input,select,textarea,button{font-size:16px;}
       </div>
     </div>
 
+    <!-- MANAGEMENT KPI OVERVIEW (management only) -->
+    <div id="kpiMgmtPanel" style="display:none;margin-top:14px;">
+      <div class="sh">Team KPI Overview</div>
+      <!-- Summary Stats -->
+      <div class="team-summary" id="kpiMgmtStats">
+        <div class="tscard c-navy"><div class="tsnum" id="kpiMgmtTotalExtra">0</div><div class="tslbl">Extra Breaks</div></div>
+        <div class="tscard c-teal"><div class="tsnum" id="kpiMgmtTotalMeeting">0</div><div class="tslbl">Meetings</div></div>
+        <div class="tscard c-amber"><div class="tsnum" id="kpiMgmtTotalPermission">0</div><div class="tslbl">Permissions</div></div>
+        <div class="tscard c-red"><div class="tsnum" id="kpiMgmtTotalIssue">0</div><div class="tslbl">Sys Issues</div></div>
+      </div>
+      <!-- Filters -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
+        <select class="fld" id="kpiMgmtDateFilter" style="flex:1;min-width:130px;" onchange="renderKpiMgmt()">
+          <option value="">All dates</option>
+        </select>
+        <select class="fld" id="kpiMgmtTypeFilter" style="flex:1;min-width:130px;" onchange="renderKpiMgmt()">
+          <option value="">All types</option>
+          <option value="extra">Extra Break</option>
+          <option value="meeting">Meeting</option>
+          <option value="permission">Permission</option>
+          <option value="issue">System Issue</option>
+        </select>
+        <select class="fld" id="kpiMgmtAgentFilter" style="flex:1;min-width:130px;" onchange="renderKpiMgmt()">
+          <option value="">All agents</option>
+        </select>
+      </div>
+      <!-- Entries Table -->
+      <div class="card" style="overflow:hidden;">
+        <div id="kpiMgmtTable">
+          <div style="text-align:center;padding:28px;font-size:12px;color:var(--t3);">Loading…</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ═══ SETTINGS ═══ -->
@@ -2767,6 +2801,14 @@ function _applyRemote(remote){
     (Array.isArray(remote.attendance)&&remote.attendance.length!==oldAttLen);
 
   if((wasChanged||swapsChanged||leavesChanged||attChanged||agentsChanged)&&me&&me.n) renderAll();
+  // Refresh KPI management panel if open
+  if(wasChanged&&me&&me.n&&isManagementUser(me)){
+    var kpiPg=document.getElementById('pg-kpi');
+    if(kpiPg&&kpiPg.classList.contains('on')){
+      _kpiInit=false; // allow re-init to refresh mgmt panel
+      renderKpiMgmt&&renderKpiMgmt();
+    }
+  }
   // Refresh attendance panel immediately when data changes
   if(attChanged&&me&&me.n){
     var attTab=document.getElementById('rt-att');
@@ -6788,6 +6830,123 @@ function initDailyKPIPage(){
   document.querySelectorAll('#kpiTabs .ftab').forEach(function(tab){
     tab.addEventListener('click',function(){ setKpiTab(tab.getAttribute('data-kpi-tab')); });
   });
+  // Show management panel for managers
+  var mgmtPanel=document.getElementById('kpiMgmtPanel');
+  if(mgmtPanel) mgmtPanel.style.display=isManagementUser(me)?'':'none';
+  if(isManagementUser(me)) renderKpiMgmt();
+}
+
+// ════════════════════════════════════════════════
+// MANAGEMENT KPI OVERVIEW
+// ════════════════════════════════════════════════
+function renderKpiMgmt(){
+  if(!isManagementUser(me)) return;
+  var s=kpiStore();
+  var typeLabels={extra:'Extra Break',meeting:'Meeting',permission:'Permission',issue:'System Issue'};
+  var typeIcons={extra:'☕',meeting:'📋',permission:'🕐',issue:'⚙️'};
+  var typePill={extra:'p-navy',meeting:'p-teal',permission:'p-amber',issue:'p-red'};
+
+  // Collect ALL entries across all types
+  var all=[];
+  ['extra','meeting','permission','issue'].forEach(function(type){
+    (s[type]||[]).forEach(function(e){all.push(Object.assign({},e,{_type:type}));});
+  });
+
+  // Sort by date+time desc
+  all.sort(function(a,b){
+    var ad=(a.date||'')+(a.time||'');
+    var bd=(b.date||'')+(b.time||'');
+    return bd.localeCompare(ad);
+  });
+
+  // Populate agent filter dropdown (once)
+  var agentSel=document.getElementById('kpiMgmtAgentFilter');
+  if(agentSel&&agentSel.options.length<=1){
+    var agents=[...new Set(all.map(function(e){return e.agent||'';}).filter(Boolean))].sort();
+    agents.forEach(function(a){
+      var o=document.createElement('option');o.value=a;o.textContent=a;agentSel.appendChild(o);
+    });
+  }
+
+  // Populate date filter dropdown (once, last 14 days)
+  var dateSel=document.getElementById('kpiMgmtDateFilter');
+  if(dateSel&&dateSel.options.length<=1){
+    var dates=[...new Set(all.map(function(e){return e.date||'';}).filter(Boolean))].sort().reverse();
+    dates.forEach(function(d){
+      var o=document.createElement('option');o.value=d;
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var p=d.split('-');o.textContent=parseInt(p[2])+' '+months[parseInt(p[1])-1]+' '+p[0];
+      dateSel.appendChild(o);
+    });
+  }
+
+  // Apply filters
+  var filterDate=(document.getElementById('kpiMgmtDateFilter')||{}).value||'';
+  var filterType=(document.getElementById('kpiMgmtTypeFilter')||{}).value||'';
+  var filterAgent=(document.getElementById('kpiMgmtAgentFilter')||{}).value||'';
+  var filtered=all.filter(function(e){
+    if(filterDate&&e.date!==filterDate) return false;
+    if(filterType&&e._type!==filterType) return false;
+    if(filterAgent&&e.agent!==filterAgent) return false;
+    return true;
+  });
+
+  // Update summary stats (always count today)
+  var todayStr=kpiTodayIso();
+  var todayAll=all.filter(function(e){return e.date===todayStr;});
+  ['extra','meeting','permission','issue'].forEach(function(type){
+    var el=document.getElementById('kpiMgmtTotal'+type.charAt(0).toUpperCase()+type.slice(1));
+    if(el) el.textContent=todayAll.filter(function(e){return e._type===type;}).length;
+  });
+
+  // Build table
+  var tbl=document.getElementById('kpiMgmtTable');
+  if(!tbl) return;
+  if(!filtered.length){
+    tbl.innerHTML='<div style="text-align:center;padding:28px;font-size:12px;color:var(--t3);">No KPI entries found</div>';
+    return;
+  }
+
+  var h='<table style="width:100%;border-collapse:collapse;">'
+    +'<thead><tr style="background:var(--bg);">'
+    +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Agent</th>'
+    +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Type</th>'
+    +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Date · Time</th>'
+    +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Details</th>'
+    +'<th style="padding:9px 12px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;text-transform:uppercase;letter-spacing:.6px;">Dur</th>'
+    +'</tr></thead><tbody>';
+
+  filtered.forEach(function(e,idx){
+    var isToday=e.date===todayStr;
+    var detail='';
+    if(e._type==='extra')      detail=e.reason||'';
+    if(e._type==='meeting')    detail=e.subject||'';
+    if(e._type==='permission') detail=(e.from&&e.to?e.from+'–'+e.to+' · ':'')+( e.permissionType||'');
+    if(e._type==='issue')      detail=(e.application||'')+(e.issueType?' ['+e.issueType+']':'');
+    var approvedBy=e.approvedBy||e.organizer||'';
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dp=e.date?e.date.split('-'):['','',''];
+    var dateDisp=dp[2]?parseInt(dp[2])+' '+months[parseInt(dp[1])-1]:e.date||'—';
+
+    h+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.03);':idx%2===0?'':'background:var(--bg);')+'">'
+      +'<td style="padding:9px 12px;">'
+        +'<div style="display:flex;align-items:center;gap:7px;">'
+        +'<div style="width:28px;height:28px;border-radius:7px;background:'+avc(e.agent||'A')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;">'+ini(e.agent||'A')+'</div>'
+        +'<div><div style="font-size:12px;font-weight:700;color:var(--t1);">'+(e.agent||'—')+'</div>'
+        +(approvedBy?'<div style="font-size:10px;color:var(--t3);">✓ '+approvedBy+'</div>':'')
+        +'</div></div>'
+      +'</td>'
+      +'<td style="padding:9px 12px;"><span class="pill '+typePill[e._type]+'">'+typeIcons[e._type]+' '+typeLabels[e._type]+'</span></td>'
+      +'<td style="padding:9px 12px;font-size:12px;color:var(--t2);white-space:nowrap;">'
+        +(isToday?'<span style="font-size:9px;background:rgba(13,92,166,.1);color:var(--navy);border-radius:3px;padding:1px 4px;margin-right:3px;">TODAY</span>':'')
+        +dateDisp+(e.time?' · '+e.time:'')
+      +'</td>'
+      +'<td style="padding:9px 12px;font-size:12px;color:var(--t1);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+detail+'">'+detail+'</td>'
+      +'<td style="padding:9px 12px;font-size:12px;font-weight:700;color:var(--navy);white-space:nowrap;">'+(e.duration||'—')+'</td>'
+      +'</tr>';
+  });
+  h+='</tbody></table>';
+  tbl.innerHTML=h;
 }
 function kpiResetForm(type){
   if(type==='extra'){
