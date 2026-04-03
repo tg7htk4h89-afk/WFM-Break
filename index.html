@@ -1046,6 +1046,7 @@ body{background:#0a3d7a;}
   animation:lbUp .5s cubic-bezier(.34,1.1,.64,1) both;
 }
 @keyframes lbUp{from{opacity:0;transform:translateY(32px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 .lhdr{
   padding:32px 28px 26px;text-align:center;
@@ -2130,7 +2131,7 @@ input,select,textarea,button{font-size:16px;}
   <div class="pg" id="pg-sch-edit">
     <div class="sh">✏️ Edit Schedule</div>
     <div style="background:rgba(13,92,166,.06);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--navy);">
-      🔒 WFM &amp; Admin only — changes reflect immediately for all users and send agent notifications
+      🔒 Management only — changes reflect immediately for all users and send agent notifications
     </div>
     <!-- Filters -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
@@ -2141,14 +2142,41 @@ input,select,textarea,button{font-size:16px;}
         <option value="">-- Select Date --</option>
       </select>
       <select class="fld" id="schEditShift" style="flex:1;min-width:140px;">
-        <option value="">-- New Shift --</option>
-        <option>09:00-16:00</option><option>10:00-17:00</option><option>11:00-18:00</option>
-        <option>12:00-19:00</option><option>13:00-20:00</option><option>14:00-21:00</option>
-        <option>15:00-22:00</option><option>16:00-23:00</option><option>17:00-00:00</option>
-        <option>18:00-01:00</option><option>18:30-01:30</option><option>19:00-02:00</option>
-        <option>19:30-02:30</option><option>20:00-03:00</option><option>21:00-04:00</option>
-        <option>M 02:00-09:00</option><option>C 02:00-09:00</option>
-        <option>OFF</option><option>Leave</option><option>P-Leave</option><option>Sick</option>
+        <option value="">-- Select New Shift --</option>
+        <optgroup label="Morning">
+          <option>08:00-15:00</option>
+          <option>09:00-15:00</option>
+          <option>09:00-16:00</option>
+          <option>10:00-17:00</option>
+          <option>11:00-18:00</option>
+          <option>12:00-19:00</option>
+        </optgroup>
+        <optgroup label="Afternoon / Evening">
+          <option>13:30-02:30</option>
+          <option>15:00-02:00</option>
+          <option>15:30-02:30</option>
+          <option>16:00-23:00</option>
+          <option>17:00-00:00</option>
+          <option>18:00-01:00</option>
+          <option>18:30-01:30</option>
+          <option>19:00-00:00</option>
+          <option>19:00-02:00</option>
+          <option>19:30-02:30</option>
+          <option>20:00-01:00</option>
+          <option>20:00-03:00</option>
+        </optgroup>
+        <optgroup label="Night / Early Morning">
+          <option>M 02:00-09:00</option>
+          <option>C 02:00-09:00</option>
+          <option>C 02:00-10:00</option>
+        </optgroup>
+        <optgroup label="Status">
+          <option>OFF</option>
+          <option>Leave</option>
+          <option>P-Leave</option>
+          <option>Sick</option>
+          <option>Holiday</option>
+        </optgroup>
       </select>
     </div>
     <button class="btn btn-navy" onclick="wfmSaveShift()" style="margin-bottom:14px;">💾 Save Change &amp; Notify Agent</button>
@@ -2527,13 +2555,23 @@ var DEPTS=[
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
 var SK='kib_v11';
-// ── API endpoints ── switch N8N_MODE to true once n8n workflow is deployed
-var N8N_MODE=false;
-var N8N_URL=''; // set your n8n webhook URL here e.g. 'https://your-n8n.cloud/webhook/kib-wfm'
-var GAS_URL='https://script.google.com/macros/s/AKfycbxNyvwcT50dClYFS_mwmenEgEbsTo3eJ9FjvDRjdKR3kX-PWh3gIrX93WiZfBWnecpVyA/exec';
-var API=N8N_MODE&&N8N_URL?N8N_URL:GAS_URL;
-// ── Pushbullet config (set your Access Token) ──
-var PUSHBULLET_TOKEN='';
+
+// ══════════════════════════════════════════════════════════
+//  KIB WFM PORTAL — API Configuration
+//  Paste your n8n webhook URLs below after importing workflows.
+//  Until n8n is live, the portal uses GAS automatically.
+// ══════════════════════════════════════════════════════════
+var N8N_URL_GET    = 'YOUR_N8N_GET_WEBHOOK_URL_HERE';   // GET  /kib-wfm
+var N8N_URL_POST   = 'YOUR_N8N_POST_WEBHOOK_URL_HERE';  // POST /kib-wfm
+var N8N_URL_NOTIFY = 'YOUR_N8N_NOTIFY_WEBHOOK_URL_HERE';// POST /kib-notify
+// ── Pushbullet Token ──
+var PUSHBULLET_TOKEN = '';
+// ── GAS fallback (always works while n8n is being set up) ──
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyWcUuqWo1c2lVdJ5LMYhNZ04u54pcRUaYbtDGI0gIYQwYQ9S-zZzM4JRow-Tw0QtaSFg/exec';
+// ── Smart API selection: use n8n if URLs are configured, else GAS ──
+function _isN8nReady(url){ return url && url.indexOf('YOUR_')<0 && url.indexOf('http')===0; }
+var API     = _isN8nReady(N8N_URL_POST) ? N8N_URL_POST : GAS_URL;
+var API_GET = _isN8nReady(N8N_URL_GET)  ? N8N_URL_GET  : GAS_URL;
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=30,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2705,7 +2743,7 @@ function _queueRetry(d){
 function apiPull(){
   if(_syncing) return;
   _syncing=true;
-  fetch(API+'?action=getAll&_='+Date.now())
+  fetch(API_GET+'?action=getAll&_='+Date.now())
   .then(function(r){return r.json();})
   .then(function(remote){
     _syncing=false;
@@ -2817,19 +2855,23 @@ function _applyRemote(remote){
   if(Array.isArray(remote.leaves)) { LEAVES=remote.leaves; }
   if(Array.isArray(remote.actlog)) { ACTLOG=remote.actlog; }
   if(Array.isArray(remote.attendance)){
-    // Dedup remote attendance by agent+date — Sheets may have duplicates from old appendRow path
-    // Keep the LAST entry for each agent+date (most recent save wins)
+    // Dedup: keep LAST entry per Agent+Date (last row in sheet wins)
+    // normDate() handles any date format GAS or n8n might return
     var attDedup={};
     remote.attendance.forEach(function(a){
-      attDedup[a.agent+'|'+a.date]=a; // overwrite keeps last
+      if(!a.agent) return;
+      var d=normDate(a.date);
+      if(!d) return;
+      a.date=d; // normalize to YYYY-MM-DD in place
+      attDedup[a.agent+'|'+d]=a;
     });
     var dedupedRemote=Object.values(attDedup);
-
-    // Keep local entries written in last 30s that aren't confirmed in remote yet
+    // Keep local entries written in last 30s not yet in remote
     var remoteKeys={};
     dedupedRemote.forEach(function(a){remoteKeys[a.agent+'|'+a.date]=true;});
     var localNew=ATT_LOG.filter(function(a){
-      if(remoteKeys[a.agent+'|'+a.date]) return false; // remote has it
+      var d=normDate(a.date);
+      if(remoteKeys[a.agent+'|'+d]) return false;
       try{return Date.now()-new Date(a.ts.replace(' ','T')).getTime()<30000;}catch(e){return false;}
     });
     ATT_LOG=dedupedRemote.concat(localNew);
@@ -2967,7 +3009,7 @@ function checkPw(){
   var fallback=setTimeout(function(){
     if(!done){done=true;if(btn){btn.textContent='Enter Portal →';btn.disabled=false;}showStep2(emp);}
   },4000);
-  fetch(API+'?action=getAll&_='+Date.now())
+  fetch(API_GET+'?action=getAll&_='+Date.now())
     .then(function(r){return r.json();})
     .then(function(remote){
       if(done)return;done=true;clearTimeout(fallback);
@@ -3024,7 +3066,7 @@ function finishLogin(emp,shift,opts){
     if(!done){done=true;_startSession();}
   },5000); // fallback after 5s if Sheets unreachable
 
-  fetch(API+'?action=getAll&_='+Date.now())
+  fetch(API_GET+'?action=getAll&_='+Date.now())
   .then(function(r){return r.json();})
   .then(function(remote){
     if(done) return; done=true; clearTimeout(timeout);
@@ -3831,6 +3873,9 @@ function startApp(){
   var hl=document.getElementById('hub-login');if(hl)hl.classList.add('hidden');
   document.getElementById('u-app').classList.add('visible');
   document.getElementById('u-bnav').classList.add('visible');
+  // Show u-home immediately so loading spinner has somewhere to render
+  var uHome=document.getElementById('u-home');
+  if(uHome){uHome.classList.add('on');uHome.style.display='block';}
 
   // Set topbar user info
   var av=document.getElementById('u-av');
@@ -4542,8 +4587,8 @@ function buildSchGrid(){
 var _schEditChanges=[];   // local log of changes in this session
 
 function renderSchEdit(){
-  if(!me||(me.access!=='wfm'&&me.access!=='admin'&&me.loginRole!=='management'&&me.loginRole!=='wfm')){
-    sp_showToast('WFM or Admin access required','err'); return;
+  if(!me||!isManagementUser(me)){
+    sp_showToast('Management access required','err'); return;
   }
   // Populate agent dropdown
   var aSel=document.getElementById('schEditAgent');
@@ -4618,11 +4663,49 @@ function schEditPrefill(agentId,date,currentShift){
   var dSel=document.getElementById('schEditDate');
   var sSel=document.getElementById('schEditShift');
   if(aSel) aSel.value=agentId;
-  if(dSel) dSel.value=date;
-  if(sSel) sSel.value=currentShift;
-  // Scroll to top of page
+
+  // If date not in dropdown options, add it temporarily
+  if(dSel){
+    var found=false;
+    for(var i=0;i<dSel.options.length;i++){
+      if(dSel.options[i].value===date){found=true;break;}
+    }
+    if(!found&&date){
+      var opt=document.createElement('option');
+      opt.value=date;
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var p=date.split('-');
+      opt.textContent=parseInt(p[2])+' '+months[parseInt(p[1])-1]+' '+p[0];
+      dSel.appendChild(opt);
+    }
+    dSel.value=date;
+  }
+
+  // Set shift — if current shift isn't in dropdown, add it temporarily
+  if(sSel){
+    var shiftFound=false;
+    for(var j=0;j<sSel.options.length;j++){
+      if(sSel.options[j].value===currentShift){shiftFound=true;break;}
+    }
+    if(!shiftFound&&currentShift){
+      var sOpt=document.createElement('option');
+      sOpt.value=currentShift;
+      sOpt.textContent=currentShift+' (current)';
+      sSel.insertBefore(sOpt,sSel.options[1]);
+    }
+    sSel.value=currentShift;
+  }
+
+  // Scroll to top so user can see the dropdowns
+  var pg=document.getElementById('pg-sch-edit');
+  if(pg) pg.scrollTop=0;
   var uContent=document.getElementById('u-content');
-  if(uContent) uContent.scrollTop=0; else window.scrollTo(0,0);
+  if(uContent) uContent.scrollTop=0;
+  else window.scrollTo(0,0);
+
+  // Show feedback to confirm prefill worked
+  var fb=document.getElementById('schEditFeedback');
+  if(fb) fb.innerHTML='<div style="background:rgba(13,92,166,.06);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--navy);">✏️ Editing '+date+' — current shift: <strong>'+currentShift+'</strong> — change below and save</div>';
 }
 
 function wfmSaveShift(){
@@ -4638,20 +4721,17 @@ function wfmSaveShift(){
   var agent=AGENTS.find(function(a){return a.id===agentId;});
   if(!agent){return;}
   var idx=DATES.indexOf(date);
-  if(idx<0){
-    if(fb) fb.innerHTML='<div style="background:var(--rbg);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);">❌ Date not in current schedule range</div>';
-    return;
-  }
-  var oldShift=agent.sch[idx]||'OFF';
-  if(oldShift===shift){
+  // idx<0 means date is outside current loaded schedule — still allow API save
+  var oldShift=idx>=0?(agent.sch[idx]||'OFF'):'(previous period)';
+  if(oldShift===shift&&idx>=0){
     if(fb) fb.innerHTML='<div style="background:var(--abg);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--amber);">⚠️ No change — shift is already '+shift+'</div>';
     return;
   }
 
   if(fb) fb.innerHTML='<div style="background:rgba(13,92,166,.06);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--navy);">⏳ Saving…</div>';
 
-  // Update local AGENTS immediately
-  agent.sch[idx]=shift;
+  // Update local AGENTS only if date is in current loaded range
+  if(idx>=0) agent.sch[idx]=shift;
 
   // Push to Sheets via updateShift action
   fetch(API,{method:'POST',body:JSON.stringify({
@@ -4678,6 +4758,12 @@ function wfmSaveShift(){
       try{localStorage.removeItem(SK);}catch(e){}
       apiPull();
       // Pushbullet notification to agent
+      if(N8N_URL_NOTIFY&&N8N_URL_NOTIFY.indexOf('YOUR_')<0){
+        fetch(N8N_URL_NOTIFY,{method:'POST',body:JSON.stringify({
+          type:'schedule_change',agentName:agent.n,date:date,
+          oldShift:oldShift,newShift:shift,changedBy:me.n||me.name,ts:kuwaitISO()
+        }),headers:{'Content-Type':'application/json'}}).catch(function(){});
+      }
       pushNotify('Schedule Updated 📅',
         'Hi '+agent.n+', your shift on '+date+' has been updated:\n'
         +oldShift+' → '+shift
@@ -5213,10 +5299,32 @@ function attGetAgents(){
 }
 
 // ── Get today’s ATT_LOG entry for an agent ───────────────────
+// ── Normalize any date value to YYYY-MM-DD Kuwait format ─────
+function normDate(v){
+  if(!v) return '';
+  var str=String(v).trim();
+  // Already YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  // ISO string "2026-04-04T..."
+  if(str.indexOf('T')>4){
+    try{return new Date(new Date(str).getTime()+10800000).toISOString().substring(0,10);}catch(e){}
+  }
+  // Google Sheets serial number (GAS sometimes returns these)
+  if(/^\d{5}$/.test(str)){
+    try{return new Date((parseInt(str)-25569)*86400000+10800000).toISOString().substring(0,10);}catch(e){}
+  }
+  // Long date string "Sat Apr 04 2026 00:00:00 GMT+0300..."
+  try{
+    var d=new Date(str);
+    if(!isNaN(d.getTime())) return new Date(d.getTime()+10800000).toISOString().substring(0,10);
+  }catch(e){}
+  return str.substring(0,10);
+}
+
 function attGetEntry(agentName){
-  var d=today();
+  var d=today(); // "2026-04-04"
   for(var i=ATT_LOG.length-1;i>=0;i--){
-    if(ATT_LOG[i].agent===agentName&&ATT_LOG[i].date===d) return ATT_LOG[i];
+    if(ATT_LOG[i].agent===agentName && normDate(ATT_LOG[i].date)===d) return ATT_LOG[i];
   }
   return null;
 }
@@ -5508,7 +5616,9 @@ function attSaveOne(agentId){
     ts:kuwaitISO()
   };
   // Update local ATT_LOG immediately (upsert by agent+date)
-  ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===agent.n&&e.date===today());});
+  var todayStr=today();
+  ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===agent.n&&normDate(e.date)===todayStr);});
+  entry.date=todayStr; // ensure stored as clean YYYY-MM-DD
   ATT_LOG.push(entry);
 
   // ── Send to backend ──
@@ -5534,7 +5644,15 @@ function attSaveOne(agentId){
   })
   .catch(function(){setSy(false);});
 
-  // Pushbullet notification to management channel
+  // Send notification via n8n notifications workflow AND direct Pushbullet
+  if(N8N_URL_NOTIFY&&N8N_URL_NOTIFY.indexOf('YOUR_')<0){
+    fetch(N8N_URL_NOTIFY,{method:'POST',body:JSON.stringify({
+      type:'attendance_marked',
+      agentName:agent.n,date:today(),status:entry.status,
+      newShift:entry.newShift,note:entry.note,markedBy:entry.markedBy,ts:entry.ts
+    }),headers:{'Content-Type':'application/json'}}).catch(function(){});
+  }
+  // Also direct Pushbullet (if token set)
   pushNotify('Attendance Marked',
     '\u2705 '+agent.n+' marked '+entry.status.toUpperCase()+
     (entry.newShift?' \u2192 '+entry.newShift:'')+
@@ -5660,7 +5778,13 @@ function approveSwap(id){
     .then(function(r){return r.json();})
     .then(function(res){if(res&&res.ok){_cache=null;try{localStorage.removeItem(SK);}catch(e){}apiPull();}})
     .catch(function(){});
-  // Pushbullet — notify both agents
+  // n8n notification + direct Pushbullet
+  if(N8N_URL_NOTIFY&&N8N_URL_NOTIFY.indexOf('YOUR_')<0){
+    fetch(N8N_URL_NOTIFY,{method:'POST',body:JSON.stringify({
+      type:'swap_approved',id:s.id,from:s.from,to:s.to,date:s.date,
+      sA:s.sA,sB:s.sB,actionedBy:me.n||me.name
+    }),headers:{'Content-Type':'application/json'}}).catch(function(){});
+  }
   pushNotify('Swap Approved \u2705',
     s.from+' \u21c4 '+s.to+' on '+s.date+
     ' \u00b7 '+s.sA+' \u21c4 '+s.sB+
@@ -6515,7 +6639,7 @@ function uNav(section, subPage){
       // Render immediately with whatever we have, then pull fresh data
       if(typeof renderAttendance==='function') renderAttendance();
       // Pull fresh from Sheets and re-render so marks are always current
-      fetch(API+'?action=getAll&_='+Date.now())
+      fetch(API_GET+'?action=getAll&_='+Date.now())
         .then(function(r){return r.json();})
         .then(function(remote){
           if(remote&&remote.ok){
@@ -6569,6 +6693,42 @@ function _uSpTabOn(id){
 function renderUnifiedHome(){
   try{
   if(!me) return;
+
+  // ── If AGENTS not loaded yet, show loading state and trigger fetch ──
+  if(!AGENTS||!AGENTS.length){
+    var uhome=document.getElementById('u-home');
+    // Show spinner regardless of .on class — don't let the race condition cause blank screen
+    if(uhome){
+      uhome.style.display='block'; // ensure visible
+      uhome.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;gap:16px;">'
+        +'<div style="width:44px;height:44px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;"></div>'
+        +'<div style="color:rgba(255,255,255,.7);font-size:14px;font-weight:600;letter-spacing:-.2px;">Loading…</div>'
+        +'</div>';
+    }
+    // Trigger a fresh API pull immediately, then keep retrying
+    if(typeof apiPull==='function') apiPull();
+    var _homeRetry=setInterval(function(){
+      if(AGENTS&&AGENTS.length){
+        clearInterval(_homeRetry);
+        renderUnifiedHome();
+      }
+    },800);
+    // Give up after 15s and show error
+    setTimeout(function(){
+      clearInterval(_homeRetry);
+      if(!AGENTS||!AGENTS.length){
+        var uh=document.getElementById('u-home');
+        if(uh) uh.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;padding:24px;">'
+          +'<div style="font-size:32px;">⚠️</div>'
+          +'<div style="color:rgba(255,255,255,.9);font-size:15px;font-weight:700;">Connection issue</div>'
+          +'<div style="color:rgba(255,255,255,.6);font-size:13px;text-align:center;">Could not load portal data. Check your connection.</div>'
+          +'<button onclick="apiPull();renderUnifiedHome();" style="margin-top:8px;padding:10px 24px;background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">🔄 Retry</button>'
+          +'</div>';
+      }
+    },15000);
+    return;
+  }
+
   var d   = gd();
   var s   = d.settings||{};
   var now = new Date(Date.now()+3*60*60*1000); // Kuwait UTC+3
@@ -7372,7 +7532,7 @@ function uBuildNav(){
   if(!nav||!me) return;
   nav.innerHTML='';
   var isMgr=isManagementUser(me);
-  var isWfm=(me.access==='wfm'||me.access==='admin'||me.loginRole==='wfm');
+  var isWfm=(me.access==='wfm'||me.access==='admin'||me.loginRole==='wfm'||me.access==='management'||me.loginRole==='management');
   var tabs=isMgr
     ? [
         {id:'home',ic:'🏠',lb:'Home'},
@@ -7478,7 +7638,7 @@ if(!sessionStorage.getItem('_attClean')){
     var fallback=setTimeout(function(){
       if(!done){ done=true; startApp(); }
     }, 4000);
-    fetch(API+'?action=getAll&_='+Date.now())
+    fetch(API_GET+'?action=getAll&_='+Date.now())
       .then(function(r){return r.json();})
       .then(function(remote){
         if(done) return; done=true; clearTimeout(fallback);
