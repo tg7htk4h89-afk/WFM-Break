@@ -2837,8 +2837,12 @@ function _applyRemote(remote){
 
   // ── Live schedule from Sheet — replaces hardcoded AGENTS ──
   if(Array.isArray(remote.agents)&&remote.agents.length){
+    // ── Atomic swap — build new array first, then assign ──
+    // AGENTS.length=0 + forEach was a race condition: renderAttendance()
+    // could fire between clear and repopulate, seeing an empty array
+    var newAgents=remote.agents.slice();
     AGENTS.length=0;
-    remote.agents.forEach(function(a){ AGENTS.push(a); });
+    newAgents.forEach(function(a){AGENTS.push(a);});
     if(Array.isArray(remote.dates)&&remote.dates.length){
       DATES.length=0;
       remote.dates.forEach(function(d){ DATES.push(d); });
@@ -2870,9 +2874,9 @@ function _applyRemote(remote){
   if((wasChanged||swapsChanged||leavesChanged||attChanged||agentsChanged)&&me&&me.n) renderAll();
 
   // ── Always refresh attendance page on every poll if it's open ──
-  if(me&&me.n){
-    var attPg=document.getElementById('pg-attendance');
-    if(attPg&&(attPg.classList.contains('on')||attPg.style.display==='block')&&typeof renderAttendance==='function') renderAttendance();
+  if(me&&me.n&&AGENTS&&AGENTS.length>0){
+    var attIsOpen=(sp_currentPage==='attendance'||_uSection==='attendance');
+    if(attIsOpen&&typeof renderAttendance==='function') renderAttendance();
     var attTab=document.getElementById('rt-att');
     if(attTab&&attTab.style.display!=='none'&&typeof renderMyAttTab==='function') renderMyAttTab();
   }
@@ -5191,10 +5195,11 @@ var ATT_STATUSES=[
 
 // ── Get agent list visible to current user ───────────────────
 function attGetAgents(){
-  var OFF=['OFF','Leave','P-Leave','Sick','Weekend'];
+  // If AGENTS not loaded yet, return empty gracefully (don't show "No agents" flash)
+  if(!AGENTS||!AGENTS.length) return [];
   var list=AGENTS.filter(function(a){
     if(a.r==='admin'||a.r==='wfm') return false;
-    return OFF.indexOf(gTodayS(a)||'OFF')<0;
+    return true; // show ALL agents regardless of shift — manager needs to mark everyone
   });
   if(me&&isAgentUser(me)){
     var myDept=me.t||me.dept||'';
@@ -6507,7 +6512,18 @@ function uNav(section, subPage){
     if(pg==='attendance'){
       // Reset dept filter for wfm/manager/admin so they see ALL agents
       if(me && !isAgentUser(me)) _attDeptFilter='';
-      setTimeout(function(){ if(typeof renderAttendance==='function') renderAttendance(); }, 50);
+      // Render immediately with whatever we have, then pull fresh data
+      if(typeof renderAttendance==='function') renderAttendance();
+      // Pull fresh from Sheets and re-render so marks are always current
+      fetch(API+'?action=getAll&_='+Date.now())
+        .then(function(r){return r.json();})
+        .then(function(remote){
+          if(remote&&remote.ok){
+            _applyRemote(remote);
+            if(typeof renderAttendance==='function') renderAttendance();
+          }
+        })
+        .catch(function(){});
     }
   }
 
@@ -7433,6 +7449,13 @@ function initSpProfile(){
 // ════════════════════════════════════════════════════════
 // SESSION RESTORE — stay logged in after page refresh
 // ════════════════════════════════════════════════════════
+// One-time: clean duplicate attendance rows in Sheets (runs once per browser session)
+if(!sessionStorage.getItem('_attClean')){
+  sessionStorage.setItem('_attClean','1');
+  setTimeout(function(){
+    fetch(API,{method:'POST',body:JSON.stringify({action:'cleanAllAttendance'}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  },5000); // fire 5s after page load — non-blocking
+}
 (function(){
   try{
     var raw=localStorage.getItem('kib_session');
