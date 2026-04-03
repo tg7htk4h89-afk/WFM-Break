@@ -2126,6 +2126,40 @@ input,select,textarea,button{font-size:16px;}
     <div class="sch-wrap" id="schGridWrap"></div>
   </div>
 
+  <!-- ═══ WFM SCHEDULE EDITOR (WFM/Admin only) ═══ -->
+  <div class="pg" id="pg-sch-edit">
+    <div class="sh">✏️ Edit Schedule</div>
+    <div style="background:rgba(13,92,166,.06);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--navy);">
+      🔒 WFM &amp; Admin only — changes reflect immediately for all users and send agent notifications
+    </div>
+    <!-- Filters -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <select class="fld" id="schEditAgent" style="flex:1;min-width:140px;" onchange="schEditLoadAgent()">
+        <option value="">-- Select Agent --</option>
+      </select>
+      <select class="fld" id="schEditDate" style="flex:1;min-width:130px;">
+        <option value="">-- Select Date --</option>
+      </select>
+      <select class="fld" id="schEditShift" style="flex:1;min-width:140px;">
+        <option value="">-- New Shift --</option>
+        <option>09:00-16:00</option><option>10:00-17:00</option><option>11:00-18:00</option>
+        <option>12:00-19:00</option><option>13:00-20:00</option><option>14:00-21:00</option>
+        <option>15:00-22:00</option><option>16:00-23:00</option><option>17:00-00:00</option>
+        <option>18:00-01:00</option><option>18:30-01:30</option><option>19:00-02:00</option>
+        <option>19:30-02:30</option><option>20:00-03:00</option><option>21:00-04:00</option>
+        <option>M 02:00-09:00</option><option>C 02:00-09:00</option>
+        <option>OFF</option><option>Leave</option><option>P-Leave</option><option>Sick</option>
+      </select>
+    </div>
+    <button class="btn btn-navy" onclick="wfmSaveShift()" style="margin-bottom:14px;">💾 Save Change &amp; Notify Agent</button>
+    <div id="schEditFeedback" style="margin-bottom:12px;"></div>
+    <!-- Bulk edit table for selected agent -->
+    <div id="schEditAgentView"></div>
+    <!-- Recent changes log -->
+    <div class="sh">Recent Schedule Changes</div>
+    <div class="card"><div id="schEditLog" style="padding:0;"><div style="padding:14px;text-align:center;font-size:12px;color:var(--t3);">No changes yet</div></div></div>
+  </div>
+
   <!-- ═══ REQUESTS ═══ -->
   <div class="pg" id="pg-requests">
     <div class="ftabs" id="reqMainTabs">
@@ -2492,7 +2526,14 @@ var DEPTS=[
   {key:'Management',label:'Management'}
 ];
 var AVC=['#0D5CA6','#1d4ed8','#065f46','#6b21a8','#92400e','#991b1b','#0d5c63','#1e3a5f','#b45309','#0369a1'];
-var SK='kib_v10',API='https://script.google.com/macros/s/AKfycbxOOgJoT_F7xa9ib5bN6TZE2eS_e2g00zDzEmJr16ryixifHFhYcc1eQ0Set3t8RORhTA/exec';
+var SK='kib_v11';
+// ── API endpoints ── switch N8N_MODE to true once n8n workflow is deployed
+var N8N_MODE=false;
+var N8N_URL=''; // set your n8n webhook URL here e.g. 'https://your-n8n.cloud/webhook/kib-wfm'
+var GAS_URL='https://script.google.com/macros/s/AKfycbxOOgJoT_F7xa9ib5bN6TZE2eS_e2g00zDzEmJr16ryixifHFhYcc1eQ0Set3t8RORhTA/exec';
+var API=N8N_MODE&&N8N_URL?N8N_URL:GAS_URL;
+// ── Pushbullet config (set your Access Token) ──
+var PUSHBULLET_TOKEN='';
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=30,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2545,6 +2586,19 @@ function kuwaitISO(){
 function kuwaitISOFull(){
   // Returns "YYYY-MM-DDTHH:MM:SS+03:00" — ISO with Kuwait offset
   return new Date(Date.now()+3*60*60*1000).toISOString().replace('Z','+03:00').substring(0,22)+':00';
+}
+// ── Pushbullet push notification ──────────────────────────────────
+function pushNotify(title,body,channel){
+  if(!PUSHBULLET_TOKEN) return;
+  try{
+    var payload={type:'note',title:'KIB WFM \u2014 '+title,body:body};
+    if(channel) payload.channel_tag=channel;
+    fetch('https://api.pushbullet.com/v2/pushes',{
+      method:'POST',
+      headers:{'Access-Token':PUSHBULLET_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    }).catch(function(){});
+  }catch(e){}
 }
 
 
@@ -4470,6 +4524,195 @@ function buildSchGrid(){
 // ════════════════════════════════════════════════
 // REQUESTS
 // ════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// WFM SCHEDULE EDITOR
+// ════════════════════════════════════════════════════════
+var _schEditChanges=[];   // local log of changes in this session
+
+function renderSchEdit(){
+  if(!me||(me.access!=='wfm'&&me.access!=='admin'&&me.loginRole!=='management'&&me.loginRole!=='wfm')){
+    sp_showToast('WFM or Admin access required','err'); return;
+  }
+  // Populate agent dropdown
+  var aSel=document.getElementById('schEditAgent');
+  if(aSel&&aSel.options.length<=1){
+    AGENTS.filter(function(a){return a.r!=='admin';})
+      .sort(function(a,b){return a.n.localeCompare(b.n);})
+      .forEach(function(a){
+        var o=document.createElement('option');
+        o.value=a.id; o.textContent=a.n+' ('+a.t+')';
+        aSel.appendChild(o);
+      });
+  }
+  // Populate date dropdown
+  var dSel=document.getElementById('schEditDate');
+  if(dSel&&dSel.options.length<=1){
+    DATES.forEach(function(d){
+      var o=document.createElement('option');
+      o.value=d;
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var p=d.split('-');
+      o.textContent=parseInt(p[2])+' '+months[parseInt(p[1])-1]+(d===today()?' (Today)':'');
+      dSel.appendChild(o);
+    });
+    // Default to today
+    if(DATES.indexOf(today())>=0) dSel.value=today();
+  }
+  renderSchEditLog();
+}
+
+function schEditLoadAgent(){
+  var id=document.getElementById('schEditAgent').value;
+  if(!id){document.getElementById('schEditAgentView').innerHTML='';return;}
+  var agent=AGENTS.find(function(a){return a.id===id;});
+  if(!agent){return;}
+  // Build mini schedule table for this agent
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var h='<div class="card" style="overflow:hidden;margin-bottom:12px;">'
+    +'<div class="ch"><div class="ctitle">📅 '+agent.n+' — Full Schedule</div>'
+    +'<div style="font-size:10px;color:var(--t2);">Click a shift to edit</div></div>'
+    +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:280px;">'
+    +'<thead><tr style="background:var(--bg);">'
+    +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Date</th>'
+    +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Shift</th>'
+    +'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--t2);text-align:left;">Action</th>'
+    +'</tr></thead><tbody>';
+  DATES.forEach(function(d,i){
+    var sch=agent.sch[i]||'OFF';
+    var isToday=d===today();
+    var p=d.split('-');
+    var dateDisp=parseInt(p[2])+' '+months[parseInt(p[1])-1];
+    // Check if this date has an approved swap override
+    var swOvr=getSwapOverride(agent.n,d);
+    var dispShift=swOvr?swOvr.shift:sch;
+    var swBadge=swOvr?'<span style="font-size:9px;background:rgba(22,163,74,.12);color:#15803d;border-radius:3px;padding:1px 5px;margin-left:4px;">🔄 Swapped</span>':'';
+    h+='<tr style="border-bottom:1px solid var(--border);'+(isToday?'background:rgba(13,92,166,.04);':'')+'">'
+      +'<td style="padding:8px 10px;font-size:12px;">'
+        +(isToday?'<span style="font-size:8px;background:rgba(13,92,166,.1);color:var(--navy);border-radius:3px;padding:1px 4px;margin-right:3px;">TODAY</span>':'')
+        +dateDisp+'</td>'
+      +'<td style="padding:8px 10px;"><span class="sc '+scCls(dispShift)+'">'+dispShift+'</span>'+swBadge+'</td>'
+      +'<td style="padding:8px 10px;">'
+        +'<button onclick="schEditPrefill(\''+agent.id+'\',\''+d+'\',\''+sch+'\')" '
+        +'style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;'
+        +'border:1.5px solid var(--border);background:none;color:var(--navy);cursor:pointer;">✏️ Edit</button>'
+      +'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  document.getElementById('schEditAgentView').innerHTML=h;
+}
+
+function schEditPrefill(agentId,date,currentShift){
+  var aSel=document.getElementById('schEditAgent');
+  var dSel=document.getElementById('schEditDate');
+  var sSel=document.getElementById('schEditShift');
+  if(aSel) aSel.value=agentId;
+  if(dSel) dSel.value=date;
+  if(sSel) sSel.value=currentShift;
+  // Scroll to top of page
+  var uContent=document.getElementById('u-content');
+  if(uContent) uContent.scrollTop=0; else window.scrollTo(0,0);
+}
+
+function wfmSaveShift(){
+  var agentId=document.getElementById('schEditAgent').value;
+  var date=document.getElementById('schEditDate').value;
+  var shift=document.getElementById('schEditShift').value;
+  var fb=document.getElementById('schEditFeedback');
+
+  if(!agentId||!date||!shift){
+    if(fb) fb.innerHTML='<div style="background:var(--rbg);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);">⚠️ Select agent, date and new shift</div>';
+    return;
+  }
+  var agent=AGENTS.find(function(a){return a.id===agentId;});
+  if(!agent){return;}
+  var idx=DATES.indexOf(date);
+  if(idx<0){
+    if(fb) fb.innerHTML='<div style="background:var(--rbg);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);">❌ Date not in current schedule range</div>';
+    return;
+  }
+  var oldShift=agent.sch[idx]||'OFF';
+  if(oldShift===shift){
+    if(fb) fb.innerHTML='<div style="background:var(--abg);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--amber);">⚠️ No change — shift is already '+shift+'</div>';
+    return;
+  }
+
+  if(fb) fb.innerHTML='<div style="background:rgba(13,92,166,.06);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--navy);">⏳ Saving…</div>';
+
+  // Update local AGENTS immediately
+  agent.sch[idx]=shift;
+
+  // Push to Sheets via updateShift action
+  fetch(API,{method:'POST',body:JSON.stringify({
+    action:'updateShift',
+    agent:agent.n,
+    date:date,
+    shift:shift,
+    changedBy:me.n||me.name||'WFM',
+    changedAt:kuwaitISO()
+  }),headers:{'Content-Type':'text/plain'}})
+  .then(function(r){return r.json();})
+  .then(function(res){
+    if(res&&res.ok){
+      setSy(true);
+      if(fb) fb.innerHTML='<div style="background:var(--gbg);border:1px solid rgba(61,181,73,.3);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--green);">'
+        +'✅ '+agent.n+' on '+date+' changed from <strong>'+oldShift+'</strong> → <strong>'+shift+'</strong></div>';
+      // Log the change locally
+      _schEditChanges.unshift({agent:agent.n,date:date,from:oldShift,to:shift,by:me.n||me.name,ts:kuwaitISO()});
+      if(_schEditChanges.length>50) _schEditChanges.pop();
+      renderSchEditLog();
+      schEditLoadAgent();
+      // Force all clients to reload schedule
+      _cache=null;
+      try{localStorage.removeItem(SK);}catch(e){}
+      apiPull();
+      // Pushbullet notification to agent
+      pushNotify('Schedule Updated 📅',
+        'Hi '+agent.n+', your shift on '+date+' has been updated:\n'
+        +oldShift+' → '+shift
+        +'\nUpdated by '+(me.n||me.name));
+      logA('SCHEDULE_CHANGE',agent.n+' on '+date+': '+oldShift+' → '+shift,'ok');
+    } else {
+      // Revert local change
+      agent.sch[idx]=oldShift;
+      if(fb) fb.innerHTML='<div style="background:var(--rbg);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);">❌ Save failed: '+(res&&res.error||'unknown error')+'</div>';
+    }
+  })
+  .catch(function(){
+    agent.sch[idx]=oldShift;
+    setSy(false);
+    if(fb) fb.innerHTML='<div style="background:var(--rbg);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);">❌ Connection error — change reverted</div>';
+  });
+}
+
+function renderSchEditLog(){
+  var el=document.getElementById('schEditLog');
+  if(!el) return;
+  // Merge local changes with actlog schedule changes
+  var allChanges=_schEditChanges.slice();
+  (ACTLOG||[]).filter(function(e){return e.action==='SCHEDULE_CHANGE';}).slice(0,20).forEach(function(e){
+    // Only add if not already in local log
+    allChanges.push({agent:e.detail.split(' on ')[0],detail:e.detail,by:e.user,ts:e.ts,fromLog:true});
+  });
+  if(!allChanges.length){
+    el.innerHTML='<div style="padding:14px;text-align:center;font-size:12px;color:var(--t3);">No changes yet</div>';
+    return;
+  }
+  var h='';
+  allChanges.slice(0,30).forEach(function(c){
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dp=(c.date||'').split('-');
+    var dateDisp=dp[2]?parseInt(dp[2])+' '+months[parseInt(dp[1])-1]:c.date||'';
+    var detail=c.fromLog?c.detail:(c.agent+' on '+dateDisp+': '+c.from+' → '+c.to);
+    h+='<div style="display:flex;gap:9px;padding:9px 13px;border-bottom:1px solid var(--border);align-items:flex-start;">'
+      +'<div style="width:8px;height:8px;border-radius:50%;background:var(--navy);margin-top:4px;flex-shrink:0;"></div>'
+      +'<div style="flex:1;">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--t1);">'+detail+'</div>'
+        +'<div style="font-size:10px;color:var(--t3);margin-top:2px;">by '+(c.by||'—')+' · '+(c.ts||'').substring(0,16)+'</div>'
+      +'</div></div>';
+  });
+  el.innerHTML=h;
+}
+
 function buildSwapWith(dateStr){
   var sel=document.getElementById('swWith');
   if(!sel) return;
@@ -5255,8 +5498,7 @@ function attSaveOne(agentId){
   ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===agent.n&&e.date===today());});
   ATT_LOG.push(entry);
 
-  // ── Send to GAS via dedicated saveAttendance action (proper upsert by agent+date) ──
-  // Do NOT use saveSheet/appendRow — that path duplicates rows on re-mark
+  // ── Send to backend ──
   fetch(API,{method:'POST',body:JSON.stringify({
     action:'saveAttendance',
     agent:entry.agent,
@@ -5269,17 +5511,36 @@ function attSaveOne(agentId){
   }),headers:{'Content-Type':'text/plain'}})
   .then(function(r){return r.json();})
   .then(function(res){
-    if(res&&res.ok){setSy(true);}
-    else{setSy(false);console.warn('[Att]',res&&res.error);}
+    if(res&&res.ok){
+      setSy(true);
+      // Force re-pull so all connected management see the update immediately
+      _cache=null;
+      try{localStorage.removeItem(SK);}catch(e){}
+      apiPull();
+    } else {setSy(false);console.warn('[Att]',res&&res.error);}
   })
   .catch(function(){setSy(false);});
-  logA('ATTENDANCE',agent.n+' → '+entry.status.toUpperCase()+(entry.newShift?' (→'+entry.newShift+')':''),'inf');
+
+  // Pushbullet notification to management channel
+  pushNotify('Attendance Marked',
+    '\u2705 '+agent.n+' marked '+entry.status.toUpperCase()+
+    (entry.newShift?' \u2192 '+entry.newShift:'')+
+    ' by '+(me.n||me.name)+' \u00b7 '+today());
+
+  logA('ATTENDANCE',agent.n+' \u2192 '+entry.status.toUpperCase()+(entry.newShift?' (\u2192'+entry.newShift+')':''),'inf');
   delete _attSelMap[agentId];
-  sp_showToast(agent.n.split(' ')[0]+' → '+entry.status,'ok');
+  sp_showToast(agent.n.split(' ')[0]+' \u2192 '+entry.status,'ok');
   var card=document.getElementById('attc-'+agentId);
   if(card){var nc=document.createElement('div');nc.innerHTML=attBuildCard(agent);card.parentNode.replaceChild(nc.firstChild,card);}
-  if(agent.n===(me.n||me.name)&&typeof renderMySchedule==='function') renderMySchedule();
-  if(agent.n===(me.n||me.name)&&typeof renderProfilePage==='function') renderProfilePage();
+  // Immediately refresh the attendance page for everyone viewing it
+  setTimeout(function(){
+    if(typeof renderAttendance==='function'){
+      var ap=document.getElementById('pg-attendance');
+      if(ap&&ap.classList.contains('on')) renderAttendance();
+    }
+    if(agent.n===(me.n||me.name)&&typeof renderMySchedule==='function') renderMySchedule();
+    if(agent.n===(me.n||me.name)&&typeof renderProfilePage==='function') renderProfilePage();
+  },300);
 }
 
 // ── Save all pending ──────────────────────────────────────────
@@ -5361,11 +5622,18 @@ function approveSwap(id){
   s.status='approved';
   s.actionedBy=me.n;
   s.actionedAt=kuwaitISO();
-  // Apply schedule override: swap shifts for both agents on the swap date
   _applySwapToSchedule(s);
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'approved',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'approved',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){if(res&&res.ok){_cache=null;try{localStorage.removeItem(SK);}catch(e){}apiPull();}})
+    .catch(function(){});
+  // Pushbullet — notify both agents
+  pushNotify('Swap Approved \u2705',
+    s.from+' \u21c4 '+s.to+' on '+s.date+
+    ' \u00b7 '+s.sA+' \u21c4 '+s.sB+
+    '\nApproved by '+(me.n||me.name));
   logA&&logA('SWAP_APPROVED',id+' approved by '+me.n,'ok');
-  sp_showToast('Swap approved ✓ — schedule updated','ok');
+  sp_showToast('Swap approved \u2713 \u2014 schedule updated','ok');
   renderSwapApproval();
   if(typeof buildSchGrid==='function') buildSchGrid();
   uUpdateBadges&&uUpdateBadges();
@@ -5377,6 +5645,7 @@ function rejectSwap(id){
   s.actionedBy=me.n;
   s.actionedAt=kuwaitISO();
   fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'rejected',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  pushNotify('Swap Rejected \u274c',s.from+' \u21c4 '+s.to+' on '+s.date+' was rejected by '+(me.n||me.name));
   logA&&logA('SWAP_REJECTED',id+' rejected by '+me.n,'inf');
   sp_showToast('Swap rejected','inf');
   renderSwapApproval();
@@ -6140,7 +6409,7 @@ function uNav(section, subPage){
 
   // Topbar title
   var titles={home:'KIB WFM Portal',breaks:'Break System',schedule:'Schedule',attendance:'Attendance',
-    requests:'Requests',kpi:'Daily KPI',team:'Team',wfm:'Dashboard',me:'My Profile'};
+    requests:'Requests',kpi:'Daily KPI',team:'Team',wfm:'Dashboard',me:'My Profile','sch-edit':'Edit Schedule'};
   var tEl=document.getElementById('u-title');
   if(tEl) tEl.textContent=titles[section]||'WFM Portal';
 
@@ -6187,6 +6456,16 @@ function uNav(section, subPage){
       if(typeof renderAttPanel==='function') renderAttPanel();
       if(typeof renderSwapApproval==='function') renderSwapApproval();
     }
+
+  }else if(section==='sch-edit'){
+    if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
+    var spSE=document.getElementById('sp-sApp');
+    if(spSE){spSE.style.display='block';spSE.classList.add('on');}
+    _uInjectSpNav();
+    document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+    var seEl=document.getElementById('pg-sch-edit');
+    if(seEl) seEl.classList.add('on');
+    renderSchEdit();
 
   }else if(section==='schedule'||section==='attendance'||section==='requests'||section==='kpi'||section==='wfm'||section==='me'){
     if(spApp){spApp.style.display='block';spApp.classList.add('u-active');}
@@ -7049,6 +7328,7 @@ function uBuildNav(){
   if(!nav||!me) return;
   nav.innerHTML='';
   var isMgr=isManagementUser(me);
+  var isWfm=(me.access==='wfm'||me.access==='admin'||me.loginRole==='wfm');
   var tabs=isMgr
     ? [
         {id:'home',ic:'🏠',lb:'Home'},
@@ -7066,6 +7346,11 @@ function uBuildNav(){
         {id:'kpi',ic:'📌',lb:'Daily KPI'},
         {id:'me',ic:'👤',lb:'Me'}
       ];
+  // WFM/Admin get the schedule editor tab
+  if(isWfm){
+    tabs.splice(tabs.findIndex(function(t){return t.id==='schedule';})+1,0,
+      {id:'sch-edit',ic:'✏️',lb:'Edit Sch'});
+  }
   tabs.forEach(function(t){
     var btn=document.createElement('button');
     btn.className='unb'; btn.id='unb-'+t.id;
