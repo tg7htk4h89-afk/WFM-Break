@@ -2817,14 +2817,22 @@ function _applyRemote(remote){
   if(Array.isArray(remote.leaves)) { LEAVES=remote.leaves; }
   if(Array.isArray(remote.actlog)) { ACTLOG=remote.actlog; }
   if(Array.isArray(remote.attendance)){
-    // Merge: remote is source of truth, but keep any local entries not yet in remote
-    // (written in last 30s — GAS upsert may not have propagated yet)
-    var remoteAttMap={};
-    remote.attendance.forEach(function(a){remoteAttMap[a.agent+'|'+a.date]=true;});
-    var localNew=ATT_LOG.filter(function(a){
-      return !remoteAttMap[a.agent+'|'+a.date]&&a.ts&&(Date.now()-new Date(a.ts.replace(' ','T')).getTime()<30000);
+    // Dedup remote attendance by agent+date — Sheets may have duplicates from old appendRow path
+    // Keep the LAST entry for each agent+date (most recent save wins)
+    var attDedup={};
+    remote.attendance.forEach(function(a){
+      attDedup[a.agent+'|'+a.date]=a; // overwrite keeps last
     });
-    ATT_LOG=remote.attendance.concat(localNew);
+    var dedupedRemote=Object.values(attDedup);
+
+    // Keep local entries written in last 30s that aren't confirmed in remote yet
+    var remoteKeys={};
+    dedupedRemote.forEach(function(a){remoteKeys[a.agent+'|'+a.date]=true;});
+    var localNew=ATT_LOG.filter(function(a){
+      if(remoteKeys[a.agent+'|'+a.date]) return false; // remote has it
+      try{return Date.now()-new Date(a.ts.replace(' ','T')).getTime()<30000;}catch(e){return false;}
+    });
+    ATT_LOG=dedupedRemote.concat(localNew);
   }
 
   // ── Live schedule from Sheet — replaces hardcoded AGENTS ──
@@ -2851,27 +2859,27 @@ function _applyRemote(remote){
     }
   }
 
-  var attChanged=ATT_LOG.length!==oldAttLen||
-    (Array.isArray(remote.attendance)&&remote.attendance.length!==oldAttLen);
+  var attChanged=false;
+  if(Array.isArray(remote.attendance)){
+    // Build a fast content hash to detect any real change
+    var remoteHash=remote.attendance.map(function(a){return a.agent+'|'+a.date+'|'+a.status;}).join(',');
+    var localHash=ATT_LOG.map(function(a){return a.agent+'|'+a.date+'|'+a.status;}).join(',');
+    attChanged=(remoteHash!==localHash);
+  }
 
   if((wasChanged||swapsChanged||leavesChanged||attChanged||agentsChanged)&&me&&me.n) renderAll();
+
+  // ── Always refresh attendance page on every poll if it's open ──
+  if(me&&me.n){
+    var attPg=document.getElementById('pg-attendance');
+    if(attPg&&(attPg.classList.contains('on')||attPg.style.display==='block')&&typeof renderAttendance==='function') renderAttendance();
+    var attTab=document.getElementById('rt-att');
+    if(attTab&&attTab.style.display!=='none'&&typeof renderMyAttTab==='function') renderMyAttTab();
+  }
   // Refresh KPI management panel if open
   if(wasChanged&&me&&me.n&&isManagementUser(me)){
     var kpiPg=document.getElementById('pg-kpi');
-    if(kpiPg&&kpiPg.classList.contains('on')){
-      _kpiInit=false; // allow re-init to refresh mgmt panel
-      renderKpiMgmt&&renderKpiMgmt();
-    }
-  }
-  // Refresh attendance panel immediately when data changes
-  if(attChanged&&me&&me.n){
-    var attTab=document.getElementById('rt-att');
-    if(attTab&&attTab.style.display!=='none'&&typeof renderMyAttTab==='function') renderMyAttTab();
-    // Also refresh management attendance page if open
-    if(typeof renderAttendance==='function'){
-      var attPg=document.getElementById('pg-attendance');
-      if(attPg&&attPg.classList.contains('on')) renderAttendance();
-    }
+    if(kpiPg&&kpiPg.classList.contains('on')){_kpiInit=false;renderKpiMgmt&&renderKpiMgmt();}
   }
 }
 
@@ -5554,13 +5562,33 @@ function attSaveAll(){
 function attTodayStatus(agentName){return attGetEntry(agentName);}
 
 function saveAllAtt(){
-  var e=Object.entries(attSel);if(!e.length){sp_showToast('Mark attendance first','err');return;}
+  // Redirect to the correct save path that uses saveAttendance action (upsert, no duplicates)
+  var e=Object.entries(attSel);
+  if(!e.length){sp_showToast('Mark attendance first','err');return;}
   e.forEach(function(p){
     var a=AGENTS.find(function(x){return x.id===p[0];});
-    logA('ATTENDANCE',a.n+' → '+p[1].toUpperCase(),'inf');
-    saveSheet('Attendance',[a.n,today(),p[1],me.n,kuwaitISO()]);
+    if(!a) return;
+    var status=p[1];
+    // Build entry directly and save via proper saveAttendance action
+    var entry={
+      id:'ATT'+(Date.now()%1000000),
+      agent:a.n, date:today(), status:status,
+      note:'', newShift:'', markedBy:me.n||me.name||'', ts:kuwaitISO()
+    };
+    ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===a.n&&e.date===today());});
+    ATT_LOG.push(entry);
+    fetch(API,{method:'POST',body:JSON.stringify({
+      action:'saveAttendance',
+      agent:entry.agent, date:entry.date, status:entry.status,
+      note:entry.note, newShift:entry.newShift, markedBy:entry.markedBy, ts:entry.ts
+    }),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){if(res&&res.ok){setSy(true);_cache=null;try{localStorage.removeItem(SK);}catch(e){}}})
+    .catch(function(){setSy(false);});
+    logA('ATTENDANCE',a.n+' \u2192 '+status.toUpperCase(),'inf');
   });
-  sp_showToast('Attendance saved for '+e.length+' agents ✓','ok');
+  sp_showToast('Attendance saved for '+e.length+' agents \u2713','ok');
+  setTimeout(function(){apiPull();},500);
 }
 
 function renderSwapApproval(){
