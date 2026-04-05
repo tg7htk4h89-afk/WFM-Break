@@ -2444,7 +2444,7 @@ input,select,textarea,button{font-size:16px;}
     <div class="card" style="margin-top:14px;">
       <div class="ch">
         <div class="ctitle">📅 My KPI History</div>
-        <div style="font-size:11px;color:var(--t2);">Last 5 days</div>
+        <div style="font-size:11px;color:var(--t2);">Last 7 days</div>
       </div>
       <div class="cb" id="kpiHistBody">
         <div style="text-align:center;padding:18px 0;font-size:12px;color:var(--t3);">Loading...</div>
@@ -4356,7 +4356,19 @@ function showPage(id){
   if(id==='fullsch') renderFullSchedule();
   if(id==='attendance') renderAttendance();
   if(id==='requests') renderRequests();
-  if(id==='kpi') initDailyKPIPage();
+  if(id==='kpi'){
+    initDailyKPIPage();
+    // Always fetch fresh KPI data from server when page opens
+    fetch(API_GET+'?action=getAll&_='+Date.now())
+      .then(function(r){return r.json();})
+      .then(function(remote){
+        if(remote&&remote.ok){
+          _applyRemote(remote);
+          renderDailyKPIStats(); // re-render with fresh server data
+        }
+      })
+      .catch(function(){});
+  }
   if(id==='dashboard') renderDashboard();
   if(id==='team'){
     if(isManagementUser(me)||canAdmin()){
@@ -5312,18 +5324,28 @@ function normDate(v){
   var str=String(v).trim();
   // Already YYYY-MM-DD
   if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
-  // ISO string "2026-04-04T..."
-  if(str.indexOf('T')>4){
-    try{return new Date(new Date(str).getTime()+10800000).toISOString().substring(0,10);}catch(e){}
+  // "2026-04-04 00:00:00" or "2026-04-04T00:00:00" — just take the date part
+  if(/^\d{4}-\d{2}-\d{2}[\sT]/.test(str)) return str.substring(0,10);
+  // ISO string "2026-04-04T00:00:00.000Z"
+  if(str.indexOf('T')===10 && str.indexOf('Z')>0){
+    try{return new Date(str).toISOString().substring(0,10);}catch(e){}
   }
-  // Google Sheets serial number (GAS sometimes returns these)
+  // Google Sheets serial number (e.g. 46114)
   if(/^\d{5}$/.test(str)){
-    try{return new Date((parseInt(str)-25569)*86400000+10800000).toISOString().substring(0,10);}catch(e){}
+    try{return new Date((parseInt(str)-25569)*86400000).toISOString().substring(0,10);}catch(e){}
   }
-  // Long date string "Sat Apr 04 2026 00:00:00 GMT+0300..."
+  // Long date string from GAS: "Fri Apr 04 2026 00:00:00 GMT+0300..."
+  // or "Sat Apr 05 2026 03:00:00 GMT+0300 (Arabia Standard Time)"
   try{
     var d=new Date(str);
-    if(!isNaN(d.getTime())) return new Date(d.getTime()+10800000).toISOString().substring(0,10);
+    if(!isNaN(d.getTime())){
+      // Use Kuwait offset (+3h) to get the correct calendar date
+      var ku=new Date(d.getTime()+10800000);
+      var y=ku.getUTCFullYear();
+      var m=('0'+(ku.getUTCMonth()+1)).slice(-2);
+      var day=('0'+ku.getUTCDate()).slice(-2);
+      return y+'-'+m+'-'+day;
+    }
   }catch(e){}
   return str.substring(0,10);
 }
