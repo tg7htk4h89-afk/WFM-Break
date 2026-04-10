@@ -1927,8 +1927,15 @@ input,select,textarea,button{font-size:16px;}
   <div class="pg" id="pg-attendance" style="padding:0;">
     <div id="att-topbar-wrap"></div>
     <div style="padding:0 13px;">
-      <div id="att-dept-tabs-page" style="display:flex;gap:6px;overflow-x:auto;padding:12px 0 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;"></div>
-      <div id="att-list-page"></div>
+      <div style="display:flex;gap:8px;padding:10px 0 4px;border-bottom:1px solid var(--border);margin-bottom:0;">
+        <button id="att-tab-today" onclick="attSwitchTab('today')" style="flex:1;padding:8px 0;font-size:12px;font-weight:700;border-radius:8px;border:none;cursor:pointer;background:var(--navy);color:#fff;">📋 Today</button>
+        <button id="att-tab-history" onclick="attSwitchTab('history')" style="flex:1;padding:8px 0;font-size:12px;font-weight:700;border-radius:8px;border:none;cursor:pointer;background:var(--bg);color:var(--t2);">📊 History</button>
+      </div>
+      <div id="att-panel-today">
+        <div id="att-dept-tabs-page" style="display:flex;gap:6px;overflow-x:auto;padding:12px 0 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;"></div>
+        <div id="att-list-page"></div>
+      </div>
+      <div id="att-panel-history" style="display:none;"></div>
     </div>
     <div style="height:90px"></div>
   </div>
@@ -5385,6 +5392,124 @@ function attGetEntry(agentName){
 }
 
 // ── Render full attendance tab ───────────────────────────────
+var _attTab='today';
+function attSwitchTab(tab){
+  _attTab=tab;
+  var today=document.getElementById('att-panel-today');
+  var hist=document.getElementById('att-panel-history');
+  var btnT=document.getElementById('att-tab-today');
+  var btnH=document.getElementById('att-tab-history');
+  if(today) today.style.display=tab==='today'?'':'none';
+  if(hist)  hist.style.display=tab==='history'?'':'none';
+  if(btnT){ btnT.style.background=tab==='today'?'var(--navy)':'var(--bg)'; btnT.style.color=tab==='today'?'#fff':'var(--t2)'; }
+  if(btnH){ btnH.style.background=tab==='history'?'var(--navy)':'var(--bg)'; btnH.style.color=tab==='history'?'#fff':'var(--t2)'; }
+  if(tab==='history') renderAttHistory();
+}
+function renderAttHistory(){
+  var el=document.getElementById('att-panel-history');
+  if(!el) return;
+
+  // Sort ATT_LOG newest first
+  var log=ATT_LOG.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||'')||(b.ts||'').localeCompare(a.ts||''); });
+
+  // Filter controls
+  var teams=[...new Set(AGENTS.map(function(a){return a.t;}))].sort();
+  var dates=[...new Set(log.map(function(e){return normDate(e.date)||'';}).filter(Boolean))].sort().reverse().slice(0,30);
+
+  var stored=JSON.parse(sessionStorage.getItem('attHistFilter')||'{}');
+  var filterTeam=stored.team||'All';
+  var filterDate=stored.date||'All';
+  var filterStatus=stored.status||'All';
+  var filterSearch=stored.search||'';
+
+  function saveFilter(){ sessionStorage.setItem('attHistFilter',JSON.stringify({team:filterTeam,date:filterDate,status:filterStatus,search:filterSearch})); }
+
+  // Apply filters
+  var filtered=log.filter(function(e){
+    if(filterTeam!=='All'){
+      var ag=AGENTS.find(function(a){return a.n===e.agent;});
+      if(!ag||ag.t!==filterTeam) return false;
+    }
+    if(filterDate!=='All'&&normDate(e.date)!==filterDate) return false;
+    if(filterStatus!=='All'&&e.status!==filterStatus) return false;
+    if(filterSearch&&!(e.agent||'').toLowerCase().includes(filterSearch.toLowerCase())) return false;
+    return true;
+  });
+
+  var statusLabels={ontime:'On Time',late:'Late',permission:'Permission',sick:'Sick',noshow:'No Show',absent:'Absent',wfh:'WFH'};
+  var statusColors={ontime:'#22c55e',late:'#f59e0b',permission:'#3b82f6',sick:'#ef4444',noshow:'#dc2626',absent:'#991b1b',wfh:'#8b5cf6'};
+
+  var html='<div style="padding:12px 0;">';
+
+  // ── Filters ───────────────────────────────────────────────────────
+  html+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">';
+  // Search
+  html+='<input id="attH-search" value="'+filterSearch+'" oninput="(function(v){attHistFilter(\'search\',v);})(this.value)" placeholder="🔍 Search agent…" style="flex:1;min-width:140px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);color:var(--t1);">';
+  // Date
+  html+='<select id="attH-date" onchange="attHistFilter(\'date\',this.value)" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);color:var(--t1);">';
+  html+='<option value="All"'+(filterDate==='All'?' selected':'')+'">All Dates</option>';
+  dates.forEach(function(d){ html+='<option value="'+d+'"'+(filterDate===d?' selected':'')+'>'+d+'</option>'; });
+  html+='</select>';
+  // Team
+  html+='<select id="attH-team" onchange="attHistFilter(\'team\',this.value)" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);color:var(--t1);">';
+  html+='<option value="All"'+(filterTeam==='All'?' selected':'')+'">All Teams</option>';
+  teams.forEach(function(t){ html+='<option value="'+t+'"'+(filterTeam===t?' selected':'')+'>'+t+'</option>'; });
+  html+='</select>';
+  // Status
+  html+='<select id="attH-status" onchange="attHistFilter(\'status\',this.value)" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);color:var(--t1);">';
+  html+='<option value="All"'+(filterStatus==='All'?' selected':'')+'">All Statuses</option>';
+  Object.keys(statusLabels).forEach(function(k){ html+='<option value="'+k+'"'+(filterStatus===k?' selected':'')+'>'+statusLabels[k]+'</option>'; });
+  html+='</select>';
+  html+='</div>';
+
+  // ── Summary bar ───────────────────────────────────────────────────
+  var summary={};
+  filtered.forEach(function(e){ summary[e.status]=(summary[e.status]||0)+1; });
+  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">';
+  html+='<div style="padding:4px 10px;border-radius:20px;background:var(--section);font-size:11px;font-weight:700;color:var(--t2);">'+filtered.length+' records</div>';
+  Object.keys(summary).forEach(function(k){
+    var col=statusColors[k]||'#6b7280';
+    html+='<div style="padding:4px 10px;border-radius:20px;background:'+col+'22;font-size:11px;font-weight:700;color:'+col+';">'+statusLabels[k]+' '+summary[k]+'</div>';
+  });
+  html+='</div>';
+
+  // ── Table ─────────────────────────────────────────────────────────
+  if(!filtered.length){
+    html+='<div style="text-align:center;padding:40px 0;color:var(--t3);font-size:13px;">No records found</div>';
+  } else {
+    html+='<div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border);">';
+    html+='<table style="border-collapse:collapse;width:100%;min-width:540px;">';
+    html+='<thead><tr style="background:var(--navy);">';
+    ['Agent','Team','Date','Status','Note','Shift','Marked By'].forEach(function(h){
+      html+='<th style="padding:9px 11px;text-align:left;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;letter-spacing:.3px;">'+h+'</th>';
+    });
+    html+='</tr></thead><tbody>';
+    filtered.forEach(function(e,idx){
+      var ag=AGENTS.find(function(a){return a.n===e.agent;})||{t:'—'};
+      var col=statusColors[e.status]||'#6b7280';
+      var lbl=statusLabels[e.status]||e.status||'—';
+      var rowBg=idx%2===0?'var(--white)':'var(--bg)';
+      html+='<tr style="border-bottom:1px solid var(--border);background:'+rowBg+';">';
+      html+='<td style="padding:8px 11px;font-size:12px;font-weight:700;color:var(--t1);white-space:nowrap;">'+e.agent+'</td>';
+      html+='<td style="padding:8px 11px;font-size:11px;color:var(--t2);">'+ag.t+'</td>';
+      html+='<td style="padding:8px 11px;font-size:11px;color:var(--t2);white-space:nowrap;">'+(normDate(e.date)||e.date||'—')+'</td>';
+      html+='<td style="padding:8px 11px;"><span style="display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;background:'+col+'22;color:'+col+';">'+lbl+'</span></td>';
+      html+='<td style="padding:8px 11px;font-size:11px;color:var(--t2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(e.note||'—')+'</td>';
+      html+='<td style="padding:8px 11px;font-size:11px;color:var(--t2);">'+(e.newShift||'—')+'</td>';
+      html+='<td style="padding:8px 11px;font-size:11px;color:var(--t2);">'+(e.markedBy||'—')+'</td>';
+      html+='</tr>';
+    });
+    html+='</tbody></table></div>';
+  }
+  html+='</div>';
+  el.innerHTML=html;
+}
+function attHistFilter(key,val){
+  var stored=JSON.parse(sessionStorage.getItem('attHistFilter')||'{}');
+  stored[key]=val;
+  sessionStorage.setItem('attHistFilter',JSON.stringify(stored));
+  renderAttHistory();
+}
 function renderAttendance(){
   if(!me||!canTeam()) return;
   var now=new Date(Date.now()+3*60*60*1000);
@@ -5396,6 +5521,10 @@ function renderAttendance(){
   var activeTabs=document.getElementById('att-dept-tabs-page') || document.getElementById('att-dept-tabs');
   var topbarWrap=document.getElementById('att-topbar-wrap');
   if(!activeList) return;
+
+  // Show/hide History tab based on role
+  var histTab=document.getElementById('att-tab-history');
+  if(histTab) histTab.style.display=isManagementUser(me)?'':'none';
 
   // Get all agents
   var allAgents=attGetAgents();
