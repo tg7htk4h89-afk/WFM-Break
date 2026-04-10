@@ -4574,7 +4574,7 @@ function setTeamFilter(t){
 }
 
 function buildSchGrid(){
-  var display=(sp_teamFilter==='All'?AGENTS:AGENTS.filter(function(a){return a.t===teamFilter;}))
+  var display=(sp_teamFilter==='All'?AGENTS:AGENTS.filter(function(a){return a.t===sp_teamFilter;}))
     .filter(function(a){return a.t!=='Management';});
   var teams=[...new Set(display.map(function(a){return a.t;}))];
   var th='<th class="name-h">Name</th>';
