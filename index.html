@@ -2959,9 +2959,15 @@ function debugAPI(){
   .then(function(d){
     var agents=d.agents||[];
     var dates=d.dates||[];
-    var msg='Source: '+(url.indexOf('n8n')>-1?'n8n':'GAS')+'\nok:'+d.ok+'\nagents:'+agents.length+'\ndates:'+dates.length;
-    if(agents.length>0) msg+='\nFirst agent: '+agents[0].n+'\nSch[0]: '+agents[0].sch[0]+'\nSch len: '+agents[0].sch.length;
-    if(dates.length>0) msg+='\nDate[0]: '+dates[0]+' Date[-1]: '+dates[dates.length-1];
+    var dbg=d._debug||{};
+    var msg='=== API DEBUG ===\n';
+    msg+='ok: '+d.ok+'\n';
+    msg+='agents: '+agents.length+'\n';
+    msg+='dates: '+dates.length+'\n';
+    msg+='Schedule rows from n8n: '+dbg.schRows+'\n';
+    msg+='First agent: '+dbg.firstAgent+'\n';
+    msg+='First shift: '+dbg.firstShift+'\n';
+    if(agents.length>0){msg+='Portal agent[0]: '+agents[0].n+' sch[0]:'+agents[0].sch[0]+'\n';}
     alert(msg);
   })
   .catch(function(e){alert('FETCH ERROR: '+e);});
