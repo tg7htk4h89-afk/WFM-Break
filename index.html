@@ -2745,19 +2745,40 @@ function _queueRetry(d){
 function apiPull(){
   if(_syncing) return;
   _syncing=true;
-  fetch(API_GET+'?action=getAll&_='+Date.now())
+  var isN8n=_isN8nReady(N8N_URL_GET);
+  var url=isN8n?(N8N_URL_GET+'?_='+Date.now()):(GAS_URL+'?action=getAll&_='+Date.now());
+  fetch(url)
   .then(function(r){return r.json();})
   .then(function(remote){
     _syncing=false;
-    if(!remote||!remote.ok) return setSy(false);
+    if(!remote||!remote.ok){
+      // n8n failed — fall back to GAS
+      if(isN8n) _apiPullGAS();
+      else setSy(false);
+      return;
+    }
+    // n8n returned ok but no schedule agents → fall back to GAS for schedule
+    if(isN8n&&(!remote.agents||!remote.agents.length)){
+      _apiPullGAS(); return;
+    }
     setSy(true);
-    // Sheets data always wins — it is the source of truth
     _applyRemote(remote);
   })
   .catch(function(){
     _syncing=false;
-    setSy(false);
+    if(isN8n) _apiPullGAS();
+    else setSy(false);
   });
+}
+function _apiPullGAS(){
+  // Fallback: read from GAS when n8n is not active or has no schedule
+  fetch(GAS_URL+'?action=getAll&_='+Date.now())
+  .then(function(r){return r.json();})
+  .then(function(remote){
+    if(remote&&remote.ok){setSy(true);_applyRemote(remote);}
+    else setSy(false);
+  })
+  .catch(function(){setSy(false);});
 }
 
 // ── Apply remote Sheets data as the new truth ──
@@ -3071,10 +3092,17 @@ function finishLogin(emp,shift,opts){
     if(!done){done=true;_startSession();}
   },5000); // fallback after 5s if Sheets unreachable
 
-  fetch(API_GET+'?action=getAll&_='+Date.now())
+  var _loginUrl=_isN8nReady(N8N_URL_GET)?(N8N_URL_GET+'?_='+Date.now()):(GAS_URL+'?action=getAll&_='+Date.now());
+  fetch(_loginUrl)
   .then(function(r){return r.json();})
   .then(function(remote){
-    if(done) return; done=true; clearTimeout(timeout);
+    if(done) return;
+    // If n8n returns ok but empty agents, try GAS
+    if(remote&&remote.ok&&_isN8nReady(N8N_URL_GET)&&(!remote.agents||!remote.agents.length)){
+      fetch(GAS_URL+'?action=getAll&_='+Date.now()).then(function(r2){return r2.json();}).then(function(r2){if(r2&&r2.ok)remote=r2;}).catch(function(){}).finally(function(){done=true;clearTimeout(timeout);if(remote&&remote.ok)_applyRemote(remote);_startSession();});
+      return;
+    }
+    done=true; clearTimeout(timeout);
     if(remote&&remote.ok){
       _applyRemote(remote);
       // After merge: if any local breaks weren't in Sheets, re-push to confirm them
