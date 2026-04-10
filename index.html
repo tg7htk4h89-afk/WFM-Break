@@ -2783,13 +2783,12 @@ function _applyRemote(remote){
     // Start with all remote breaks
     newBreaks[date]=rBreaks.slice();
     // Keep local breaks that aren't confirmed in Sheets yet
-    // Rule: keep ANY local break with status booked/active/done that isn't in remote
-    // (not just 30s window — if agent re-logged after a failed sync, break could be hours old)
+    // Keep them for the ENTIRE day — not just 30s — so re-login never loses booked breaks
     var repushNeeded=false;
     lBreaks.forEach(function(lb){
-      if(rMap[lb.id]) return; // already in Sheets — remote wins (already included above)
+      if(rMap[lb.id]) return; // already in Sheets — remote wins
       if(lb.status==='cancelled') return; // don't resurrect cancelled breaks
-      // This break exists locally but not in Sheets — keep it and re-push
+      // Break is in local but not in Sheets — keep it and re-push to Sheets
       newBreaks[date].push(lb);
       changed=true;
       repushNeeded=true;
@@ -3076,7 +3075,22 @@ function finishLogin(emp,shift,opts){
   .then(function(r){return r.json();})
   .then(function(remote){
     if(done) return; done=true; clearTimeout(timeout);
-    if(remote&&remote.ok) _applyRemote(remote);
+    if(remote&&remote.ok){
+      _applyRemote(remote);
+      // After merge: if any local breaks weren't in Sheets, re-push to confirm them
+      var localData=gd();
+      var todayKey=today();
+      var todayBreaks=(localData.breaks&&localData.breaks[todayKey])||[];
+      var remoteBreaks=(remote.breaks&&remote.breaks[todayKey])||[];
+      var remoteIds={};
+      remoteBreaks.forEach(function(b){remoteIds[b.id]=true;});
+      var unsynced=todayBreaks.filter(function(b){return !remoteIds[b.id]&&b.status!=='cancelled';});
+      if(unsynced.length>0){
+        // Re-push the full data so unsynced breaks reach Sheets
+        _lastPushedBreaksJSON=''; // force push even if dedup guard would block it
+        _pushToSheets(localData);
+      }
+    }
     _startSession();
   })
   .catch(function(){
@@ -4772,10 +4786,14 @@ function wfmSaveShift(){
       if(_schEditChanges.length>50) _schEditChanges.pop();
       renderSchEditLog();
       schEditLoadAgent();
-      // Force all clients to reload schedule
+      // Force all clients to reload schedule — memory cache only, preserve break data
       _cache=null;
-      try{localStorage.removeItem(SK);}catch(e){}
       apiPull();
+      // Re-render the schedule grid immediately so change is visible
+      setTimeout(function(){
+        if(typeof renderMySchedule==='function') renderMySchedule();
+        if(typeof buildSchGrid==='function') buildSchGrid();
+      },300);
       // Pushbullet notification to agent
       if(N8N_URL_NOTIFY&&N8N_URL_NOTIFY.indexOf('YOUR_')<0){
         fetch(N8N_URL_NOTIFY,{method:'POST',body:JSON.stringify({
@@ -5665,9 +5683,8 @@ function attSaveOne(agentId){
   .then(function(res){
     if(res&&res.ok){
       setSy(true);
-      // Force re-pull so all connected management see the update immediately
+      // Invalidate memory cache only — do NOT wipe localStorage (breaks data lives there)
       _cache=null;
-      try{localStorage.removeItem(SK);}catch(e){}
       apiPull();
     } else {setSy(false);console.warn('[Att]',res&&res.error);}
   })
@@ -5735,7 +5752,7 @@ function saveAllAtt(){
       note:entry.note, newShift:entry.newShift, markedBy:entry.markedBy, ts:entry.ts
     }),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
-    .then(function(res){if(res&&res.ok){setSy(true);_cache=null;try{localStorage.removeItem(SK);}catch(e){}}})
+    .then(function(res){if(res&&res.ok){setSy(true);_cache=null;}})
     .catch(function(){setSy(false);});
     logA('ATTENDANCE',a.n+' \u2192 '+status.toUpperCase(),'inf');
   });
@@ -5805,7 +5822,7 @@ function approveSwap(id){
   _applySwapToSchedule(s);
   fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'approved',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
-    .then(function(res){if(res&&res.ok){_cache=null;try{localStorage.removeItem(SK);}catch(e){}apiPull();}})
+    .then(function(res){if(res&&res.ok){_cache=null;apiPull();}})
     .catch(function(){});
   // n8n notification + direct Pushbullet
   if(N8N_URL_NOTIFY&&N8N_URL_NOTIFY.indexOf('YOUR_')<0){
