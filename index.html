@@ -4186,11 +4186,21 @@ function scCls(s){
   if(h>=2&&h<9)return'sc-n';if(h>=9&&h<12)return'sc-m';if(h>=12&&h<17)return'sc-a';return'sc-e';
 }
 function scShort(s){
-  if(!s)return'—';if(s==='OFF')return'OFF';if(s==='P-Leave')return'PLv';
-  if(s==='Leave')return'Lv';if(s==='Sick')return'Sick';
-  if(s.startsWith('M '))return'M '+s.split(' ')[1].split(':')[0];
-  if(s.startsWith('C '))return'C '+s.split(' ')[1].split(':')[0];
-  return s.split('-')[0];
+  if(!s) return '—';
+  if(s==='OFF') return 'OFF';
+  if(s==='P-Leave') return 'P-Lv';
+  if(s==='Leave') return 'Leave';
+  if(s==='Sick') return 'Sick';
+  if(s==='Holiday') return 'Hol';
+  if(s==='Absent') return 'Abs';
+  // Night shifts like "M 02:00-09:00" → "M 02"
+  if(s.startsWith('M ')) return 'M '+s.split(' ')[1].split(':')[0];
+  if(s.startsWith('C ')) return 'C '+s.split(' ')[1].split(':')[0];
+  // Full shift like "08:00-16:00" → show start only (space is limited in grid cells)
+  // Extract HH:MM-HH format to keep it compact
+  var m = s.match(/^(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/);
+  if(m) return m[1]; // show start time only for brevity
+  return s.split(':')[0]; // fallback: just hour
 }
 function pill(txt,cls){return'<span class="pill '+cls+'">'+txt+'</span>';}
 function fmtTS(ts){return new Date(ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
