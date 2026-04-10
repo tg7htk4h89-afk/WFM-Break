@@ -2563,17 +2563,11 @@ var SK='kib_v11';
 //  ③ Activate both workflows, copy the webhook URLs below
 //  ④ Set your Pushbullet token
 // ══════════════════════════════════════════════════════════
-var N8N_URL_GET    = 'https://atmproject.app.n8n.cloud/webhook/kib-wfm-get'; // GET  /kib-wfm-get
-var N8N_URL_POST   = 'https://atmproject.app.n8n.cloud/webhook/kib-wfm';     // POST /kib-wfm
-var N8N_URL_NOTIFY = 'https://atmproject.app.n8n.cloud/webhook/kib-notify';  // POST /kib-notify
+// ── n8n Cloud — all reads and writes go through n8n ──
+var API_GET    = 'https://atmproject.app.n8n.cloud/webhook/kib-wfm-get'; // GET  reads all sheets
+var API        = 'https://atmproject.app.n8n.cloud/webhook/kib-wfm';     // POST all actions
+var N8N_URL_NOTIFY = 'https://atmproject.app.n8n.cloud/webhook/kib-notify';  // POST notifications
 var PUSHBULLET_TOKEN = '';
-// ── GAS fallback — used automatically while n8n URLs are placeholders ──
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyWcUuqWo1c2lVdJ5LMYhNZ04u54pcRUaYbtDGI0gIYQwYQ9S-zZzM4JRow-Tw0QtaSFg/exec';
-function _isN8nReady(url){ return !!(url && url.indexOf('YOUR_')<0 && url.indexOf('http')===0); }
-// API = n8n POST if configured, else GAS
-var API     = _isN8nReady(N8N_URL_POST) ? N8N_URL_POST : GAS_URL;
-// API_GET = n8n GET if configured, else GAS (GAS handles ?action=getAll the same way)
-var API_GET = _isN8nReady(N8N_URL_GET)  ? N8N_URL_GET  : GAS_URL;
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=30,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2745,40 +2739,18 @@ function _queueRetry(d){
 function apiPull(){
   if(_syncing) return;
   _syncing=true;
-  var isN8n=_isN8nReady(N8N_URL_GET);
-  var url=isN8n?(N8N_URL_GET+'?_='+Date.now()):(GAS_URL+'?action=getAll&_='+Date.now());
-  fetch(url)
+  fetch(API_GET+'?_='+Date.now())
   .then(function(r){return r.json();})
   .then(function(remote){
     _syncing=false;
-    if(!remote||!remote.ok){
-      // n8n failed — fall back to GAS
-      if(isN8n) _apiPullGAS();
-      else setSy(false);
-      return;
-    }
-    // n8n returned ok but no schedule agents → fall back to GAS for schedule
-    if(isN8n&&(!remote.agents||!remote.agents.length)){
-      _apiPullGAS(); return;
-    }
+    if(!remote||!remote.ok) return setSy(false);
     setSy(true);
     _applyRemote(remote);
   })
   .catch(function(){
     _syncing=false;
-    if(isN8n) _apiPullGAS();
-    else setSy(false);
+    setSy(false);
   });
-}
-function _apiPullGAS(){
-  // Fallback: read from GAS when n8n is not active or has no schedule
-  fetch(GAS_URL+'?action=getAll&_='+Date.now())
-  .then(function(r){return r.json();})
-  .then(function(remote){
-    if(remote&&remote.ok){setSy(true);_applyRemote(remote);}
-    else setSy(false);
-  })
-  .catch(function(){setSy(false);});
 }
 
 // ── Apply remote Sheets data as the new truth ──
@@ -2980,6 +2952,20 @@ function forceSync(){
   apiPull();
   showToast('Syncing from server…','inf');
 }
+function debugAPI(){
+  var url=API_GET+'?_='+Date.now();
+  fetch(url)
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var agents=d.agents||[];
+    var dates=d.dates||[];
+    var msg='Source: '+(url.indexOf('n8n')>-1?'n8n':'GAS')+'\nok:'+d.ok+'\nagents:'+agents.length+'\ndates:'+dates.length;
+    if(agents.length>0) msg+='\nFirst agent: '+agents[0].n+'\nSch[0]: '+agents[0].sch[0]+'\nSch len: '+agents[0].sch.length;
+    if(dates.length>0) msg+='\nDate[0]: '+dates[0]+' Date[-1]: '+dates[dates.length-1];
+    alert(msg);
+  })
+  .catch(function(e){alert('FETCH ERROR: '+e);});
+}
 
 function isAgentUser(user){
   if(!user) return false;
@@ -3092,17 +3078,10 @@ function finishLogin(emp,shift,opts){
     if(!done){done=true;_startSession();}
   },5000); // fallback after 5s if Sheets unreachable
 
-  var _loginUrl=_isN8nReady(N8N_URL_GET)?(N8N_URL_GET+'?_='+Date.now()):(GAS_URL+'?action=getAll&_='+Date.now());
-  fetch(_loginUrl)
+  fetch(API_GET+'?_='+Date.now())
   .then(function(r){return r.json();})
   .then(function(remote){
-    if(done) return;
-    // If n8n returns ok but empty agents, try GAS
-    if(remote&&remote.ok&&_isN8nReady(N8N_URL_GET)&&(!remote.agents||!remote.agents.length)){
-      fetch(GAS_URL+'?action=getAll&_='+Date.now()).then(function(r2){return r2.json();}).then(function(r2){if(r2&&r2.ok)remote=r2;}).catch(function(){}).finally(function(){done=true;clearTimeout(timeout);if(remote&&remote.ok)_applyRemote(remote);_startSession();});
-      return;
-    }
-    done=true; clearTimeout(timeout);
+    if(done) return; done=true; clearTimeout(timeout);
     if(remote&&remote.ok){
       _applyRemote(remote);
       // After merge: if any local breaks weren't in Sheets, re-push to confirm them
