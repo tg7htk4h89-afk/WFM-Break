@@ -2570,11 +2570,17 @@ var SK='kib_v11';
 //  ③ Activate both workflows, copy the webhook URLs below
 //  ④ Set your Pushbullet token
 // ══════════════════════════════════════════════════════════
-// ── n8n Cloud — all reads and writes go through n8n ──
-var API_GET    = 'https://atmproject.app.n8n.cloud/webhook/kib-wfm-get'; // GET  reads all sheets
-var API        = 'https://atmproject.app.n8n.cloud/webhook/kib-wfm';     // POST all actions
-var N8N_URL_NOTIFY = 'https://atmproject.app.n8n.cloud/webhook/kib-notify';  // POST notifications
+// ── n8n Cloud — domain-split workflows ───────────────────────────────────────
+var API_GET        = 'https://atmproject.app.n8n.cloud/webhook/kib-wfm-get';   // GET  — all reads
+var API_BREAKS     = 'https://atmproject.app.n8n.cloud/webhook/kib-breaks';    // POST — saveAll, saveLogin
+var API_ATTENDANCE = 'https://atmproject.app.n8n.cloud/webhook/kib-attendance';// POST — saveAttendance
+var API_SCHEDULE   = 'https://atmproject.app.n8n.cloud/webhook/kib-schedule';  // POST — updateShift, saveSchedule
+var API_REQUESTS   = 'https://atmproject.app.n8n.cloud/webhook/kib-requests';  // POST — swaps, leaves
+var API_KPI        = 'https://atmproject.app.n8n.cloud/webhook/kib-kpi';       // POST — KPI, activity
+var N8N_URL_NOTIFY = 'https://atmproject.app.n8n.cloud/webhook/kib-notify';    // POST — notifications
 var PUSHBULLET_TOKEN = '';
+// Backwards-compatible alias (used by old code paths)
+var API = API_BREAKS;
 var me=null,pendEmp=null,selShift=null,selSlot=null,selDur=30,tmFilter='',selVoicemail=false;
 var clkInt=null,syncInt=null,tmrInt=null,toastTO=null,notifs=[];
 
@@ -2717,7 +2723,7 @@ function _pushToSheets(d){
   // Do NOT convert ms timestamps to strings here: doing so breaks the 30s
   // pending-break merge check in _applyRemote and crashes mirrorBreaksToSheet_.
   var payload=JSON.stringify({action:'saveAll',data:d});
-  fetch(API,{method:'POST',body:payload,headers:{'Content-Type':'text/plain'}})
+  fetch(API_BREAKS,{method:'POST',body:payload,headers:{'Content-Type':'text/plain'}})
   .then(function(r){return r.json();})
   .then(function(res){
     if(res&&res.ok){
@@ -2944,7 +2950,7 @@ function setSy(ok){
 // ── Save login record ──
 function saveLoginAPI(emp,shift){
   try{
-    fetch(API,{method:'POST',
+    fetch(API_BREAKS,{method:'POST',
       body:JSON.stringify({action:'saveLogin',agent:emp.name,shift:shift.label,
         time:nowHH(),dept:emp.dept||'',role:emp.role||'',date:today(),ts:kuwaitISO()}),
       headers:{'Content-Type':'text/plain'}
@@ -4782,7 +4788,7 @@ function wfmSaveShift(){
   if(idx>=0) agent.sch[idx]=shift;
 
   // Push to Sheets via updateShift action
-  fetch(API,{method:'POST',body:JSON.stringify({
+  fetch(API_SCHEDULE,{method:'POST',body:JSON.stringify({
     action:'updateShift',
     agent:agent.n,
     date:date,
@@ -4991,7 +4997,7 @@ function submitSwap(){
   var swType=window._swapType||'shift';
   var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:d,sA:sA_,sB:sB_,reason:r,type:swType,status:'pending_peer',ts:kuwaitISO()};
   SWAPS.push(entry);
-  fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',
+  fetch(API_REQUESTS,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',
     id:entry.id,from:entry.from,to:entry.to,date:entry.date,
     fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,ts:entry.ts
   }),headers:{'Content-Type':'text/plain'}})
@@ -5061,7 +5067,7 @@ function respondSwap(id, accept){
   s.status=accept?'pending_mgmt':'peer_declined';
   s.peerActionBy=me.n;
   s.peerActionAt=kuwaitISO();
-  fetch(API,{method:'POST',body:JSON.stringify({
+  fetch(API_REQUESTS,{method:'POST',body:JSON.stringify({
     action:'updateSwapStatus',id:id,
     status:s.status,peerActionBy:me.n,peerActionAt:s.peerActionAt
   }),headers:{'Content-Type':'text/plain'}}).catch(function(){});
@@ -5106,7 +5112,7 @@ function submitLeave(){
   }
   var entry={id:'L'+(Date.now()%10000),agent:me.n,type:type,from:from,to:to,days:1,status:'pending',notes:notes,ts:kuwaitISO()};
   LEAVES.push(entry);
-  fetch(API,{method:'POST',body:JSON.stringify({action:'saveLeaveRequest',
+  fetch(API_REQUESTS,{method:'POST',body:JSON.stringify({action:'saveLeaveRequest',
     id:entry.id,agent:entry.agent,type:entry.type,from:entry.from,
     to:entry.to,notes:entry.notes,ts:entry.ts
   }),headers:{'Content-Type':'text/plain'}})
@@ -5806,7 +5812,7 @@ function attSaveOne(agentId){
   ATT_LOG.push(entry);
 
   // ── Send to backend ──
-  fetch(API,{method:'POST',body:JSON.stringify({
+  fetch(API_ATTENDANCE,{method:'POST',body:JSON.stringify({
     action:'saveAttendance',
     agent:entry.agent,
     date:entry.date,
@@ -5842,6 +5848,31 @@ function attSaveOne(agentId){
     ' by '+(me.n||me.name)+' \u00b7 '+today());
 
   logA('ATTENDANCE',agent.n+' \u2192 '+entry.status.toUpperCase()+(entry.newShift?' (\u2192'+entry.newShift+')':''),'inf');
+  // Log sick/noshow/absent to ScheduleChanges via Schedule workflow — also updates Schedule sheet cell
+  if(entry.status==='sick'||entry.status==='noshow'||entry.status==='absent'){
+    var ag=AGENTS.find(function(a){return a.n===agent.n;});
+    var idx=DATES.indexOf(today());
+    var curShift=ag&&idx>=0?ag.sch[idx]:'';
+    fetch(API_SCHEDULE,{method:'POST',body:JSON.stringify({
+      action:'logAttendance',
+      agent:agent.n, date:today(), status:entry.status,
+      shift:curShift,
+      note:entry.note||'', markedBy:entry.markedBy||me.n||me.name
+    }),headers:{'Content-Type':'text/plain'}})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res&&res.ok){
+        // Update local AGENTS array so grid reflects change immediately
+        if(ag&&idx>=0){
+          var label=entry.status==='sick'?'Sick':entry.status==='noshow'?'No Show':'Absent';
+          ag.sch[idx]=label;
+          if(typeof buildSchGrid==='function') buildSchGrid();
+        }
+        _cache=null; apiPull();
+      }
+    })
+    .catch(function(){});
+  }
   delete _attSelMap[agentId];
   sp_showToast(agent.n.split(' ')[0]+' \u2192 '+entry.status,'ok');
   var card=document.getElementById('attc-'+agentId);
@@ -5883,7 +5914,7 @@ function saveAllAtt(){
     };
     ATT_LOG=ATT_LOG.filter(function(e){return!(e.agent===a.n&&e.date===today());});
     ATT_LOG.push(entry);
-    fetch(API,{method:'POST',body:JSON.stringify({
+    fetch(API_ATTENDANCE,{method:'POST',body:JSON.stringify({
       action:'saveAttendance',
       agent:entry.agent, date:entry.date, status:entry.status,
       note:entry.note, newShift:entry.newShift, markedBy:entry.markedBy, ts:entry.ts
@@ -5957,10 +5988,18 @@ function approveSwap(id){
   s.actionedBy=me.n;
   s.actionedAt=kuwaitISO();
   _applySwapToSchedule(s);
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'approved',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}})
+  // 1. Update swap status in SwapRequests sheet
+  fetch(API_REQUESTS,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'approved',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
     .then(function(res){if(res&&res.ok){_cache=null;apiPull();}})
     .catch(function(){});
+  // 2. Apply the swap to the actual Schedule sheet + log ScheduleChanges
+  fetch(API_SCHEDULE,{method:'POST',body:JSON.stringify({
+    action:'applySwap',
+    from:s.from, to:s.to, date:s.date,
+    sA:s.sA, sB:s.sB,
+    approvedBy:me.n||me.name
+  }),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   // n8n notification + direct Pushbullet
   if(N8N_URL_NOTIFY&&N8N_URL_NOTIFY.indexOf('YOUR_')<0){
     fetch(N8N_URL_NOTIFY,{method:'POST',body:JSON.stringify({
@@ -5984,7 +6023,7 @@ function rejectSwap(id){
   s.status='rejected';
   s.actionedBy=me.n;
   s.actionedAt=kuwaitISO();
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'rejected',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  fetch(API_REQUESTS,{method:'POST',body:JSON.stringify({action:'approveSwap',id:id,status:'rejected',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   pushNotify('Swap Rejected \u274c',s.from+' \u21c4 '+s.to+' on '+s.date+' was rejected by '+(me.n||me.name));
   logA&&logA('SWAP_REJECTED',id+' rejected by '+me.n,'inf');
   sp_showToast('Swap rejected','inf');
@@ -6056,7 +6095,7 @@ function renderLeaveApproval(){
 function approveLeave(id){
   var l=LEAVES.find(function(x){return x.id===id;});
   if(l) l.status='approved';
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveLeave',id:id,status:'approved',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  fetch(API_REQUESTS,{method:'POST',body:JSON.stringify({action:'approveLeave',id:id,status:'approved',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   logA('LEAVE_APPROVED',id+' approved by '+me.n,'inf');
   sp_showToast('Leave approved ✓','ok');
   renderLeaveApproval();
@@ -6064,7 +6103,7 @@ function approveLeave(id){
 function rejectLeave(id){
   var l=LEAVES.find(function(x){return x.id===id;});
   if(l) l.status='rejected';
-  fetch(API,{method:'POST',body:JSON.stringify({action:'approveLeave',id:id,status:'rejected',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+  fetch(API_REQUESTS,{method:'POST',body:JSON.stringify({action:'approveLeave',id:id,status:'rejected',actionedBy:me.n,actionedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   logA('LEAVE_REJECTED',id+' rejected by '+me.n,'inf');
   sp_showToast('Leave rejected','inf');
   renderLeaveApproval();
@@ -6173,7 +6212,7 @@ function handleFile(ev){
       }
       // Push to Sheet
       fb.innerHTML='<div style="background:rgba(13,92,166,.06);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;font-size:12px;color:var(--navy);">⏳ Saving '+agents.length+' agents to Google Sheets…</div>';
-      fetch(API,{method:'POST',body:JSON.stringify({action:'saveSchedule',agents:agents,dates:dateHeaders}),headers:{'Content-Type':'text/plain'}})
+      fetch(API_SCHEDULE,{method:'POST',body:JSON.stringify({action:'saveSchedule',agents:agents,dates:dateHeaders}),headers:{'Content-Type':'text/plain'}})
         .then(function(r){return r.json();})
         .then(function(res){
           if(res&&res.ok){
@@ -6206,7 +6245,7 @@ function seedScheduleToSheet(){
   if(!confirm('Push current hardcoded schedule to Google Sheet? This will overwrite the Schedule tab.')) return;
   var fb=document.getElementById('uploadFeedback');
   if(fb) fb.innerHTML='<div style="padding:10px;color:var(--navy);">⏳ Seeding schedule to Sheet…</div>';
-  fetch(API,{method:'POST',body:JSON.stringify({action:'saveSchedule',agents:AGENTS,dates:DATES}),headers:{'Content-Type':'text/plain'}})
+  fetch(API_SCHEDULE,{method:'POST',body:JSON.stringify({action:'saveSchedule',agents:AGENTS,dates:DATES}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
     .then(function(res){
       if(res&&res.ok){
@@ -6228,7 +6267,7 @@ function saveManual(){
   if(fb) fb.innerHTML='<div style="color:var(--navy);font-size:12px;padding:8px 0;">⏳ Saving to Sheet…</div>';
   if(di>=0) ag.sch[di]=s;
   logA('MANUAL_EDIT',ag.n+' on '+d+' → '+s,'inf');
-  fetch(API,{method:'POST',body:JSON.stringify({action:'updateShift',agent:ag.n,date:d,shift:s,changedBy:me.n,changedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}})
+  fetch(API_SCHEDULE,{method:'POST',body:JSON.stringify({action:'updateShift',agent:ag.n,date:d,shift:s,changedBy:me.n,changedAt:kuwaitISO()}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
     .then(function(res){
       var ok=res&&res.ok;
@@ -6304,7 +6343,7 @@ function clearAndResyncBreaks(){
   _cache=d;
   try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){}
   // Push deduplicated data with clearDay flag so GAS knows to replace not append
-  fetch(API,{method:'POST',body:JSON.stringify({action:'saveAll',clearDay:t,data:d}),headers:{'Content-Type':'text/plain'}})
+  fetch(API_BREAKS,{method:'POST',body:JSON.stringify({action:'saveAll',clearDay:t,data:d}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
     .then(function(res){
       if(res&&res.ok){
@@ -6333,7 +6372,7 @@ function clearTodayBreaks(){
   _lastPushedBreaksJSON='';
   _cache=d;
   try{localStorage.setItem(SK,JSON.stringify(d));}catch(e){}
-  fetch(API,{method:'POST',body:JSON.stringify({action:'saveAll',clearDay:today(),data:d}),headers:{'Content-Type':'text/plain'}})
+  fetch(API_BREAKS,{method:'POST',body:JSON.stringify({action:'saveAll',clearDay:today(),data:d}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
     .then(function(res){
       if(res&&res.ok){
@@ -6404,7 +6443,7 @@ async function saveSheet(tab,vals){
   };
   try{
     var payload={action:'appendRow',tab:tabMap[tab]||tab,row:vals};
-    fetch(API,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}})
+    fetch(API_KPI,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
     .then(function(res){if(res&&!res.ok)console.warn('[Sheets]',tab,res.error);})
     .catch(function(e){console.warn('[Sheets fetch error]',e);});
@@ -6419,7 +6458,7 @@ function logA(action,detail,type){
   if(typeof ACTLOG!=='undefined'){ACTLOG.unshift(e);if(ACTLOG.length>200)ACTLOG.pop();}
   // Send to Apps Script (via same API endpoint)
   try{
-    fetch(API,{method:'POST',body:JSON.stringify({action:'logActivity',
+    fetch(API_KPI,{method:'POST',body:JSON.stringify({action:'logActivity',
       ts:e.ts,agent:e.user,role:e.role,action:e.action,detail:e.detail,level:e.type
     }),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   }catch(ex){}
@@ -6612,7 +6651,7 @@ function srfSubmit(){
     ts:kuwaitISO()
   };
   logA('SCHEDULE_REQUEST',me.n+' submitted preference for '+window._srfFrom+' → '+window._srfTo,'inf');
-  fetch(API,{method:'POST',body:JSON.stringify({action:'saveScheduleReq',payload:payload}),headers:{'Content-Type':'text/plain'}})
+  fetch(API_SCHEDULE,{method:'POST',body:JSON.stringify({action:'saveScheduleReq',payload:payload}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
     .then(function(res){
       if(res&&res.ok){
@@ -7655,7 +7694,7 @@ function submitDailyKPI(type){
     return false;
   }
 
-  fetch(API,{method:'POST',body:JSON.stringify(Object.assign({action:action},payload)),headers:{'Content-Type':'text/plain'}})
+  fetch(API_KPI,{method:'POST',body:JSON.stringify(Object.assign({action:action},payload)),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();})
     .then(function(res){
       if(res&&res.ok){
@@ -7786,7 +7825,7 @@ function initSpProfile(){
 if(!sessionStorage.getItem('_attClean')){
   sessionStorage.setItem('_attClean','1');
   setTimeout(function(){
-    fetch(API,{method:'POST',body:JSON.stringify({action:'cleanAllAttendance'}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
+    fetch(API_ATTENDANCE,{method:'POST',body:JSON.stringify({action:'cleanAllAttendance'}),headers:{'Content-Type':'text/plain'}}).catch(function(){});
   },5000); // fire 5s after page load — non-blocking
 }
 (function(){
@@ -7893,7 +7932,7 @@ function submitQuickSwap(){
   var theirShift=idx>=0?(ag.sch[idx]||'OFF'):'?';
   var entry={id:'SW'+(Date.now()%100000),from:me.n,to:ag.n,date:_qs_date,sA:_qs_myShift,sB:theirShift,reason:reason,status:'pending_peer',ts:kuwaitISO()};
   SWAPS.push(entry);
-  fetch(API,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',id:entry.id,from:entry.from,to:entry.to,date:entry.date,fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,ts:entry.ts}),headers:{'Content-Type':'text/plain'}})
+  fetch(API_REQUESTS,{method:'POST',body:JSON.stringify({action:'saveSwapRequest',id:entry.id,from:entry.from,to:entry.to,date:entry.date,fromShift:entry.sA,toShift:entry.sB,reason:entry.reason,ts:entry.ts}),headers:{'Content-Type':'text/plain'}})
     .then(function(r){return r.json();}).then(function(res){if(res&&res.ok)setSy(true);else setSy(false);}).catch(function(){setSy(false);});
   if(typeof logA==='function')logA('SWAP_REQUEST',me.n+' ↔ '+ag.n+' on '+_qs_date,'inf');
   closeQuickSwap();
