@@ -4745,7 +4745,7 @@ function schEditPrefill(agentId,date,currentShift){
       var sOpt=document.createElement('option');
       sOpt.value=currentShift;
       sOpt.textContent=currentShift+' (current)';
-      sSel.insertBefore(sOpt,sSel.options[1]);
+      sSel.insertBefore(sOpt, sSel.options[1] || null);
     }
     sSel.value=currentShift;
   }
@@ -4833,10 +4833,11 @@ function wfmSaveShift(){
       if(fb) fb.innerHTML='<div style="background:var(--rbg);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);">❌ Save failed: '+(res&&res.error||'unknown error')+'</div>';
     }
   })
-  .catch(function(){
+  .catch(function(e){
     agent.sch[idx]=oldShift;
     setSy(false);
-    if(fb) fb.innerHTML='<div style="background:var(--rbg);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);">❌ Connection error — change reverted</div>';
+    var isCors=e&&(String(e).indexOf('CORS')>-1||String(e).indexOf('fetch')>-1);
+    if(fb) fb.innerHTML='<div style="background:var(--rbg);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);">'+(isCors?'❌ n8n /kib-schedule not active — activate it in n8n':'❌ Connection error — change reverted')+'</div>';
   });
 }
 
